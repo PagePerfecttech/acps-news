@@ -1,85 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiEdit, FiTrash2, FiPlus, FiEye, FiThumbsUp, FiMessageSquare } from 'react-icons/fi';
 import { NewsArticle } from '../../types';
-
-// Mock data for demonstration
-const mockArticles: NewsArticle[] = [
-  {
-    id: '1',
-    title: 'జైలర్ 2లో బాలయ్య.. ఇక దిదుడి బిడేల్!',
-    content: 'రజినీకాంత్-నెల్సన్ కాంబోలో వచ్చిన బ్లాక్ బస్టర్ చిత్రం జైలర్. ఈ సినిమాకు సీక్వెల్ ప్రకటించిన విషయం తెలిసిందే. ఈ సీక్వెల్‌లో నందమూరి బాలకృష్ణ తన కెరియర్‌లో మొదటిసారి తమిళంలో నటించబోతున్నారని వార్తలొచ్చాయి. గతంలో కూడా ఈ వార్తలు వచ్చినా, ఇప్పుడు మరింత బలంగా వినిపిస్తున్నాయి. జైలర్ 2లో బాలయ్య కీలక పాత్రలో కనిపించే అవకాశం ఉందని, దీనికి సంబంధించిన చర్చలు జరుగుతున్నాయని సమాచారం.',
-    summary: 'రజినీకాంత్-నెల్సన్ కాంబోలో వచ్చిన బ్లాక్ బస్టర్ చిత్రం జైలర్ సీక్వెల్‌లో నందమూరి బాలకృష్ణ కీలక పాత్రలో నటించనున్నారు.',
-    category: 'సినిమా',
-    image_url: 'https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=1470&auto=format&fit=crop',
-    created_at: '2023-05-15T10:30:00Z',
-    updated_at: '2023-05-15T10:30:00Z',
-    author: 'రాజేష్ కుమార్',
-    likes: 24,
-    comments: [
-      {
-        id: '101',
-        news_id: '1',
-        content: 'బాలయ్య మాస్ అభిమానులకు ఇది గొప్ప వార్త!',
-        author_ip: '192.168.1.1',
-        created_at: '2023-05-15T11:30:00Z',
-        approved: true
-      }
-    ],
-    tags: ['సినిమా', 'బాలయ్య', 'రజినీకాంత్', 'జైలర్'],
-    published: true
-  },
-  {
-    id: '2',
-    title: 'ఏపీలో వరదలు: పలు ప్రాంతాల్లో తీవ్ర నష్టం',
-    content: 'ఆంధ్రప్రదేశ్‌లో భారీ వర్షాలకు పలు ప్రాంతాలు వరద ముంపునకు గురయ్యాయి. గోదావరి, కృష్ణా నదులు ప్రమాదకర స్థాయిని దాటడంతో పలు గ్రామాలు నీట మునిగాయి. ప్రభుత్వం సహాయక చర్యలు చేపట్టినప్పటికీ, వరద బాధితులు తీవ్ర ఇబ్బందులు ఎదుర్కొంటున్నారు. వరద ప్రభావిత ప్రాంతాల్లో సహాయక శిబిరాలు ఏర్పాటు చేసి, ఆహారం, మంచినీరు, వైద్య సదుపాయాలు కల్పిస్తున్నారు అధికారులు.',
-    summary: 'ఆంధ్రప్రదేశ్‌లో భారీ వర్షాలకు పలు ప్రాంతాలు వరద ముంపునకు గురయ్యాయి. ప్రభుత్వం సహాయక చర్యలు చేపట్టింది.',
-    category: 'రాష్ట్రీయం',
-    image_url: 'https://images.unsplash.com/photo-1523772721666-22ad3c3b6f90?q=80&w=1470&auto=format&fit=crop',
-    created_at: '2023-05-14T15:45:00Z',
-    updated_at: '2023-05-14T15:45:00Z',
-    author: 'సురేష్ రెడ్డి',
-    likes: 18,
-    comments: [
-      {
-        id: '201',
-        news_id: '2',
-        content: 'ప్రభుత్వం త్వరగా సహాయం చేయాలి',
-        author_ip: '192.168.1.2',
-        created_at: '2023-05-14T16:30:00Z',
-        approved: true
-      },
-      {
-        id: '202',
-        news_id: '2',
-        content: 'బాధితులకు మా సానుభూతి',
-        author_ip: '192.168.1.3',
-        created_at: '2023-05-14T17:15:00Z',
-        approved: true
-      }
-    ],
-    tags: ['వరదలు', 'ఆంధ్రప్రదేశ్', 'ప్రకృతి విపత్తు'],
-    published: true
-  },
-];
+import { getNewsArticles, deleteNewsArticle } from '../../lib/dataService';
 
 export default function NewsManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Load articles when component mounts
+  useEffect(() => {
+    const loadedArticles = getNewsArticles();
+    setArticles(loadedArticles);
+  }, []);
+
   // Get unique categories from articles
-  const categories = Array.from(new Set(mockArticles.map(article => article.category)));
-  
+  const categories = Array.from(new Set(articles.map(article => article.category)));
+
   // Filter articles based on search term and category
-  const filteredArticles = mockArticles.filter(article => {
+  const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          article.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === '' || article.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -88,24 +38,57 @@ export default function NewsManagement() {
       year: 'numeric',
     });
   };
-  
+
   const handleDelete = (id: string) => {
-    // In a real app, this would delete from the database
-    console.log(`Deleting article with ID: ${id}`);
+    if (window.confirm('Are you sure you want to delete this article?')) {
+      setIsDeleting(true);
+
+      try {
+        const success = deleteNewsArticle(id);
+
+        if (success) {
+          // Update the articles list
+          setArticles(prev => prev.filter(article => article.id !== id));
+          setMessage({ type: 'success', text: 'Article deleted successfully!' });
+
+          // Clear message after 3 seconds
+          setTimeout(() => {
+            setMessage({ type: '', text: '' });
+          }, 3000);
+        } else {
+          throw new Error('Failed to delete article');
+        }
+      } catch (error) {
+        console.error('Error deleting article:', error);
+        setMessage({ type: 'error', text: 'Failed to delete article. Please try again.' });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">News Management</h1>
-        <Link 
+        <Link
           href="/admin/news/add"
           className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-md flex items-center"
         >
           <FiPlus className="mr-2" /> Add New Article
         </Link>
       </div>
-      
+
+      {message.text && (
+        <div
+          className={`p-4 mb-6 rounded-md ${
+            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -142,7 +125,7 @@ export default function NewsManagement() {
           </div>
         </div>
       </div>
-      
+
       {/* Articles Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -235,7 +218,7 @@ export default function NewsManagement() {
             </tbody>
           </table>
         </div>
-        
+
         {filteredArticles.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No articles found. Try adjusting your search or filters.

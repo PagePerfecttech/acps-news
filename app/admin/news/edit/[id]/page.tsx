@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 import { getNewsArticleById, updateNewsArticle, getCategories } from '../../../../lib/dataService';
-import { Category } from '../../../../types';
+import { Category, NewsArticle } from '../../../../types';
 
 export default function EditNewsArticle({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -110,10 +110,12 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
 
     try {
       // Process tags
-      const processedTags = formData.tags.split(',').map(tag => tag.trim());
+      const processedTags = formData.tags.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
 
       // Create the updated article object
-      const updatedArticle = {
+      const updatedArticle: NewsArticle = {
         ...article!,
         title: formData.title,
         summary: formData.summary,
@@ -122,9 +124,11 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
         author: formData.author,
         tags: processedTags,
         published: formData.published,
-        image_url: formData.image_url,
+        image_url: formData.image_url || undefined,
         video_url: formData.video_url || undefined,
-        video_type: (formData.video_type === 'youtube' || formData.video_type === 'uploaded') ? formData.video_type : undefined,
+        video_type: (formData.video_type === 'youtube' || formData.video_type === 'uploaded')
+          ? formData.video_type
+          : undefined,
         updated_at: new Date().toISOString(),
       };
 

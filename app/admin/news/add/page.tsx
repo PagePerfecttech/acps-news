@@ -100,16 +100,18 @@ export default function AddNewsPage() {
         .filter(tag => tag.length > 0);
 
       // Create a new article object
-      const newArticle = {
+      const newArticle: NewsArticle = {
         id: `${Date.now()}`, // Generate a unique ID
         title: formData.title,
         content: formData.content,
         summary: formData.summary,
         category: formData.category,
         author: formData.author,
-        image_url: formData.image_url,
-        video_url: formData.video_url || null,
-        video_type: formData.video_type || null,
+        image_url: formData.image_url || undefined,
+        video_url: formData.video_url || undefined,
+        video_type: (formData.video_type === 'youtube' || formData.video_type === 'uploaded')
+          ? formData.video_type
+          : undefined,
         tags: processedTags,
         published: formData.published,
         created_at: new Date().toISOString(),
