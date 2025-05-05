@@ -148,6 +148,7 @@ export const resetToDefaultData = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
   localStorage.setItem('flipnews_articles', JSON.stringify(longNewsPosts));
   localStorage.setItem('flipnews_ads', JSON.stringify(defaultAds));
+  localStorage.setItem('flipnews_categories', JSON.stringify(defaultCategories));
 };
 
 // Ad Management Functions

@@ -1,66 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiEdit, FiTrash2, FiPlus, FiEye, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import { Ad } from '../../types';
-
-// Mock data for demonstration
-const mockAds: Ad[] = [
-  {
-    id: '1',
-    title: 'ప్రీమియం సబ్‌స్క్రిప్షన్ - అన్లిమిటెడ్ యాక్సెస్ పొందండి',
-    description: 'ఇప్పుడే సబ్‌స్క్రైబ్ చేసుకొని యాడ్-ఫ్రీ రీడింగ్, ఎక్స్‌క్లూజివ్ కంటెంట్ మరియు మరిన్ని ఆనందించండి!',
-    image_url: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/subscribe',
-    frequency: 3, // Show after every 3 articles
-    active: true,
-    created_at: '2023-05-01T00:00:00Z',
-    updated_at: '2023-05-01T00:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'నూతన స్మార్ట్‌ఫోన్ లాంచ్',
-    description: 'అత్యాధునిక ఫీచర్లతో కొత్త స్మార్ట్‌ఫోన్ మార్కెట్లోకి',
-    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    video_type: 'youtube',
-    link_url: '/smartphone',
-    frequency: 5,
-    active: true,
-    created_at: '2023-05-02T00:00:00Z',
-    updated_at: '2023-05-02T00:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'ఆన్‌లైన్ షాపింగ్ ఆఫర్స్',
-    text_content: 'ఇప్పుడే కొనుగోలు చేసి 50% వరకు పొదుపు చేయండి!',
-    image_url: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/shopping',
-    frequency: 4,
-    active: false,
-    created_at: '2023-05-03T00:00:00Z',
-    updated_at: '2023-05-03T00:00:00Z',
-  }
-];
+import { getAds, deleteAd, updateAd } from '../../lib/dataService';
 
 export default function AdManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  
+  const [ads, setAds] = useState<Ad[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Load ads when component mounts
+  useEffect(() => {
+    const loadedAds = getAds();
+    setAds(loadedAds);
+  }, []);
+
   // Filter ads based on search term and status
-  const filteredAds = mockAds.filter(ad => {
+  const filteredAds = ads.filter(ad => {
     const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (ad.description && ad.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (ad.text_content && ad.text_content.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && ad.active) || 
+
+    const matchesStatus = statusFilter === 'all' ||
+                         (statusFilter === 'active' && ad.active) ||
                          (statusFilter === 'inactive' && !ad.active);
-    
+
     return matchesSearch && matchesStatus;
   });
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -69,17 +41,75 @@ export default function AdManagement() {
       year: 'numeric',
     });
   };
-  
+
   const handleToggleStatus = (id: string) => {
-    // In a real app, this would update the database
-    console.log(`Toggling status for ad with ID: ${id}`);
+    try {
+      // Find the ad
+      const adToUpdate = ads.find(ad => ad.id === id);
+
+      if (!adToUpdate) {
+        throw new Error('Ad not found');
+      }
+
+      // Toggle the status
+      const updatedAd: Ad = {
+        ...adToUpdate,
+        active: !adToUpdate.active,
+        updated_at: new Date().toISOString()
+      };
+
+      // Update the ad
+      const success = updateAd(updatedAd);
+
+      if (success) {
+        // Update the ads list
+        setAds(prev => prev.map(ad => ad.id === id ? updatedAd : ad));
+        setMessage({
+          type: 'success',
+          text: `Ad ${updatedAd.active ? 'activated' : 'deactivated'} successfully!`
+        });
+
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', text: '' });
+        }, 3000);
+      } else {
+        throw new Error('Failed to update ad status');
+      }
+    } catch (error) {
+      console.error('Error updating ad status:', error);
+      setMessage({ type: 'error', text: 'Failed to update ad status. Please try again.' });
+    }
   };
-  
+
   const handleDelete = (id: string) => {
-    // In a real app, this would delete from the database
-    console.log(`Deleting ad with ID: ${id}`);
+    if (window.confirm('Are you sure you want to delete this ad?')) {
+      setIsDeleting(true);
+
+      try {
+        const success = deleteAd(id);
+
+        if (success) {
+          // Update the ads list
+          setAds(prev => prev.filter(ad => ad.id !== id));
+          setMessage({ type: 'success', text: 'Ad deleted successfully!' });
+
+          // Clear message after 3 seconds
+          setTimeout(() => {
+            setMessage({ type: '', text: '' });
+          }, 3000);
+        } else {
+          throw new Error('Failed to delete ad');
+        }
+      } catch (error) {
+        console.error('Error deleting ad:', error);
+        setMessage({ type: 'error', text: 'Failed to delete ad. Please try again.' });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
-  
+
   const getAdType = (ad: Ad) => {
     if (ad.video_url && ad.video_type === 'youtube') return 'YouTube Video';
     if (ad.video_url) return 'Uploaded Video';
@@ -92,14 +122,24 @@ export default function AdManagement() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Ad Management</h1>
-        <Link 
+        <Link
           href="/admin/ads/add"
           className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-md flex items-center"
         >
           <FiPlus className="mr-2" /> Add New Ad
         </Link>
       </div>
-      
+
+      {message.text && (
+        <div
+          className={`p-4 mb-6 rounded-md ${
+            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -133,7 +173,7 @@ export default function AdManagement() {
           </div>
         </div>
       </div>
-      
+
       {/* Ads Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -243,7 +283,7 @@ export default function AdManagement() {
             </tbody>
           </table>
         </div>
-        
+
         {filteredAds.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No ads found. Try adjusting your search or filters.
