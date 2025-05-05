@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from "next/image";
+import { useState } from 'react';
 import NewsCard from "./components/NewsCard";
 import AdBanner from "./components/AdBanner";
 import { NewsArticle, Ad } from "./types";
@@ -53,8 +52,7 @@ const mockAds: Ad[] = [
   }
 ];
 
-// Use the first ad for now
-const mockAd = mockAds[0];
+// Ads will be used in the combined content array
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -86,7 +84,7 @@ export default function Home() {
   });
 
   // Handle swiper slide change
-  const handleSlideChange = (swiper: any) => {
+  const handleSlideChange = (swiper: { activeIndex: number }) => {
     setCurrentIndex(swiper.activeIndex);
 
     // Hide instructions after first slide change

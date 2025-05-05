@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Link from 'next/link';
 import { FiLock, FiMail } from 'react-icons/fi';
+import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,24 +26,31 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // In a real app, this would be an API call to authenticate
-      console.log('Logging in with:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, hardcode a valid login
-      if (formData.email === 'admin@flipnews.com' && formData.password === 'admin123') {
+      // Authenticate with Supabase
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      if (data?.user) {
+        // Successfully logged in
+        console.log('Logged in as:', data.user.email);
+
         // Set a cookie or localStorage token in a real app
         localStorage.setItem('flipnews_auth', 'true');
-        
+
         // Redirect to admin dashboard
         router.push('/admin');
       } else {
         setError('Invalid email or password');
       }
-    } catch (error) {
-      setError('Login failed. Please try again.');
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please try again.');
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +78,7 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -163,12 +171,12 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-6">
-              <a
+              <Link
                 href="/"
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 FlipNews Home
-              </a>
+              </Link>
             </div>
           </div>
         </div>
