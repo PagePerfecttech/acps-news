@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { addNewsArticle } from '../../../lib/dataService';
 
 export default function AddNewsPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -75,31 +78,50 @@ export default function AddNewsPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // In a real app, this would be an API call
-      console.log('Submitting news article:', formData);
+      // Process tags
+      const processedTags = formData.tags.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create a new article object
+      const newArticle = {
+        id: `${Date.now()}`, // Generate a unique ID
+        title: formData.title,
+        content: formData.content,
+        summary: formData.summary,
+        category: formData.category,
+        author: formData.author,
+        image_url: formData.image_url,
+        video_url: formData.video_url || null,
+        video_type: formData.video_type || null,
+        tags: processedTags,
+        published: formData.published,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        likes: 0,
+        comments: []
+      };
 
-      setMessage({
-        type: 'success',
-        text: 'News article created successfully!'
-      });
+      console.log('Adding new article:', newArticle);
 
-      // Reset form after successful submission
-      setFormData({
-        title: '',
-        content: '',
-        summary: '',
-        category: 'సినిమా',
-        author: '',
-        image_url: '',
-        video_url: '',
-        video_type: 'youtube',
-        tags: '',
-        published: true
-      });
+      // Add the article using the data service
+      const success = addNewsArticle(newArticle);
+
+      if (success) {
+        setMessage({
+          type: 'success',
+          text: 'News article created successfully!'
+        });
+
+        // Navigate to the news list after a short delay
+        setTimeout(() => {
+          router.push('/admin/news');
+        }, 1500);
+      } else {
+        throw new Error('Failed to add article');
+      }
     } catch (error) {
+      console.error('Error adding article:', error);
       setMessage({
         type: 'error',
         text: 'Failed to create news article. Please try again.'

@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
-import { longNewsPosts } from '../../../../data/longNewsPosts';
+import { getNewsArticleById, updateNewsArticle } from '../../../../lib/dataService';
 
 export default function EditNewsArticle({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { id } = params;
-  
-  // Find the article with the given ID
-  const article = longNewsPosts.find(article => article.id === id);
-  
+
+  // Find the article with the given ID using the data service
+  const article = getNewsArticleById(id);
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -24,11 +24,11 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
     tags: '',
     published: true
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  
+
   // Load article data when component mounts
   useEffect(() => {
     if (article) {
@@ -44,23 +44,23 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
         tags: article.tags ? article.tags.join(', ') : '',
         published: article.published
       });
-      
+
       if (article.image_url) {
         setPreviewImage(article.image_url);
       }
     }
   }, [article]);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -68,50 +68,47 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
       // For demo purposes, we'll just create a local URL
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
-      
+
       // In a real app, you would upload the file to a server and get the URL
       // For now, we'll use the local URL for preview and simulate a server URL
       setFormData(prev => ({
         ...prev,
         image_url: imageUrl, // In a real app, this would be the URL from your server
       }));
-      
+
       console.log('File selected:', file.name, 'size:', (file.size / 1024).toFixed(2) + 'KB');
     }
   };
-  
+
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // In a real app, you would upload the file to a server or cloud storage
       // For demo purposes, we'll just create a local URL
       const videoUrl = URL.createObjectURL(file);
-      
+
       // In a real app, you would upload the file to a server and get the URL
       setFormData(prev => ({
         ...prev,
         video_url: videoUrl,
         video_type: 'uploaded'
       }));
-      
+
       console.log('Video selected:', file.name, 'size:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      // In a real app, you would send this data to your API
-      console.log('Updating article:', formData);
-      
       // Process tags
       const processedTags = formData.tags.split(',').map(tag => tag.trim());
-      
+
       // Create the updated article object
       const updatedArticle = {
-        ...article,
+        ...article!,
         title: formData.title,
         summary: formData.summary,
         content: formData.content,
@@ -124,16 +121,20 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
         video_type: formData.video_type || null,
         updated_at: new Date().toISOString(),
       };
-      
-      console.log('Updated article object:', updatedArticle);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setMessage({ type: 'success', text: 'Article updated successfully!' });
-      setTimeout(() => {
-        router.push('/admin/news');
-      }, 1500);
+
+      console.log('Updating article:', updatedArticle);
+
+      // Update the article using the data service
+      const success = updateNewsArticle(updatedArticle);
+
+      if (success) {
+        setMessage({ type: 'success', text: 'Article updated successfully!' });
+        setTimeout(() => {
+          router.push('/admin/news');
+        }, 1500);
+      } else {
+        throw new Error('Failed to update article');
+      }
     } catch (error) {
       console.error('Error updating article:', error);
       setMessage({ type: 'error', text: 'Failed to update article. Please try again.' });
@@ -141,11 +142,11 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
       setIsSubmitting(false);
     }
   };
-  
+
   const handleCancel = () => {
     router.push('/admin/news');
   };
-  
+
   if (!article) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -160,7 +161,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
       </div>
     );
   }
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -184,13 +185,13 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
           </button>
         </div>
       </div>
-      
+
       {message.text && (
         <div className={`mb-4 p-3 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {message.text}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
@@ -208,7 +209,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               placeholder="Enter article title"
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label htmlFor="summary" className="block text-sm font-medium text-gray-700 mb-1">
               Summary *
@@ -224,7 +225,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               placeholder="Enter a brief summary (will be shown in cards)"
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
               Full Content *
@@ -240,7 +241,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               placeholder="Enter the full article content"
             />
           </div>
-          
+
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
               Category *
@@ -266,7 +267,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               <option value="అంతర్జాతీయం">అంతర్జాతీయం</option>
             </select>
           </div>
-          
+
           <div>
             <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
               Author *
@@ -282,7 +283,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               placeholder="Enter author name"
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
               Tags (comma separated)
@@ -297,7 +298,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               placeholder="e.g. సినిమా, బాలయ్య, రజినీకాంత్"
             />
           </div>
-          
+
           <div>
             <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 mb-1">
               Image
@@ -327,20 +328,20 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
                   onChange={handleImageUpload}
                 />
               </div>
-              
+
               {previewImage && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500 mb-1">Preview:</p>
-                  <img 
-                    src={previewImage} 
-                    alt="Preview" 
-                    className="h-32 object-cover rounded-md border border-gray-300" 
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    className="h-32 object-cover rounded-md border border-gray-300"
                   />
                 </div>
               )}
             </div>
           </div>
-          
+
           <div>
             <label htmlFor="video_url" className="block text-sm font-medium text-gray-700 mb-1">
               Video
@@ -380,7 +381,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
                   onChange={handleVideoUpload}
                 />
               </div>
-              
+
               {formData.video_url && formData.video_type === 'uploaded' && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500 mb-1">Video selected</p>
@@ -389,7 +390,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
                   </div>
                 </div>
               )}
-              
+
               {formData.video_url && formData.video_type === 'youtube' && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500 mb-1">YouTube video</p>
@@ -401,7 +402,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               )}
             </div>
           </div>
-          
+
           <div className="md:col-span-2">
             <div className="flex items-center">
               <input
@@ -418,7 +419,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
             </div>
           </div>
         </div>
-        
+
         <div className="mt-8 flex justify-end space-x-3">
           <button
             type="button"

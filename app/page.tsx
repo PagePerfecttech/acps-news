@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NewsCard from "./components/NewsCard";
 import AdBanner from "./components/AdBanner";
 import { NewsArticle, Ad } from "./types";
@@ -9,11 +9,8 @@ import { EffectCards, Virtual, Mousewheel } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-cards';
 
-// Import longer news posts
-import { longNewsPosts } from './data/longNewsPosts';
-
-// Use the longer news posts
-const mockArticles: NewsArticle[] = longNewsPosts;
+// Import data service
+import { getNewsArticles } from './lib/dataService';
 
 const mockAds: Ad[] = [
   {
@@ -57,31 +54,42 @@ const mockAds: Ad[] = [
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [combinedContent, setCombinedContent] = useState<Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }>>([]);
 
-  // Create a combined array of content (news articles and ads)
-  const adFrequency = 3; // Show ad after every 3 news articles
-  const combinedContent: Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }> = [];
+  // Load articles from data service
+  useEffect(() => {
+    // Get articles from data service
+    const newsArticles = getNewsArticles();
+    setArticles(newsArticles);
 
-  // Populate the combined content array
-  mockArticles.forEach((article, index) => {
-    // Add the news article
-    combinedContent.push({
-      type: 'news',
-      content: article,
-      index: combinedContent.length
+    // Create a combined array of content (news articles and ads)
+    const adFrequency = 3; // Show ad after every 3 news articles
+    const newCombinedContent: Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }> = [];
+
+    // Populate the combined content array
+    newsArticles.forEach((article, index) => {
+      // Add the news article
+      newCombinedContent.push({
+        type: 'news',
+        content: article,
+        index: newCombinedContent.length
+      });
+
+      // Add an ad after every 'adFrequency' articles
+      if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1) {
+        // Use different ads based on position
+        const adIndex = Math.floor(index / adFrequency) % mockAds.length;
+        newCombinedContent.push({
+          type: 'ad',
+          content: mockAds[adIndex],
+          index: newCombinedContent.length
+        });
+      }
     });
 
-    // Add an ad after every 'adFrequency' articles
-    if ((index + 1) % adFrequency === 0 && index < mockArticles.length - 1) {
-      // Use different ads based on position
-      const adIndex = Math.floor(index / adFrequency) % mockAds.length;
-      combinedContent.push({
-        type: 'ad',
-        content: mockAds[adIndex],
-        index: combinedContent.length
-      });
-    }
-  });
+    setCombinedContent(newCombinedContent);
+  }, []);
 
   // Handle swiper slide change
   const handleSlideChange = (swiper: { activeIndex: number }) => {
@@ -96,9 +104,9 @@ export default function Home() {
   // Calculate the current position for display
   const getCurrentPosition = () => {
     const currentItem = combinedContent[currentIndex];
-    if (currentItem.type === 'news') {
-      const newsIndex = mockArticles.findIndex(article => article.id === (currentItem.content as NewsArticle).id);
-      return `${newsIndex + 1} / ${mockArticles.length}`;
+    if (currentItem?.type === 'news') {
+      const newsIndex = articles.findIndex(article => article.id === (currentItem.content as NewsArticle).id);
+      return `${newsIndex + 1} / ${articles.length}`;
     }
     return '';
   };
@@ -127,8 +135,8 @@ export default function Home() {
               {item.type === 'news' ? (
                 <NewsCard
                   article={item.content as NewsArticle}
-                  index={mockArticles.findIndex(article => article.id === (item.content as NewsArticle).id) + 1}
-                  totalArticles={mockArticles.length}
+                  index={articles.findIndex(article => article.id === (item.content as NewsArticle).id) + 1}
+                  totalArticles={articles.length}
                 />
               ) : (
                 <div className="w-full h-full">
