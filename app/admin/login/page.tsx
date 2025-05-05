@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiLock, FiMail } from 'react-icons/fi';
-import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,40 +25,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Check if Supabase is configured
-      if (isSupabaseConfigured()) {
-        // Authenticate with Supabase
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password
-        });
+      // For demo purposes, use hardcoded credentials
+      if (formData.email === 'admin@flipnews.com' && formData.password === 'admin123') {
+        // Set auth token in localStorage
+        localStorage.setItem('flipnews_auth', 'true');
 
-        if (authError) {
-          throw authError;
-        }
-
-        if (data?.user) {
-          // Successfully logged in
-          console.log('Logged in as:', data.user.email);
-
-          // Set a cookie or localStorage token in a real app
-          localStorage.setItem('flipnews_auth', 'true');
-
-          // Redirect to admin dashboard
-          router.push('/admin');
-          return;
-        }
+        // Redirect to admin dashboard
+        router.push('/admin');
       } else {
-        console.log('Supabase not configured, using fallback authentication');
-        // Fallback to hardcoded credentials for demo
-        if (formData.email === 'admin@flipnews.com' && formData.password === 'admin123') {
-          localStorage.setItem('flipnews_auth', 'true');
-          router.push('/admin');
-          return;
-        }
+        setError('Invalid email or password');
       }
-
-      setError('Invalid email or password');
     } catch (error: any) {
       setError(error.message || 'Login failed. Please try again.');
       console.error('Login error:', error);
