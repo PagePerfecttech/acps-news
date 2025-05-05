@@ -59,3 +59,11 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+}

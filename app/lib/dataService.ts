@@ -1,5 +1,19 @@
-import { NewsArticle, Ad, Comment } from '../types';
+import { NewsArticle, Ad, Comment, Category } from '../types';
 import { longNewsPosts } from '../data/longNewsPosts';
+
+// Default categories data
+const defaultCategories: Category[] = [
+  { id: '1', name: 'సినిమా', slug: 'cinema', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '2', name: 'రాజకీయం', slug: 'politics', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '3', name: 'క్రీడలు', slug: 'sports', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '4', name: 'వ్యాపారం', slug: 'business', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '5', name: 'టెక్నాలజీ', slug: 'technology', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '6', name: 'ఆరోగ్యం', slug: 'health', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '7', name: 'విద్య', slug: 'education', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '8', name: 'రాష్ట్రీయం', slug: 'state', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '9', name: 'జాతీయం', slug: 'national', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' },
+  { id: '10', name: 'అంతర్జాతీయం', slug: 'international', created_at: '2023-05-01T00:00:00Z', updated_at: '2023-05-01T00:00:00Z' }
+];
 
 // Default ads data
 const defaultAds: Ad[] = [
@@ -53,6 +67,12 @@ const initializeData = () => {
   if (!localStorage.getItem('flipnews_ads')) {
     // Initialize with the default ads
     localStorage.setItem('flipnews_ads', JSON.stringify(defaultAds));
+  }
+
+  // Check if categories data exists in localStorage
+  if (!localStorage.getItem('flipnews_categories')) {
+    // Initialize with the default categories
+    localStorage.setItem('flipnews_categories', JSON.stringify(defaultCategories));
   }
 };
 
@@ -195,6 +215,89 @@ export const deleteAd = (id: string): boolean => {
     return true;
   } catch (error) {
     console.error('Error deleting ad:', error);
+    return false;
+  }
+};
+
+// Category Management Functions
+
+// Get all categories
+export const getCategories = (): Category[] => {
+  if (typeof window === 'undefined') {
+    // Return the default data on server-side
+    return defaultCategories;
+  }
+
+  initializeData();
+  const categories = localStorage.getItem('flipnews_categories');
+  return categories ? JSON.parse(categories) : defaultCategories;
+};
+
+// Get a single category by ID
+export const getCategoryById = (id: string): Category | undefined => {
+  const categories = getCategories();
+  return categories.find(category => category.id === id);
+};
+
+// Get a single category by slug
+export const getCategoryBySlug = (slug: string): Category | undefined => {
+  const categories = getCategories();
+  return categories.find(category => category.slug === slug);
+};
+
+// Update a category
+export const updateCategory = (updatedCategory: Category): boolean => {
+  if (typeof window === 'undefined') return false; // Can't update on server-side
+
+  try {
+    const categories = getCategories();
+    const index = categories.findIndex(category => category.id === updatedCategory.id);
+
+    if (index === -1) return false;
+
+    categories[index] = updatedCategory;
+    localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+    return true;
+  } catch (error) {
+    console.error('Error updating category:', error);
+    return false;
+  }
+};
+
+// Add a new category
+export const addCategory = (newCategory: Category): boolean => {
+  if (typeof window === 'undefined') return false; // Can't update on server-side
+
+  try {
+    const categories = getCategories();
+
+    // Check if slug already exists
+    const slugExists = categories.some(category => category.slug === newCategory.slug);
+    if (slugExists) {
+      console.error('Category with this slug already exists');
+      return false;
+    }
+
+    categories.push(newCategory);
+    localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+    return true;
+  } catch (error) {
+    console.error('Error adding category:', error);
+    return false;
+  }
+};
+
+// Delete a category
+export const deleteCategory = (id: string): boolean => {
+  if (typeof window === 'undefined') return false; // Can't update on server-side
+
+  try {
+    const categories = getCategories();
+    const filteredCategories = categories.filter(category => category.id !== id);
+    localStorage.setItem('flipnews_categories', JSON.stringify(filteredCategories));
+    return true;
+  } catch (error) {
+    console.error('Error deleting category:', error);
     return false;
   }
 };

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
-import { getNewsArticleById, updateNewsArticle } from '../../../../lib/dataService';
+import { getNewsArticleById, updateNewsArticle, getCategories } from '../../../../lib/dataService';
+import { Category } from '../../../../types';
 
 export default function EditNewsArticle({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
   // Find the article with the given ID using the data service
   const article = getNewsArticleById(id);
 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -29,16 +31,20 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
   const [message, setMessage] = useState({ type: '', text: '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Load article data when component mounts
+  // Load article data and categories when component mounts
   useEffect(() => {
+    // Load categories
+    const loadedCategories = getCategories();
+    setCategories(loadedCategories);
+
     if (article) {
       setFormData({
         title: article.title,
         content: article.content,
-        summary: article.summary,
+        summary: article.summary || '',
         category: article.category,
         author: article.author,
-        image_url: article.image_url,
+        image_url: article.image_url || '',
         video_url: article.video_url || '',
         video_type: article.video_type || 'youtube',
         tags: article.tags ? article.tags.join(', ') : '',
@@ -117,8 +123,8 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
         tags: processedTags,
         published: formData.published,
         image_url: formData.image_url,
-        video_url: formData.video_url || null,
-        video_type: formData.video_type || null,
+        video_url: formData.video_url || undefined,
+        video_type: (formData.video_type === 'youtube' || formData.video_type === 'uploaded') ? formData.video_type : undefined,
         updated_at: new Date().toISOString(),
       };
 
@@ -255,16 +261,11 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
               className="w-full p-2 border border-gray-300 rounded-md"
             >
               <option value="">Select a category</option>
-              <option value="సినిమా">సినిమా</option>
-              <option value="రాజకీయం">రాజకీయం</option>
-              <option value="క్రీడలు">క్రీడలు</option>
-              <option value="వ్యాపారం">వ్యాపారం</option>
-              <option value="టెక్నాలజీ">టెక్నాలజీ</option>
-              <option value="ఆరోగ్యం">ఆరోగ్యం</option>
-              <option value="విద్య">విద్య</option>
-              <option value="రాష్ట్రీయం">రాష్ట్రీయం</option>
-              <option value="జాతీయం">జాతీయం</option>
-              <option value="అంతర్జాతీయం">అంతర్జాతీయం</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -1,18 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { addNewsArticle } from '../../../lib/dataService';
+import { addNewsArticle, getCategories } from '../../../lib/dataService';
+import { Category } from '../../../types';
 
 export default function AddNewsPage() {
   const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     summary: '',
-    category: 'సినిమా',
+    category: '',
     author: '',
     image_url: '',
     video_url: '',
@@ -24,6 +26,20 @@ export default function AddNewsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Load categories when component mounts
+  useEffect(() => {
+    const loadedCategories = getCategories();
+    setCategories(loadedCategories);
+
+    // Set default category if available
+    if (loadedCategories.length > 0 && !formData.category) {
+      setFormData(prev => ({
+        ...prev,
+        category: loadedCategories[0].name
+      }));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -217,13 +233,12 @@ export default function AddNewsPage() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
             >
-              <option value="సినిమా">సినిమా (Cinema)</option>
-              <option value="రాష్ట్రీయం">రాష్ట్రీయం (Politics)</option>
-              <option value="క్రీడలు">క్రీడలు (Sports)</option>
-              <option value="వ్యాపారం">వ్యాపారం (Business)</option>
-              <option value="ఆరోగ్యం">ఆరోగ్యం (Health)</option>
-              <option value="విద్య">విద్య (Education)</option>
-              <option value="టెక్">టెక్ (Technology)</option>
+              <option value="">Select a category</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
 
