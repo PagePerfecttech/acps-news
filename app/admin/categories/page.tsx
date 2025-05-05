@@ -1,27 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiSave } from 'react-icons/fi';
-
-// Mock categories for demonstration
-const initialCategories = [
-  { id: '1', name: 'సినిమా', slug: 'cinema', count: 12 },
-  { id: '2', name: 'రాజకీయం', slug: 'politics', count: 8 },
-  { id: '3', name: 'క్రీడలు', slug: 'sports', count: 15 },
-  { id: '4', name: 'వ్యాపారం', slug: 'business', count: 6 },
-  { id: '5', name: 'టెక్నాలజీ', slug: 'technology', count: 9 },
-  { id: '6', name: 'ఆరోగ్యం', slug: 'health', count: 7 },
-  { id: '7', name: 'విద్య', slug: 'education', count: 4 },
-  { id: '8', name: 'రాష్ట్రీయం', slug: 'state', count: 11 },
-  { id: '9', name: 'జాతీయం', slug: 'national', count: 10 },
-  { id: '10', name: 'అంతర్జాతీయం', slug: 'international', count: 5 },
-];
+import { getCategories, addCategory, updateCategory, deleteCategory } from '../../lib/dataService';
+import { getNewsArticles } from '../../lib/dataService';
+import { Category } from '../../types';
 
 export default function CategoryManagement() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
   const [editingCategory, setEditingCategory] = useState<{ id: string, name: string, slug: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [isLoading, setIsLoading] = useState(true);
+  const [articleCounts, setArticleCounts] = useState<Record<string, number>>({});
+
+  // Load categories when component mounts
+  useEffect(() => {
+    const loadedCategories = getCategories();
+    setCategories(loadedCategories);
+
+    // Count articles per category
+    const articles = getNewsArticles();
+    const counts: Record<string, number> = {};
+
+    loadedCategories.forEach(category => {
+      counts[category.id] = articles.filter(article => article.category === category.name).length;
+    });
+
+    setArticleCounts(counts);
+    setIsLoading(false);
+  }, []);
 
   // Filter categories based on search term
   const filteredCategories = categories.filter(category =>
@@ -31,23 +40,47 @@ export default function CategoryManagement() {
 
   const handleAddCategory = () => {
     if (newCategory.name.trim() === '' || newCategory.slug.trim() === '') {
-      alert('Category name and slug are required');
+      setMessage({ type: 'error', text: 'Category name and slug are required' });
       return;
     }
 
-    const newId = (Math.max(...categories.map(c => parseInt(c.id))) + 1).toString();
-    
-    setCategories([
-      ...categories,
-      {
-        id: newId,
-        name: newCategory.name,
-        slug: newCategory.slug,
-        count: 0
+    // Check if slug already exists
+    if (categories.some(c => c.slug === newCategory.slug)) {
+      setMessage({ type: 'error', text: 'A category with this slug already exists' });
+      return;
+    }
+
+    const newId = (Math.max(...categories.map(c => parseInt(c.id) || 0), 0) + 1).toString();
+
+    const newCategoryObj: Category = {
+      id: newId,
+      name: newCategory.name,
+      slug: newCategory.slug,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const success = addCategory(newCategoryObj);
+
+      if (success) {
+        // Update the local state
+        setCategories([...categories, newCategoryObj]);
+        setArticleCounts({ ...articleCounts, [newId]: 0 });
+        setNewCategory({ name: '', slug: '' });
+        setMessage({ type: 'success', text: 'Category added successfully!' });
+
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', text: '' });
+        }, 3000);
+      } else {
+        throw new Error('Failed to add category');
       }
-    ]);
-    
-    setNewCategory({ name: '', slug: '' });
+    } catch (error) {
+      console.error('Error adding category:', error);
+      setMessage({ type: 'error', text: 'Failed to add category. Please try again.' });
+    }
   };
 
   const handleEditCategory = (category: typeof categories[0]) => {
@@ -60,32 +93,99 @@ export default function CategoryManagement() {
 
   const handleSaveEdit = () => {
     if (!editingCategory) return;
-    
+
     if (editingCategory.name.trim() === '' || editingCategory.slug.trim() === '') {
-      alert('Category name and slug are required');
+      setMessage({ type: 'error', text: 'Category name and slug are required' });
       return;
     }
 
-    setCategories(categories.map(category =>
-      category.id === editingCategory.id
-        ? { ...category, name: editingCategory.name, slug: editingCategory.slug }
-        : category
-    ));
-    
-    setEditingCategory(null);
+    // Check if slug already exists (excluding the current category)
+    if (categories.some(c => c.slug === editingCategory.slug && c.id !== editingCategory.id)) {
+      setMessage({ type: 'error', text: 'A category with this slug already exists' });
+      return;
+    }
+
+    // Find the original category
+    const originalCategory = categories.find(c => c.id === editingCategory.id);
+
+    if (!originalCategory) {
+      setMessage({ type: 'error', text: 'Category not found' });
+      return;
+    }
+
+    // Create the updated category object
+    const updatedCategoryObj: Category = {
+      ...originalCategory,
+      name: editingCategory.name,
+      slug: editingCategory.slug,
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const success = updateCategory(updatedCategoryObj);
+
+      if (success) {
+        // Update the local state
+        setCategories(categories.map(category =>
+          category.id === editingCategory.id
+            ? updatedCategoryObj
+            : category
+        ));
+
+        setEditingCategory(null);
+        setMessage({ type: 'success', text: 'Category updated successfully!' });
+
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', text: '' });
+        }, 3000);
+      } else {
+        throw new Error('Failed to update category');
+      }
+    } catch (error) {
+      console.error('Error updating category:', error);
+      setMessage({ type: 'error', text: 'Failed to update category. Please try again.' });
+    }
   };
 
   const handleDeleteCategory = (id: string) => {
-    // In a real app, you would check if there are articles using this category
+    // Check if there are articles using this category
     const categoryToDelete = categories.find(c => c.id === id);
-    if (categoryToDelete && categoryToDelete.count > 0) {
+    if (!categoryToDelete) return;
+
+    const count = articleCounts[id] || 0;
+
+    if (count > 0) {
       const confirmDelete = window.confirm(
-        `This category has ${categoryToDelete.count} articles. Are you sure you want to delete it?`
+        `This category has ${count} articles. Are you sure you want to delete it?`
+      );
+      if (!confirmDelete) return;
+    } else {
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete this category?`
       );
       if (!confirmDelete) return;
     }
-    
-    setCategories(categories.filter(category => category.id !== id));
+
+    try {
+      const success = deleteCategory(id);
+
+      if (success) {
+        // Update the local state
+        setCategories(categories.filter(category => category.id !== id));
+        setMessage({ type: 'success', text: 'Category deleted successfully!' });
+
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', text: '' });
+        }, 3000);
+      } else {
+        throw new Error('Failed to delete category');
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      setMessage({ type: 'error', text: 'Failed to delete category. Please try again.' });
+    }
   };
 
   const handleCancelEdit = () => {
@@ -107,7 +207,23 @@ export default function CategoryManagement() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Category Management</h1>
       </div>
-      
+
+      {message.text && (
+        <div
+          className={`p-4 mb-6 rounded-md ${
+            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading categories...</p>
+        </div>
+      )}
+
       {/* Search */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -126,7 +242,7 @@ export default function CategoryManagement() {
           </div>
         </div>
       </div>
-      
+
       {/* Add New Category */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <h2 className="text-lg font-medium mb-3 text-gray-800">Add New Category</h2>
@@ -173,7 +289,7 @@ export default function CategoryManagement() {
           </div>
         </div>
       </div>
-      
+
       {/* Categories Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -222,7 +338,7 @@ export default function CategoryManagement() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{category.count}</div>
+                    <div className="text-sm text-gray-500">{articleCounts[category.id] || 0}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {editingCategory && editingCategory.id === category.id ? (
@@ -262,7 +378,7 @@ export default function CategoryManagement() {
             </tbody>
           </table>
         </div>
-        
+
         {filteredCategories.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No categories found. Try adjusting your search or add a new category.
