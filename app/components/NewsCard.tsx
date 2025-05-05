@@ -9,10 +9,19 @@ interface NewsCardProps {
   article: NewsArticle;
   index?: number;
   totalArticles?: number;
+  onPopupStateChange?: (isOpen: boolean) => void;
 }
 
-export default function NewsCard({ article }: NewsCardProps) {
+export default function NewsCard({ article, onPopupStateChange }: NewsCardProps) {
   const [showFullContent, setShowFullContent] = useState(false);
+
+  // Notify parent component when popup state changes
+  const toggleFullContent = (isOpen: boolean) => {
+    setShowFullContent(isOpen);
+    if (onPopupStateChange) {
+      onPopupStateChange(isOpen);
+    }
+  };
 
   // Always show Read More button after 7 lines
   const showReadMore = true;
@@ -103,7 +112,7 @@ export default function NewsCard({ article }: NewsCardProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowFullContent(true);
+                  toggleFullContent(true);
                 }}
                 className="bg-transparent text-gray-600 text-xs px-3 py-1 border border-gray-300 rounded-sm hover:bg-gray-100 transition-colors"
               >
@@ -144,28 +153,28 @@ export default function NewsCard({ article }: NewsCardProps) {
 
       {/* Full content popup */}
       {showFullContent && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center overflow-y-auto p-4">
-          <div className="bg-white text-black w-full max-w-2xl max-h-[90vh] rounded-lg shadow-xl overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 overflow-hidden">
+          <div className="bg-white text-black w-full max-w-2xl h-[90vh] rounded-lg shadow-xl flex flex-col">
             {/* Sticky header */}
             <div className="sticky top-0 bg-yellow-500 flex justify-between items-center z-10 px-4 py-3">
               <h3 className="text-base font-bold pr-4 truncate">{article.title}</h3>
               <button
-                onClick={() => setShowFullContent(false)}
+                onClick={() => toggleFullContent(false)}
                 className="bg-yellow-600 p-1 text-black rounded-full hover:bg-yellow-700 transition-colors"
               >
                 <FiX size={18} />
               </button>
             </div>
 
-            {/* Media in popup */}
-            <div className="w-full h-[40vh]">
-              {renderMedia()}
-            </div>
+            {/* No media in popup as per user request */}
 
-            {/* Full content */}
-            <div className="px-4 py-3 overflow-y-auto max-h-[calc(90vh-40vh-56px)]">
+            {/* Full content - scrollable container (takes full height since no image) */}
+            <div className="flex-grow overflow-y-auto overscroll-contain modal-content px-4 py-3 pb-8 h-[calc(90vh-56px)]">
+              {/* Title (added since we removed the image) */}
+              <h2 className="text-xl font-bold text-gray-900 mb-3">{article.title}</h2>
+
               {/* Author and date */}
-              <div className="mb-3 text-sm text-gray-600 flex items-center">
+              <div className="mb-4 text-sm text-gray-600 flex items-center">
                 <span className="font-medium">{article.author}</span>
                 <span className="mx-2">•</span>
                 <span>{new Date(article.created_at).toLocaleDateString()}</span>
@@ -205,7 +214,7 @@ export default function NewsCard({ article }: NewsCardProps) {
               )}
 
               {/* Bottom padding for mobile scrolling */}
-              <div className="h-6"></div>
+              <div className="h-12"></div>
             </div>
           </div>
         </div>

@@ -18,6 +18,8 @@ export default function Home() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [combinedContent, setCombinedContent] = useState<Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }>>([]);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [swiperInstance, setSwiperInstance] = useState<any>(null);
 
   // Load articles and ads from data service
   useEffect(() => {
@@ -66,6 +68,24 @@ export default function Home() {
     }
   };
 
+  // Handle popup state change
+  const handlePopupStateChange = (isOpen: boolean) => {
+    setIsPopupOpen(isOpen);
+
+    // Disable/enable swiping based on popup state
+    if (swiperInstance) {
+      if (isOpen) {
+        // Disable swiping when popup is open
+        swiperInstance.allowTouchMove = false;
+        swiperInstance.mousewheel.disable();
+      } else {
+        // Enable swiping when popup is closed
+        swiperInstance.allowTouchMove = true;
+        swiperInstance.mousewheel.enable();
+      }
+    }
+  };
+
   // Calculate the current position for display
   const getCurrentPosition = () => {
     const currentItem = combinedContent[currentIndex];
@@ -87,6 +107,7 @@ export default function Home() {
           className="h-full w-full"
           initialSlide={currentIndex}
           onSlideChange={handleSlideChange}
+          onSwiper={(swiper) => setSwiperInstance(swiper)}
           effect="cards"
           cardsEffect={{
             slideShadows: false,
@@ -102,6 +123,7 @@ export default function Home() {
                   article={item.content as NewsArticle}
                   index={articles.findIndex(article => article.id === (item.content as NewsArticle).id) + 1}
                   totalArticles={articles.length}
+                  onPopupStateChange={handlePopupStateChange}
                 />
               ) : (
                 <div className="w-full h-full">

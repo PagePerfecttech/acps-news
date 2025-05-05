@@ -120,3 +120,15 @@ html, body {
   overflow-y: auto;
   padding-bottom: 100px;
 }
+
+/* Improved popup scrolling */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Allow content to be scrollable in modals */
+.modal-content {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
