@@ -1,103 +1,163 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from "next/image";
+import NewsCard from "./components/NewsCard";
+import AdBanner from "./components/AdBanner";
+import { NewsArticle, Ad } from "./types";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCards, Virtual, Mousewheel } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-cards';
+
+// Import longer news posts
+import { longNewsPosts } from './data/longNewsPosts';
+
+// Use the longer news posts
+const mockArticles: NewsArticle[] = longNewsPosts;
+
+const mockAds: Ad[] = [
+  {
+    id: '1',
+    title: 'ప్రీమియం సబ్‌స్క్రిప్షన్ - అన్లిమిటెడ్ యాక్సెస్ పొందండి',
+    description: 'ఇప్పుడే సబ్‌స్క్రైబ్ చేసుకొని యాడ్-ఫ్రీ రీడింగ్, ఎక్స్‌క్లూజివ్ కంటెంట్ మరియు మరిన్ని ఆనందించండి!',
+    image_url: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=1470&auto=format&fit=crop',
+    link_url: '/subscribe',
+    frequency: 3, // Show after every 3 articles
+    active: true,
+    created_at: '2023-05-01T00:00:00Z',
+    updated_at: '2023-05-01T00:00:00Z',
+  },
+  {
+    id: '2',
+    title: 'నూతన స్మార్ట్‌ఫోన్ లాంచ్',
+    description: 'అత్యాధునిక ఫీచర్లతో కొత్త స్మార్ట్‌ఫోన్ మార్కెట్లోకి',
+    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    video_type: 'youtube',
+    link_url: '/smartphone',
+    frequency: 5,
+    active: true,
+    created_at: '2023-05-02T00:00:00Z',
+    updated_at: '2023-05-02T00:00:00Z',
+  },
+  {
+    id: '3',
+    title: 'ఆన్‌లైన్ షాపింగ్ ఆఫర్స్',
+    text_content: 'ఇప్పుడే కొనుగోలు చేసి 50% వరకు పొదుపు చేయండి!',
+    image_url: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1470&auto=format&fit=crop',
+    link_url: '/shopping',
+    frequency: 4,
+    active: true,
+    created_at: '2023-05-03T00:00:00Z',
+    updated_at: '2023-05-03T00:00:00Z',
+  }
+];
+
+// Use the first ad for now
+const mockAd = mockAds[0];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showInstructions, setShowInstructions] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Create a combined array of content (news articles and ads)
+  const adFrequency = 3; // Show ad after every 3 news articles
+  const combinedContent: Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }> = [];
+
+  // Populate the combined content array
+  mockArticles.forEach((article, index) => {
+    // Add the news article
+    combinedContent.push({
+      type: 'news',
+      content: article,
+      index: combinedContent.length
+    });
+
+    // Add an ad after every 'adFrequency' articles
+    if ((index + 1) % adFrequency === 0 && index < mockArticles.length - 1) {
+      // Use different ads based on position
+      const adIndex = Math.floor(index / adFrequency) % mockAds.length;
+      combinedContent.push({
+        type: 'ad',
+        content: mockAds[adIndex],
+        index: combinedContent.length
+      });
+    }
+  });
+
+  // Handle swiper slide change
+  const handleSlideChange = (swiper: any) => {
+    setCurrentIndex(swiper.activeIndex);
+
+    // Hide instructions after first slide change
+    if (showInstructions) {
+      setShowInstructions(false);
+    }
+  };
+
+  // Calculate the current position for display
+  const getCurrentPosition = () => {
+    const currentItem = combinedContent[currentIndex];
+    if (currentItem.type === 'news') {
+      const newsIndex = mockArticles.findIndex(article => article.id === (currentItem.content as NewsArticle).id);
+      return `${newsIndex + 1} / ${mockArticles.length}`;
+    }
+    return '';
+  };
+
+  return (
+    <div className="w-full h-screen overflow-hidden bg-gray-100">
+      {/* Full Screen News Feed with Vertical Swipe */}
+      <div className="w-full h-full">
+        <Swiper
+          direction="vertical"
+          mousewheel={true}
+          modules={[Virtual, Mousewheel, EffectCards]}
+          className="h-full w-full"
+          initialSlide={currentIndex}
+          onSlideChange={handleSlideChange}
+          effect="cards"
+          cardsEffect={{
+            slideShadows: false,
+            perSlideRotate: 2,
+            perSlideOffset: 8,
+          }}
+          virtual
+        >
+          {combinedContent.map((item, index) => (
+            <SwiperSlide key={`${item.type}-${item.index}`} virtualIndex={index}>
+              {item.type === 'news' ? (
+                <NewsCard
+                  article={item.content as NewsArticle}
+                  index={mockArticles.findIndex(article => article.id === (item.content as NewsArticle).id) + 1}
+                  totalArticles={mockArticles.length}
+                />
+              ) : (
+                <div className="w-full h-full">
+                  <AdBanner ad={item.content as Ad} fullScreen={true} />
+                </div>
+              )}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+        {/* Position indicator */}
+        <div className="fixed top-4 right-4 z-20">
+          <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+            {getCurrentPosition()}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Swipe instruction overlay - only shown initially */}
+        {showInstructions && (
+          <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-30">
+            <div className="text-center text-white bg-black bg-opacity-70 px-6 py-3 rounded-xl">
+              <p className="mb-2 font-bold">Swipe to Navigate</p>
+              <p>Swipe Up ↑ for Next • Swipe Down ↓ for Previous</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
