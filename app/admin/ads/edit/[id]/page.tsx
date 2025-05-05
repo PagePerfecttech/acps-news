@@ -3,52 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
-
-// Mock ads data
-const mockAds = [
-  {
-    id: '1',
-    title: 'ప్రీమియం సబ్‌స్క్రిప్షన్ - అన్లిమిటెడ్ యాక్సెస్ పొందండి',
-    description: 'ఇప్పుడే సబ్‌స్క్రైబ్ చేసుకొని యాడ్-ఫ్రీ రీడింగ్, ఎక్స్‌క్లూజివ్ కంటెంట్ మరియు మరిన్ని ఆనందించండి!',
-    image_url: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/subscribe',
-    frequency: 3, // Show after every 3 articles
-    active: true,
-    created_at: '2023-05-01T00:00:00Z',
-    updated_at: '2023-05-01T00:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'నూతన స్మార్ట్‌ఫోన్ లాంచ్',
-    description: 'అత్యాధునిక ఫీచర్లతో కొత్త స్మార్ట్‌ఫోన్ మార్కెట్లోకి',
-    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    video_type: 'youtube',
-    link_url: '/smartphone',
-    frequency: 5,
-    active: true,
-    created_at: '2023-05-02T00:00:00Z',
-    updated_at: '2023-05-02T00:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'ఆన్‌లైన్ షాపింగ్ ఆఫర్స్',
-    text_content: 'ఇప్పుడే కొనుగోలు చేసి 50% వరకు పొదుపు చేయండి!',
-    image_url: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/shopping',
-    frequency: 4,
-    active: true,
-    created_at: '2023-05-03T00:00:00Z',
-    updated_at: '2023-05-03T00:00:00Z',
-  }
-];
+import { getAdById, updateAd } from '../../../../lib/dataService';
+import { Ad } from '../../../../types';
 
 export default function EditAd({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { id } = params;
-  
-  // Find the ad with the given ID
-  const ad = mockAds.find(ad => ad.id === id);
-  
+
+  // Find the ad with the given ID using the data service
+  const ad = getAdById(id);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -61,11 +25,11 @@ export default function EditAd({ params }: { params: { id: string } }) {
     videoUrl: '',
     youtubeUrl: '',
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  
+
   // Load ad data when component mounts
   useEffect(() => {
     if (ad) {
@@ -75,7 +39,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
       } else if (ad.text_content && !ad.image_url) {
         mediaType = 'text';
       }
-      
+
       setFormData({
         title: ad.title,
         description: ad.description || '',
@@ -88,32 +52,32 @@ export default function EditAd({ params }: { params: { id: string } }) {
         videoUrl: ad.video_url && ad.video_type !== 'youtube' ? ad.video_url : '',
         youtubeUrl: ad.video_url && ad.video_type === 'youtube' ? ad.video_url : '',
       });
-      
+
       if (ad.image_url) {
         setPreviewImage(ad.image_url);
       }
     }
   }, [ad]);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
   };
-  
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
-  
+
   const handleMediaTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, mediaType: e.target.value }));
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -121,50 +85,51 @@ export default function EditAd({ params }: { params: { id: string } }) {
       // For demo purposes, we'll just create a local URL
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
-      
+
       // In a real app, you would upload the file to a server and get the URL
       setFormData(prev => ({
         ...prev,
         imageUrl, // In a real app, this would be the URL from your server
       }));
-      
+
       console.log('File selected:', file.name, 'size:', (file.size / 1024).toFixed(2) + 'KB');
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      // In a real app, you would send this data to your API
-      console.log('Updating ad:', formData);
-      
       // Create the updated ad object
-      const updatedAd = {
-        ...ad,
+      const updatedAd: Ad = {
+        ...ad!,
         title: formData.title,
-        description: formData.description || null,
-        text_content: formData.mediaType === 'text' ? formData.text_content : null,
+        description: formData.description || undefined,
+        text_content: formData.mediaType === 'text' ? formData.text_content : undefined,
         link_url: formData.link_url,
         frequency: formData.frequency,
         active: formData.active,
-        image_url: formData.mediaType === 'image' ? formData.imageUrl : null,
-        video_url: formData.mediaType === 'video' ? formData.videoUrl : 
-                  formData.mediaType === 'youtube' ? formData.youtubeUrl : null,
-        video_type: formData.mediaType === 'youtube' ? 'youtube' : null,
+        image_url: formData.mediaType === 'image' ? formData.imageUrl : undefined,
+        video_url: formData.mediaType === 'video' ? formData.videoUrl :
+                  formData.mediaType === 'youtube' ? formData.youtubeUrl : undefined,
+        video_type: formData.mediaType === 'youtube' ? 'youtube' : undefined,
         updated_at: new Date().toISOString(),
       };
-      
-      console.log('Updated ad object:', updatedAd);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setMessage({ type: 'success', text: 'Ad updated successfully!' });
-      setTimeout(() => {
-        router.push('/admin/ads');
-      }, 1500);
+
+      console.log('Updating ad:', updatedAd);
+
+      // Update the ad using the data service
+      const success = updateAd(updatedAd);
+
+      if (success) {
+        setMessage({ type: 'success', text: 'Ad updated successfully!' });
+        setTimeout(() => {
+          router.push('/admin/ads');
+        }, 1500);
+      } else {
+        throw new Error('Failed to update ad');
+      }
     } catch (error) {
       console.error('Error updating ad:', error);
       setMessage({ type: 'error', text: 'Failed to update ad. Please try again.' });
@@ -172,11 +137,11 @@ export default function EditAd({ params }: { params: { id: string } }) {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleCancel = () => {
     router.push('/admin/ads');
   };
-  
+
   if (!ad) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -191,7 +156,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
       </div>
     );
   }
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -215,13 +180,13 @@ export default function EditAd({ params }: { params: { id: string } }) {
           </button>
         </div>
       </div>
-      
+
       {message.text && (
         <div className={`mb-4 p-3 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {message.text}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
@@ -239,7 +204,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               placeholder="Enter ad title"
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
               Description
@@ -254,7 +219,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               placeholder="Enter a brief description (optional)"
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label htmlFor="link_url" className="block text-sm font-medium text-gray-700 mb-1">
               Link URL *
@@ -273,7 +238,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               Where users will be directed when they click on the ad
             </p>
           </div>
-          
+
           <div>
             <label htmlFor="frequency" className="block text-sm font-medium text-gray-700 mb-1">
               Frequency *
@@ -293,7 +258,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               Show after every X articles (1-20)
             </p>
           </div>
-          
+
           <div>
             <div className="flex items-center h-full">
               <input
@@ -309,7 +274,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               </label>
             </div>
           </div>
-          
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ad Type *
@@ -361,7 +326,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               </label>
             </div>
           </div>
-          
+
           {formData.mediaType === 'image' && (
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -407,7 +372,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               </div>
             </div>
           )}
-          
+
           {formData.mediaType === 'video' && (
             <div className="md:col-span-2">
               <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-1">
@@ -427,7 +392,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               </p>
             </div>
           )}
-          
+
           {formData.mediaType === 'youtube' && (
             <div className="md:col-span-2">
               <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-700 mb-1">
@@ -452,7 +417,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               </p>
             </div>
           )}
-          
+
           {formData.mediaType === 'text' && (
             <div className="md:col-span-2">
               <label htmlFor="text_content" className="block text-sm font-medium text-gray-700 mb-1">
@@ -470,7 +435,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
             </div>
           )}
         </div>
-        
+
         <div className="mt-8 flex justify-end space-x-3">
           <button
             type="button"

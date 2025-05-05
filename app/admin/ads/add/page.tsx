@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { addAd } from '../../../lib/dataService';
+import { Ad } from '../../../types';
 
 export default function AddAdPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -41,33 +45,45 @@ export default function AddAdPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // In a real app, this would be an API call
-      console.log('Submitting ad:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setMessage({ 
-        type: 'success', 
-        text: 'Advertisement created successfully!' 
-      });
-      
-      // Reset form after successful submission
-      setFormData({
-        title: '',
-        description: '',
-        text_content: '',
-        image_url: '',
-        video_url: '',
-        video_type: 'youtube',
-        link_url: '',
-        frequency: 3,
-        active: true
-      });
+      // Create a new ad object
+      const newAd: Ad = {
+        id: `ad-${Date.now()}`, // Generate a unique ID
+        title: formData.title,
+        description: formData.description || undefined,
+        text_content: adType === 'text' ? formData.text_content : undefined,
+        image_url: adType === 'image' ? formData.image_url : undefined,
+        video_url: adType === 'video' ? formData.video_url : undefined,
+        video_type: adType === 'video' ? (formData.video_type as 'youtube' | 'uploaded') : undefined,
+        link_url: formData.link_url,
+        frequency: Number(formData.frequency),
+        active: formData.active,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Adding new ad:', newAd);
+
+      // Add the ad using the data service
+      const success = addAd(newAd);
+
+      if (success) {
+        setMessage({
+          type: 'success',
+          text: 'Advertisement created successfully!'
+        });
+
+        // Navigate to the ads list after a short delay
+        setTimeout(() => {
+          router.push('/admin/ads');
+        }, 1500);
+      } else {
+        throw new Error('Failed to add advertisement');
+      }
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: 'Failed to create advertisement. Please try again.' 
+      console.error('Error adding ad:', error);
+      setMessage({
+        type: 'error',
+        text: 'Failed to create advertisement. Please try again.'
       });
     } finally {
       setIsSubmitting(false);
@@ -78,8 +94,8 @@ export default function AddAdPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Add New Advertisement</h1>
-        <Link 
-          href="/admin" 
+        <Link
+          href="/admin"
           className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md flex items-center text-sm"
         >
           <FiX className="mr-2" /> Cancel
@@ -87,7 +103,7 @@ export default function AddAdPage() {
       </div>
 
       {message.text && (
-        <div 
+        <div
           className={`p-4 mb-6 rounded-md ${
             message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}
@@ -138,8 +154,8 @@ export default function AddAdPage() {
                 type="button"
                 onClick={() => handleAdTypeChange('image')}
                 className={`px-4 py-2 rounded-md ${
-                  adType === 'image' 
-                    ? 'bg-yellow-500 text-black' 
+                  adType === 'image'
+                    ? 'bg-yellow-500 text-black'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -149,8 +165,8 @@ export default function AddAdPage() {
                 type="button"
                 onClick={() => handleAdTypeChange('video')}
                 className={`px-4 py-2 rounded-md ${
-                  adType === 'video' 
-                    ? 'bg-yellow-500 text-black' 
+                  adType === 'video'
+                    ? 'bg-yellow-500 text-black'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -160,8 +176,8 @@ export default function AddAdPage() {
                 type="button"
                 onClick={() => handleAdTypeChange('text')}
                 className={`px-4 py-2 rounded-md ${
-                  adType === 'text' 
-                    ? 'bg-yellow-500 text-black' 
+                  adType === 'text'
+                    ? 'bg-yellow-500 text-black'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >

@@ -10,58 +10,23 @@ import 'swiper/css';
 import 'swiper/css/effect-cards';
 
 // Import data service
-import { getNewsArticles } from './lib/dataService';
-
-const mockAds: Ad[] = [
-  {
-    id: '1',
-    title: 'ప్రీమియం సబ్‌స్క్రిప్షన్ - అన్లిమిటెడ్ యాక్సెస్ పొందండి',
-    description: 'ఇప్పుడే సబ్‌స్క్రైబ్ చేసుకొని యాడ్-ఫ్రీ రీడింగ్, ఎక్స్‌క్లూజివ్ కంటెంట్ మరియు మరిన్ని ఆనందించండి!',
-    image_url: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/subscribe',
-    frequency: 3, // Show after every 3 articles
-    active: true,
-    created_at: '2023-05-01T00:00:00Z',
-    updated_at: '2023-05-01T00:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'నూతన స్మార్ట్‌ఫోన్ లాంచ్',
-    description: 'అత్యాధునిక ఫీచర్లతో కొత్త స్మార్ట్‌ఫోన్ మార్కెట్లోకి',
-    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    video_type: 'youtube',
-    link_url: '/smartphone',
-    frequency: 5,
-    active: true,
-    created_at: '2023-05-02T00:00:00Z',
-    updated_at: '2023-05-02T00:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'ఆన్‌లైన్ షాపింగ్ ఆఫర్స్',
-    text_content: 'ఇప్పుడే కొనుగోలు చేసి 50% వరకు పొదుపు చేయండి!',
-    image_url: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/shopping',
-    frequency: 4,
-    active: true,
-    created_at: '2023-05-03T00:00:00Z',
-    updated_at: '2023-05-03T00:00:00Z',
-  }
-];
-
-// Ads will be used in the combined content array
+import { getNewsArticles, getAds } from './lib/dataService';
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [ads, setAds] = useState<Ad[]>([]);
   const [combinedContent, setCombinedContent] = useState<Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }>>([]);
 
-  // Load articles from data service
+  // Load articles and ads from data service
   useEffect(() => {
-    // Get articles from data service
+    // Get articles and ads from data service
     const newsArticles = getNewsArticles();
+    const adsList = getAds();
+
     setArticles(newsArticles);
+    setAds(adsList);
 
     // Create a combined array of content (news articles and ads)
     const adFrequency = 3; // Show ad after every 3 news articles
@@ -77,12 +42,12 @@ export default function Home() {
       });
 
       // Add an ad after every 'adFrequency' articles
-      if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1) {
+      if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList.length > 0) {
         // Use different ads based on position
-        const adIndex = Math.floor(index / adFrequency) % mockAds.length;
+        const adIndex = Math.floor(index / adFrequency) % adsList.length;
         newCombinedContent.push({
           type: 'ad',
-          content: mockAds[adIndex],
+          content: adsList[adIndex],
           index: newCombinedContent.length
         });
       }

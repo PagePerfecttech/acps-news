@@ -1,6 +1,44 @@
 import { NewsArticle, Ad, Comment } from '../types';
 import { longNewsPosts } from '../data/longNewsPosts';
 
+// Default ads data
+const defaultAds: Ad[] = [
+  {
+    id: '1',
+    title: 'ప్రీమియం సబ్‌స్క్రిప్షన్ - అన్లిమిటెడ్ యాక్సెస్ పొందండి',
+    description: 'ఇప్పుడే సబ్‌స్క్రైబ్ చేసుకొని యాడ్-ఫ్రీ రీడింగ్, ఎక్స్‌క్లూజివ్ కంటెంట్ మరియు మరిన్ని ఆనందించండి!',
+    image_url: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=1470&auto=format&fit=crop',
+    link_url: '/subscribe',
+    frequency: 3, // Show after every 3 articles
+    active: true,
+    created_at: '2023-05-01T00:00:00Z',
+    updated_at: '2023-05-01T00:00:00Z',
+  },
+  {
+    id: '2',
+    title: 'నూతన స్మార్ట్‌ఫోన్ లాంచ్',
+    description: 'అత్యాధునిక ఫీచర్లతో కొత్త స్మార్ట్‌ఫోన్ మార్కెట్లోకి',
+    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    video_type: 'youtube',
+    link_url: '/smartphone',
+    frequency: 5,
+    active: true,
+    created_at: '2023-05-02T00:00:00Z',
+    updated_at: '2023-05-02T00:00:00Z',
+  },
+  {
+    id: '3',
+    title: 'ఆన్‌లైన్ షాపింగ్ ఆఫర్స్',
+    text_content: 'ఇప్పుడే కొనుగోలు చేసి 50% వరకు పొదుపు చేయండి!',
+    image_url: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1470&auto=format&fit=crop',
+    link_url: '/shopping',
+    frequency: 4,
+    active: true,
+    created_at: '2023-05-03T00:00:00Z',
+    updated_at: '2023-05-03T00:00:00Z',
+  }
+];
+
 // Initialize data in localStorage if it doesn't exist
 const initializeData = () => {
   if (typeof window === 'undefined') return; // Skip on server-side
@@ -9,6 +47,12 @@ const initializeData = () => {
   if (!localStorage.getItem('flipnews_articles')) {
     // Initialize with the default data
     localStorage.setItem('flipnews_articles', JSON.stringify(longNewsPosts));
+  }
+
+  // Check if ads data exists in localStorage
+  if (!localStorage.getItem('flipnews_ads')) {
+    // Initialize with the default ads
+    localStorage.setItem('flipnews_ads', JSON.stringify(defaultAds));
   }
 };
 
@@ -37,9 +81,9 @@ export const updateNewsArticle = (updatedArticle: NewsArticle): boolean => {
   try {
     const articles = getNewsArticles();
     const index = articles.findIndex(article => article.id === updatedArticle.id);
-    
+
     if (index === -1) return false;
-    
+
     articles[index] = updatedArticle;
     localStorage.setItem('flipnews_articles', JSON.stringify(articles));
     return true;
@@ -83,4 +127,74 @@ export const deleteNewsArticle = (id: string): boolean => {
 export const resetToDefaultData = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
   localStorage.setItem('flipnews_articles', JSON.stringify(longNewsPosts));
+  localStorage.setItem('flipnews_ads', JSON.stringify(defaultAds));
+};
+
+// Ad Management Functions
+
+// Get all ads
+export const getAds = (): Ad[] => {
+  if (typeof window === 'undefined') {
+    // Return the default data on server-side
+    return defaultAds;
+  }
+
+  initializeData();
+  const ads = localStorage.getItem('flipnews_ads');
+  return ads ? JSON.parse(ads) : defaultAds;
+};
+
+// Get a single ad by ID
+export const getAdById = (id: string): Ad | undefined => {
+  const ads = getAds();
+  return ads.find(ad => ad.id === id);
+};
+
+// Update an ad
+export const updateAd = (updatedAd: Ad): boolean => {
+  if (typeof window === 'undefined') return false; // Can't update on server-side
+
+  try {
+    const ads = getAds();
+    const index = ads.findIndex(ad => ad.id === updatedAd.id);
+
+    if (index === -1) return false;
+
+    ads[index] = updatedAd;
+    localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+    return true;
+  } catch (error) {
+    console.error('Error updating ad:', error);
+    return false;
+  }
+};
+
+// Add a new ad
+export const addAd = (newAd: Ad): boolean => {
+  if (typeof window === 'undefined') return false; // Can't update on server-side
+
+  try {
+    const ads = getAds();
+    ads.unshift(newAd); // Add to the beginning of the array
+    localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+    return true;
+  } catch (error) {
+    console.error('Error adding ad:', error);
+    return false;
+  }
+};
+
+// Delete an ad
+export const deleteAd = (id: string): boolean => {
+  if (typeof window === 'undefined') return false; // Can't update on server-side
+
+  try {
+    const ads = getAds();
+    const filteredAds = ads.filter(ad => ad.id !== id);
+    localStorage.setItem('flipnews_ads', JSON.stringify(filteredAds));
+    return true;
+  } catch (error) {
+    console.error('Error deleting ad:', error);
+    return false;
+  }
 };
