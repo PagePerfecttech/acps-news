@@ -36,7 +36,7 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
   } catch (error) {
     console.error('Error capturing screenshot:', error);
     // Return a fallback image URL if screenshot fails
-    return '/images/fallback-share-image.jpg';
+    return '/images/fallback-share-image.svg';
   }
 };
 

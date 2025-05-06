@@ -41,7 +41,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     const timeoutPromise = new Promise<string>((resolve) => {
       setTimeout(() => {
         // Use a fallback image if it takes too long
-        resolve('/images/fallback-share-image.jpg');
+        resolve('/images/fallback-share-image.svg');
       }, 3000); // 3 seconds timeout
     });
 
@@ -56,11 +56,11 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
         setScreenshotUrl(dataUrl);
       } else {
         console.error('Element not found:', elementId);
-        setScreenshotUrl('/images/fallback-share-image.jpg');
+        setScreenshotUrl('/images/fallback-share-image.svg');
       }
     } catch (error) {
       console.error('Error capturing screenshot:', error);
-      setScreenshotUrl('/images/fallback-share-image.jpg');
+      setScreenshotUrl('/images/fallback-share-image.svg');
     } finally {
       setIsCapturing(false);
     }
@@ -71,11 +71,15 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     try {
       if (!screenshotUrl) return;
 
-      const shareText = `${title}\n\nRead More News like this at ${settings.share_link}`;
-      const shareUrl = settings.share_link;
+      // Use the share link from settings, or fallback to a default
+      const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
+      const siteName = settings?.site_name || 'FlipNews';
+
+      const shareText = `${title}\n\nRead More News like this at ${shareLink}`;
+      const shareUrl = shareLink;
 
       // Create a file from the screenshot
-      const file = dataUrlToFile(screenshotUrl, `${settings.site_name}-news.png`);
+      const file = dataUrlToFile(screenshotUrl, `${siteName}-news.png`);
 
       await shareContent(title, shareText, shareUrl, [file]);
     } catch (error) {
@@ -86,12 +90,14 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
   // Handle download button click
   const handleDownload = () => {
     if (!screenshotUrl) return;
-    downloadDataUrl(screenshotUrl, `${settings.site_name}-news.png`);
+    const siteName = settings?.site_name || 'FlipNews';
+    downloadDataUrl(screenshotUrl, `${siteName}-news.png`);
   };
 
   // Handle copy link button click
   const handleCopyLink = () => {
-    const shareMessage = `${title}\n\nRead More News like this at ${settings.share_link}`;
+    const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
+    const shareMessage = `${title}\n\nRead More News like this at ${shareLink}`;
     navigator.clipboard.writeText(shareMessage);
     setCopySuccess(true);
 
@@ -133,7 +139,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
                   className="w-full h-auto"
                 />
                 <div className="absolute bottom-2 right-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs">
-                  {settings.site_name}
+                  {settings?.site_name || 'FlipNews'}
                 </div>
               </div>
             ) : (
@@ -171,7 +177,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             <div className="flex items-center">
               <textarea
                 rows={3}
-                value={`${title}\n\nRead More News like this at ${settings.share_link}`}
+                value={`${title}\n\nRead More News like this at ${settings?.share_link || 'https://flipnews.vercel.app'}`}
                 readOnly
                 className="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black text-sm"
               />
