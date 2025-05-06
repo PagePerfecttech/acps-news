@@ -15,7 +15,7 @@ export default function AddNewsPage() {
     content: '',
     summary: '',
     category: '',
-    author: '',
+    author: 'Admin User', // Default author name
     image_url: '',
     video_url: '',
     video_type: 'youtube',
@@ -27,8 +27,9 @@ export default function AddNewsPage() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Load categories when component mounts
+  // Load categories and user info when component mounts
   useEffect(() => {
+    // Load categories
     const loadedCategories = getCategories();
     setCategories(loadedCategories);
 
@@ -38,6 +39,23 @@ export default function AddNewsPage() {
         ...prev,
         category: loadedCategories[0].name
       }));
+    }
+
+    // Get current user info from localStorage
+    try {
+      const storedUsers = localStorage.getItem('flipnews_users');
+      if (storedUsers) {
+        const users = JSON.parse(storedUsers);
+        if (users && users.length > 0) {
+          // Use the first user as the author (in a real app, you'd use the logged-in user)
+          setFormData(prev => ({
+            ...prev,
+            author: users[0].name || 'Admin User'
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error getting user info:', error);
     }
   }, []);
 
@@ -253,11 +271,14 @@ export default function AddNewsPage() {
               id="author"
               name="author"
               value={formData.author}
-              onChange={handleChange}
+              readOnly
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
-              placeholder="Enter author name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black bg-gray-50"
+              placeholder="Author name (automatically set)"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Author is automatically set to your username
+            </p>
           </div>
 
           <div>
