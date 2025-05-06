@@ -262,18 +262,19 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
 
         {/* Content - white background with black text */}
         <div className="flex-grow flex flex-col p-0 bg-white text-black">
-          {/* Category tag with author on left */}
+          {/* Category on left, author on right */}
           <div className="px-3 py-2 bg-yellow-500 flex justify-between items-center">
-            {/* Author and category on left */}
-            <div className="flex items-center space-x-3">
-              <UserProfile authorName={article.author} size="small" showName={true} />
+            {/* Category on left */}
+            <div>
               <span className="text-xs font-medium text-black px-2 py-1 bg-yellow-400 rounded-sm">
                 {article.category}
               </span>
             </div>
 
-            {/* Empty space on right */}
-            <div></div>
+            {/* Author on right */}
+            <div className="flex items-center">
+              <UserProfile authorName={article.author} size="small" showName={true} />
+            </div>
           </div>
 
           {/* Title and content area */}
