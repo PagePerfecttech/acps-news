@@ -4,7 +4,21 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate URL before creating client
+const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    console.error('Invalid Supabase URL:', url);
+    return false;
+  }
+};
+
+// Use placeholder URL if the provided URL is invalid
+const validSupabaseUrl = isValidUrl(supabaseUrl) ? supabaseUrl : 'https://placeholder-url.supabase.co';
+
+export const supabase = createClient(validSupabaseUrl, supabaseAnonKey);
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = async (): Promise<boolean> => {
