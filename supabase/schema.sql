@@ -23,6 +23,7 @@ CREATE TABLE news_articles (
   video_url TEXT,
   video_type VARCHAR(50),
   author VARCHAR(255),
+  user_id UUID,
   likes INTEGER DEFAULT 0,
   views INTEGER DEFAULT 0,
   published BOOLEAN DEFAULT true,
@@ -135,3 +136,143 @@ CREATE POLICY "Allow read access to anonymous users" ON ads
 -- Allow anonymous users to create comments
 CREATE POLICY "Allow anonymous users to create comments" ON comments
   FOR INSERT WITH CHECK (true);
+
+-- Likes table to track user likes
+CREATE TABLE likes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  news_id UUID REFERENCES news_articles(id) ON DELETE CASCADE,
+  ip_address VARCHAR(50),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on likes table
+ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for authenticated users (admins) for likes
+CREATE POLICY "Allow full access to authenticated users" ON likes
+  FOR ALL USING (auth.role() = 'authenticated');
+
+-- Create policy for anonymous users (public) for likes
+CREATE POLICY "Allow read access to anonymous users" ON likes
+  FOR SELECT USING (true);
+
+-- Allow anonymous users to create likes
+CREATE POLICY "Allow anonymous users to create likes" ON likes
+  FOR INSERT WITH CHECK (true);
+
+-- Function to increment views
+CREATE OR REPLACE FUNCTION increment_views(article_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE news_articles
+  SET views = views + 1
+  WHERE id = article_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to increment likes
+CREATE OR REPLACE FUNCTION increment_likes(article_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE news_articles
+  SET likes = likes + 1
+  WHERE id = article_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Site settings table
+CREATE TABLE site_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_name VARCHAR(255) NOT NULL DEFAULT 'FlipNews',
+  primary_color VARCHAR(50) NOT NULL DEFAULT '#FACC15',
+  secondary_color VARCHAR(50) NOT NULL DEFAULT '#000000',
+  share_link VARCHAR(255) NOT NULL DEFAULT 'https://flipnews.vercel.app',
+  logo_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on site_settings table
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for authenticated users (admins) for site_settings
+CREATE POLICY "Allow full access to authenticated users" ON site_settings
+  FOR ALL USING (auth.role() = 'authenticated');
+
+-- Create policy for anonymous users (public) for site_settings
+CREATE POLICY "Allow read access to anonymous users" ON site_settings
+  FOR SELECT USING (true);
+
+-- Users table (extending Supabase auth)
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  auth_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  role VARCHAR(50) NOT NULL DEFAULT 'user',
+  profile_pic TEXT,
+  bio TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on users table
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for authenticated users (admins) for users
+CREATE POLICY "Allow full access to authenticated users" ON users
+  FOR ALL USING (auth.role() = 'authenticated');
+
+-- Create policy for anonymous users (public) for users
+CREATE POLICY "Allow read access to anonymous users" ON users
+  FOR SELECT USING (true);
+
+-- Ads table
+CREATE TABLE ads (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  image_url TEXT,
+  link_url TEXT,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on ads table
+ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for authenticated users (admins) for ads
+CREATE POLICY "Allow full access to authenticated users" ON ads
+  FOR ALL USING (auth.role() = 'authenticated');
+
+-- Create policy for anonymous users (public) for ads
+CREATE POLICY "Allow read access to anonymous users" ON ads
+  FOR SELECT USING (active = true);
+
+-- Ad settings table
+CREATE TABLE ad_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  frequency INTEGER NOT NULL DEFAULT 5, -- Show an ad after every X news articles
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on ad_settings table
+ALTER TABLE ad_settings ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for authenticated users (admins) for ad_settings
+CREATE POLICY "Allow full access to authenticated users" ON ad_settings
+  FOR ALL USING (auth.role() = 'authenticated');
+
+-- Create policy for anonymous users (public) for ad_settings
+CREATE POLICY "Allow read access to anonymous users" ON ad_settings
+  FOR SELECT USING (true);
+
+-- Insert default site settings
+INSERT INTO site_settings (site_name, primary_color, secondary_color, share_link)
+VALUES ('FlipNews', '#FACC15', '#000000', 'https://flipnews.vercel.app');
+
+-- Insert default ad settings
+INSERT INTO ad_settings (frequency)
+VALUES (5);

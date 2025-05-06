@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { FiHome, FiFileText, FiImage, FiMessageSquare, FiLogOut, FiMenu, FiX, FiTag } from 'react-icons/fi';
+import { FiHome, FiFileText, FiImage, FiMessageSquare, FiLogOut, FiMenu, FiX, FiTag, FiSettings, FiUsers } from 'react-icons/fi';
 
 export default function AdminLayout({
   children,
@@ -112,6 +112,22 @@ export default function AdminLayout({
             >
               <FiTag size={20} />
               <span>Categories</span>
+            </Link>
+            <Link
+              href="/admin/users"
+              className="flex items-center space-x-2 p-2 rounded-md hover:bg-yellow-400 transition-colors"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FiUsers size={20} />
+              <span>User Management</span>
+            </Link>
+            <Link
+              href="/admin/settings"
+              className="flex items-center space-x-2 p-2 rounded-md hover:bg-yellow-400 transition-colors"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FiSettings size={20} />
+              <span>Site Settings</span>
             </Link>
             <div className="pt-6 mt-6 border-t border-yellow-400">
               <button

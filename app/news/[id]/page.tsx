@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiClock, FiTag, FiUser, FiShare2, FiArrowLeft } from 'react-icons/fi';
-import { NewsArticle } from '../../types';
+import { FiClock, FiTag, FiUser, FiShare2, FiArrowLeft, FiThumbsUp, FiMessageSquare, FiEye } from 'react-icons/fi';
+import { NewsArticle, Comment } from '../../types';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { getNewsArticleById, getArticleStats, subscribeToChanges } from '../../lib/supabaseService';
 
 // Mock data for demonstration
 const mockArticles: Record<string, NewsArticle> = {
@@ -53,26 +55,153 @@ The bill is expected to come to a vote next month, with passage looking increasi
 export default function NewsDetail({ params }: { params: { id: string } }) {
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ likes: 0, comments: 0, views: 0 });
+  const [commentText, setCommentText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [usingSupabase, setUsingSupabase] = useState(false);
 
   useEffect(() => {
-    // In a real app, you would fetch the article from an API or database
-    // For demo purposes, we're using mock data
-    const fetchArticle = () => {
-      setLoading(true);
-      try {
-        const foundArticle = mockArticles[params.id];
-        if (foundArticle) {
-          setArticle(foundArticle);
-        }
-      } catch (error) {
-        console.error('Error fetching article:', error);
-      } finally {
-        setLoading(false);
+    const checkSupabase = async () => {
+      const configured = await isSupabaseConfigured();
+      setUsingSupabase(configured);
+      
+      // Fetch article data
+      fetchArticle(configured);
+      
+      // Record view
+      if (configured) {
+        recordView();
       }
     };
-
-    fetchArticle();
+    
+    checkSupabase();
   }, [params.id]);
+  
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!usingSupabase || !article) return;
+    
+    // Subscribe to likes changes
+    const likesSubscription = subscribeToChanges('likes', (payload) => {
+      if (payload.new && payload.new.news_id === article.id) {
+        setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
+      }
+    });
+    
+    // Subscribe to comments changes
+    const commentsSubscription = subscribeToChanges('comments', (payload) => {
+      if (payload.new && payload.new.news_id === article.id) {
+        setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
+        // Refresh article to get the new comment
+        fetchArticle(true);
+      }
+    });
+    
+    return () => {
+      likesSubscription.unsubscribe();
+      commentsSubscription.unsubscribe();
+    };
+  }, [usingSupabase, article]);
+
+  const fetchArticle = async (useSupabase: boolean) => {
+    setLoading(true);
+    try {
+      let fetchedArticle;
+      let articleStats;
+      
+      if (useSupabase) {
+        // Fetch from Supabase
+        fetchedArticle = await getNewsArticleById(params.id);
+        articleStats = await getArticleStats(params.id);
+      } else {
+        // Use mock data for demo
+        fetchedArticle = mockArticles[params.id];
+        articleStats = { 
+          likes: fetchedArticle?.likes || 0, 
+          comments: fetchedArticle?.comments?.length || 0, 
+          views: 0 
+        };
+      }
+      
+      if (fetchedArticle) {
+        setArticle(fetchedArticle);
+        setStats(articleStats);
+      }
+    } catch (error) {
+      console.error('Error fetching article:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Record view
+  const recordView = async () => {
+    try {
+      await fetch('/api/news/view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId: params.id })
+      });
+    } catch (error) {
+      console.error('Error recording view:', error);
+    }
+  };
+  
+  // Handle like
+  const handleLike = async () => {
+    try {
+      // Optimistic update
+      setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
+      
+      const response = await fetch('/api/news/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId: params.id })
+      });
+      
+      if (!response.ok) {
+        // Revert optimistic update if failed
+        setStats(prev => ({ ...prev, likes: prev.likes - 1 }));
+      }
+    } catch (error) {
+      console.error('Error liking article:', error);
+      // Revert optimistic update if failed
+      setStats(prev => ({ ...prev, likes: prev.likes - 1 }));
+    }
+  };
+  
+  // Handle comment submission
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/news/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          articleId: params.id,
+          content: commentText 
+        })
+      });
+      
+      if (response.ok) {
+        // Clear form
+        setCommentText('');
+        
+        if (!usingSupabase) {
+          // If not using Supabase real-time, update manually
+          setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -185,3 +314,4 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
     </div>
   );
 }
+

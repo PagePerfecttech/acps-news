@@ -42,6 +42,48 @@ export const fetchNewsArticles = async (): Promise<NewsArticle[]> => {
   }
 };
 
+// Get a single news article by ID
+export const getNewsArticleById = async (articleId: string): Promise<NewsArticle | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('news_articles')
+      .select(`
+        *,
+        comments:comments(*),
+        category:categories(name)
+      `)
+      .eq('id', articleId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching news article:', error);
+      return null;
+    }
+
+    // Transform the data to match our NewsArticle type
+    return {
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      summary: data.summary || '',
+      category: data.category?.name || 'Uncategorized',
+      image_url: data.image_url,
+      video_url: data.video_url,
+      video_type: data.video_type,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      author: data.author || 'Unknown',
+      likes: data.likes || 0,
+      comments: data.comments || [],
+      tags: [], // We'll need to fetch tags separately
+      published: data.published
+    };
+  } catch (error) {
+    console.error('Error in getNewsArticleById:', error);
+    return null;
+  }
+};
+
 // Get dashboard stats
 export const fetchDashboardStats = async () => {
   try {
@@ -231,3 +273,148 @@ export const subscribeToChanges = (
     )
     .subscribe();
 };
+
+// Like an article
+export const likeArticle = async (articleId: string, ipAddress: string): Promise<boolean> => {
+  try {
+    // First check if this IP has already liked this article
+    const { data: existingLike, error: checkError } = await supabase
+      .from('likes')
+      .select('*')
+      .eq('news_id', articleId)
+      .eq('ip_address', ipAddress)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking existing like:', checkError);
+      return false;
+    }
+
+    // If already liked, return true (consider it a success)
+    if (existingLike) {
+      return true;
+    }
+
+    // Start a transaction to add the like and update the article's like count
+    const { error: likeError } = await supabase
+      .from('likes')
+      .insert({
+        news_id: articleId,
+        ip_address: ipAddress,
+        created_at: new Date().toISOString()
+      });
+
+    if (likeError) {
+      console.error('Error adding like:', likeError);
+      return false;
+    }
+
+    // Increment the article's like count
+    const { error: updateError } = await supabase
+      .rpc('increment_likes', { article_id: articleId });
+
+    if (updateError) {
+      console.error('Error updating article likes:', updateError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in likeArticle:', error);
+    return false;
+  }
+};
+
+// Add a comment to an article
+export const addComment = async (
+  articleId: string,
+  content: string,
+  ipAddress: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('comments')
+      .insert({
+        news_id: articleId,
+        content,
+        author_ip: ipAddress,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Error adding comment:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in addComment:', error);
+    return false;
+  }
+};
+
+// Increment view count for an article
+export const incrementViewCount = async (articleId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .rpc('increment_views', { article_id: articleId });
+
+    if (error) {
+      console.error('Error incrementing view count:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in incrementViewCount:', error);
+    return false;
+  }
+};
+
+// Get article stats (likes, comments, views)
+export const getArticleStats = async (articleId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('news_articles')
+      .select('likes, views, comments(count)')
+      .eq('id', articleId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching article stats:', error);
+      return { likes: 0, comments: 0, views: 0 };
+    }
+
+    return {
+      likes: data.likes || 0,
+      comments: data.comments?.length || 0,
+      views: data.views || 0
+    };
+  } catch (error) {
+    console.error('Error in getArticleStats:', error);
+    return { likes: 0, comments: 0, views: 0 };
+  }
+};
+
+// Check if user has already liked an article
+export const hasUserLikedArticle = async (articleId: string, ipAddress: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('likes')
+      .select('*')
+      .eq('news_id', articleId)
+      .eq('ip_address', ipAddress)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking if user liked article:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in hasUserLikedArticle:', error);
+    return false;
+  }
+};
+

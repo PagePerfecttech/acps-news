@@ -50,8 +50,12 @@ export interface Ad {
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'user';
+  name: string;
+  role: 'admin' | 'user' | 'contributor';
+  profile_pic?: string;
+  bio?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface ApiResponse<T> {
