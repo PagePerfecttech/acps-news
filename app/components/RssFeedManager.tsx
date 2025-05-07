@@ -254,14 +254,24 @@ export default function RssFeedManager() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category
               </label>
-              <input
-                type="text"
+              <select
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 required
-              />
+              >
+                <option value="">Select a category</option>
+                <option value="General">General</option>
+                <option value="Technology">Technology</option>
+                <option value="Business">Business</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Sports">Sports</option>
+                <option value="Health">Health</option>
+                <option value="Science">Science</option>
+                <option value="Politics">Politics</option>
+                <option value="RSS">RSS</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

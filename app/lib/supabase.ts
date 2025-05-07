@@ -1,14 +1,24 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Default to placeholder values if environment variables are not set
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+
+// Fix malformed URL if it contains the PowerShell command
+if (supabaseUrl && supabaseUrl.includes('PS C:')) {
+  // Extract the actual URL from the malformed string
+  const matches = supabaseUrl.match(/(https:\/\/[a-z0-9-]+\.supabase\.co)/);
+  if (matches && matches[1]) {
+    console.log('Fixed malformed Supabase URL');
+    supabaseUrl = matches[1];
+  }
+}
 
 // Validate URL before creating client
 const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
-    return true;
+    return url.includes('supabase.co'); // Additional check to ensure it's a Supabase URL
   } catch (e) {
     console.error('Invalid Supabase URL:', url);
     return false;
@@ -44,14 +54,19 @@ const CONNECTION_CHECK_INTERVAL = 30000; // 30 seconds
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = async (): Promise<boolean> => {
   try {
+    // Check if the URL is valid (after our fix for malformed URLs)
+    if (!isValidUrl(validSupabaseUrl)) {
+      console.warn('Supabase URL is invalid or not a Supabase URL');
+      connectionStatus = 'error';
+      return false;
+    }
+
     // Check if environment variables are set
     const envVarsConfigured = (
-      process.env.NEXT_PUBLIC_SUPABASE_URL !== undefined &&
-      process.env.NEXT_PUBLIC_SUPABASE_URL !== '' &&
-      process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder-url.supabase.co' &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== undefined &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== '' &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'placeholder-key'
+      validSupabaseUrl !== 'https://placeholder-url.supabase.co' &&
+      supabaseAnonKey !== undefined &&
+      supabaseAnonKey !== '' &&
+      supabaseAnonKey !== 'placeholder-key'
     );
 
     if (!envVarsConfigured) {
