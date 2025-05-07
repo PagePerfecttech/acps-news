@@ -42,47 +42,60 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       setTimeout(() => {
         // Use a fallback image if it takes too long
         resolve('/images/fallback-share-image.svg');
-      }, 5000); // 5 seconds timeout (increased from 3s)
+      }, 6000); // 6 seconds timeout (increased for better reliability)
     });
 
     try {
       // First, make sure the element is fully visible and rendered
       const element = document.getElementById(elementId);
-      if (element) {
-        // Ensure all images are loaded before capturing
-        const images = element.querySelectorAll('img');
-        if (images.length > 0) {
-          await Promise.all(
-            Array.from(images).map(img => {
-              if (img.complete) return Promise.resolve();
-              return new Promise<void>((resolve) => {
-                img.onload = () => resolve();
-                img.onerror = () => resolve(); // Continue even if image fails
-                // Set a timeout in case the image never loads
-                setTimeout(resolve, 2000);
-              });
-            })
-          );
-        }
-
-        // Wait a moment for any animations or transitions to complete
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Race between screenshot capture and timeout
-        const dataUrl = await Promise.race([
-          captureScreenshot(element),
-          timeoutPromise
-        ]);
-
-        // Verify that we got a valid data URL
-        if (dataUrl.startsWith('data:image/')) {
-          setScreenshotUrl(dataUrl);
-        } else {
-          console.error('Invalid screenshot data URL');
-          setScreenshotUrl('/images/fallback-share-image.svg');
-        }
-      } else {
+      if (!element) {
         console.error('Element not found:', elementId);
+        setScreenshotUrl('/images/fallback-share-image.svg');
+        setIsCapturing(false);
+        return;
+      }
+
+      // Make sure the element is visible in the viewport
+      try {
+        const rect = element.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+          console.warn('Element has zero dimensions:', elementId);
+          // Continue anyway, as the element might still be renderable
+        }
+      } catch (e) {
+        console.warn('Error checking element dimensions:', e);
+      }
+
+      // Ensure all images are loaded before capturing
+      const images = element.querySelectorAll('img');
+      if (images.length > 0) {
+        await Promise.all(
+          Array.from(images).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise<void>((resolve) => {
+              img.onload = () => resolve();
+              img.onerror = () => resolve(); // Continue even if image fails
+              // Set a timeout in case the image never loads
+              setTimeout(resolve, 2000);
+            });
+          })
+        );
+      }
+
+      // Wait a moment for any animations or transitions to complete
+      await new Promise(resolve => setTimeout(resolve, 200)); // Increased from 100ms
+
+      // Race between screenshot capture and timeout
+      const dataUrl = await Promise.race([
+        captureScreenshot(element),
+        timeoutPromise
+      ]);
+
+      // Verify that we got a valid data URL
+      if (dataUrl.startsWith('data:image/')) {
+        setScreenshotUrl(dataUrl);
+      } else {
+        console.error('Invalid screenshot data URL');
         setScreenshotUrl('/images/fallback-share-image.svg');
       }
     } catch (error) {
@@ -96,7 +109,11 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
   // Handle share button click
   const handleShare = async () => {
     try {
-      if (!screenshotUrl) return;
+      if (!screenshotUrl) {
+        console.warn('No screenshot URL available for sharing');
+        alert('Screenshot is not ready yet. Please try again in a moment.');
+        return;
+      }
 
       // Use the share link from settings, or fallback to a default
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
@@ -105,11 +122,18 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       const shareText = `${title}\n\nRead More News like this at ${shareLink}`;
       const shareUrl = shareLink;
 
-      // Create a file from the screenshot
-      const file = dataUrlToFile(screenshotUrl, `${siteName}-news.png`);
+      try {
+        // Create a file from the screenshot
+        const file = dataUrlToFile(screenshotUrl, `${siteName}-news.png`);
 
-      // Use the Web Share API with the screenshot
-      await shareContent(title, shareText, shareUrl, [file]);
+        // Use the Web Share API with the screenshot
+        await shareContent(title, shareText, shareUrl, [file]);
+      } catch (fileError) {
+        console.error('Error creating file from screenshot:', fileError);
+
+        // Fallback to sharing without the screenshot
+        await shareContent(title, shareText, shareUrl);
+      }
     } catch (error) {
       console.error('Error sharing content:', error);
       alert('There was an error sharing. Please try a different sharing option.');
@@ -119,40 +143,111 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
   // Handle platform-specific sharing
   const handlePlatformShare = async (platform: 'whatsapp' | 'facebook' | 'twitter') => {
     try {
-      if (!screenshotUrl) return;
+      if (!screenshotUrl) {
+        console.warn(`No screenshot URL available for sharing to ${platform}`);
+        alert('Screenshot is not ready yet. Please try again in a moment.');
+        return;
+      }
 
       // Use the share link from settings, or fallback to a default
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
       const siteName = settings?.site_name || 'FlipNews';
 
-      const shareText = `${title}\n\nRead More News like this at ${shareLink}`;
+      // Customize share text based on platform
+      let shareText = `${title}\n\nRead More News like this at ${shareLink}`;
+
+      // Twitter has character limits, so make it more concise
+      if (platform === 'twitter') {
+        shareText = `${title} | Read More at ${shareLink}`;
+      }
+
       const shareUrl = shareLink;
 
       // Share to the specific platform
       await shareContent(title, shareText, shareUrl, undefined, platform);
     } catch (error) {
       console.error(`Error sharing to ${platform}:`, error);
+      alert(`There was an error sharing to ${platform}. Please try a different sharing option.`);
     }
   };
 
   // Handle download button click
   const handleDownload = () => {
-    if (!screenshotUrl) return;
-    const siteName = settings?.site_name || 'FlipNews';
-    downloadDataUrl(screenshotUrl, `${siteName}-news.png`);
+    try {
+      if (!screenshotUrl) {
+        console.warn('No screenshot URL available for download');
+        alert('Screenshot is not ready yet. Please try again in a moment.');
+        return;
+      }
+      const siteName = settings?.site_name || 'FlipNews';
+      downloadDataUrl(screenshotUrl, `${siteName}-news.png`);
+    } catch (error) {
+      console.error('Error downloading screenshot:', error);
+      alert('There was an error downloading the image. Please try again.');
+    }
   };
 
   // Handle copy link button click
   const handleCopyLink = () => {
-    const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
-    const shareMessage = `${title}\n\nRead More News like this at ${shareLink}`;
-    navigator.clipboard.writeText(shareMessage);
-    setCopySuccess(true);
+    try {
+      const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
+      const shareMessage = `${title}\n\nRead More News like this at ${shareLink}`;
 
-    // Reset copy success message after 2 seconds
-    setTimeout(() => {
-      setCopySuccess(false);
-    }, 2000);
+      // Modern clipboard API with fallback
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareMessage)
+          .then(() => {
+            setCopySuccess(true);
+            // Reset copy success message after 2 seconds
+            setTimeout(() => {
+              setCopySuccess(false);
+            }, 2000);
+          })
+          .catch(err => {
+            console.error('Failed to copy text: ', err);
+            // Fallback to older method
+            fallbackCopyTextToClipboard(shareMessage);
+          });
+      } else {
+        // Fallback for browsers that don't support clipboard API
+        fallbackCopyTextToClipboard(shareMessage);
+      }
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      alert('Failed to copy to clipboard. Please try again.');
+    }
+  };
+
+  // Fallback method for copying text
+  const fallbackCopyTextToClipboard = (text: string) => {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+
+      // Make the textarea out of viewport
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+
+      textArea.focus();
+      textArea.select();
+
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setCopySuccess(true);
+        // Reset copy success message after 2 seconds
+        setTimeout(() => {
+          setCopySuccess(false);
+        }, 2000);
+      } else {
+        console.warn('Fallback clipboard copy failed');
+      }
+
+      document.body.removeChild(textArea);
+    } catch (err) {
+      console.error('Fallback clipboard error:', err);
+    }
   };
 
   if (!isOpen) return null;

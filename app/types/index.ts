@@ -14,6 +14,8 @@ export interface NewsArticle {
   comments: Comment[];
   tags?: string[];
   published: boolean;
+  rss_feed_id?: string;
+  rss_item_guid?: string;
 }
 
 export interface Comment {
@@ -70,4 +72,29 @@ export interface Category {
   slug: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface RssFeed {
+  id: string;
+  name: string;
+  url: string;
+  category_id: string;
+  user_id: string;
+  active: boolean;
+  last_fetched: string | null;
+  fetch_frequency: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RssFeedItem {
+  id: string;
+  feed_id: string;
+  guid: string;
+  title: string;
+  link: string | null;
+  pub_date: string | null;
+  news_article_id: string | null;
+  imported: boolean;
+  created_at: string;
 }

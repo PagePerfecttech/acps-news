@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { FiMenu, FiX, FiHome, FiGrid, FiBookmark, FiSettings, FiSearch } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSettings } from '../contexts/SettingsContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { settings } = useSettings();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -26,14 +28,14 @@ export default function Header() {
   return (
     <header>
       {/* Way2News style header */}
-      <div className="bg-yellow-500 text-black p-3 sticky top-0 z-10">
+      <div className="bg-primary text-black p-3 sticky top-0 z-10" style={{ backgroundColor: settings.primary_color }}>
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <button onClick={toggleMenu} className="mr-3">
               {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
             <Link href="/" className="text-xl font-bold">
-              FlipNews
+              {settings.site_name || 'FlipNews'}
             </Link>
           </div>
           <div className="flex items-center">
@@ -54,7 +56,7 @@ export default function Header() {
             <Link
               key={category}
               href={`/category/${category}`}
-              className="text-sm font-medium px-3 py-1 rounded-full bg-gray-100 hover:bg-yellow-100"
+              className="text-sm font-medium px-3 py-1 rounded-full bg-gray-100 hover:bg-primary hover:bg-opacity-20"
             >
               {category}
             </Link>
@@ -71,8 +73,8 @@ export default function Header() {
             exit={{ opacity: 0, x: -300 }}
             className="fixed top-0 left-0 h-full w-3/4 bg-white shadow-lg z-50 overflow-y-auto"
           >
-            <div className="p-4 bg-yellow-500 flex justify-between items-center">
-              <span className="text-xl font-bold">FlipNews</span>
+            <div className="p-4 bg-primary flex justify-between items-center" style={{ backgroundColor: settings.primary_color }}>
+              <span className="text-xl font-bold">{settings.site_name || 'FlipNews'}</span>
               <button onClick={toggleMenu}>
                 <FiX size={24} />
               </button>
@@ -84,7 +86,7 @@ export default function Header() {
                   భాష (Language)
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <button className="border border-yellow-500 bg-yellow-50 text-black py-2 rounded text-sm font-medium">
+                  <button className="border border-primary bg-primary bg-opacity-10 text-black py-2 rounded text-sm font-medium" style={{ borderColor: settings.primary_color }}>
                     తెలుగు
                   </button>
                   <button className="border border-gray-300 text-gray-700 py-2 rounded text-sm">
@@ -108,7 +110,7 @@ export default function Header() {
                     <Link
                       key={category}
                       href={`/category/${category}`}
-                      className="block py-2 px-3 hover:bg-yellow-50 rounded"
+                      className="block py-2 px-3 hover:bg-primary hover:bg-opacity-10 rounded"
                       onClick={toggleMenu}
                     >
                       {category}
@@ -124,28 +126,28 @@ export default function Header() {
                 <div className="space-y-3">
                   <Link
                     href="/about"
-                    className="block py-2 px-3 hover:bg-yellow-50 rounded"
+                    className="block py-2 px-3 hover:bg-primary hover:bg-opacity-10 rounded"
                     onClick={toggleMenu}
                   >
                     మా గురించి (About Us)
                   </Link>
                   <Link
                     href="/contact"
-                    className="block py-2 px-3 hover:bg-yellow-50 rounded"
+                    className="block py-2 px-3 hover:bg-primary hover:bg-opacity-10 rounded"
                     onClick={toggleMenu}
                   >
                     సంప్రదించండి (Contact Us)
                   </Link>
                   <Link
                     href="/privacy"
-                    className="block py-2 px-3 hover:bg-yellow-50 rounded"
+                    className="block py-2 px-3 hover:bg-primary hover:bg-opacity-10 rounded"
                     onClick={toggleMenu}
                   >
                     ప్రైవసీ పాలసీ
                   </Link>
                   <Link
                     href="/admin/login"
-                    className="block py-2 px-3 hover:bg-yellow-50 rounded mt-3 border-t border-gray-200 pt-3"
+                    className="block py-2 px-3 hover:bg-primary hover:bg-opacity-10 rounded mt-3 border-t border-gray-200 pt-3"
                     onClick={toggleMenu}
                   >
                     అడ్మిన్ లాగిన్ (Admin Login)
@@ -170,19 +172,19 @@ export default function Header() {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-2 md:hidden">
-        <Link href="/" className="flex flex-col items-center text-yellow-500">
+        <Link href="/" className="flex flex-col items-center text-primary" style={{ color: settings.primary_color }}>
           <FiHome size={20} />
           <span className="text-xs mt-1">హోమ్</span>
         </Link>
-        <Link href="/categories" className="flex flex-col items-center text-gray-500">
+        <Link href="/categories" className="flex flex-col items-center text-gray-500 hover:text-primary" style={{ ":hover": { color: settings.primary_color } }}>
           <FiGrid size={20} />
           <span className="text-xs mt-1">కేటగిరీలు</span>
         </Link>
-        <Link href="/saved" className="flex flex-col items-center text-gray-500">
+        <Link href="/saved" className="flex flex-col items-center text-gray-500 hover:text-primary" style={{ ":hover": { color: settings.primary_color } }}>
           <FiBookmark size={20} />
           <span className="text-xs mt-1">సేవ్డ్</span>
         </Link>
-        <Link href="/settings" className="flex flex-col items-center text-gray-500">
+        <Link href="/settings" className="flex flex-col items-center text-gray-500 hover:text-primary" style={{ ":hover": { color: settings.primary_color } }}>
           <FiSettings size={20} />
           <span className="text-xs mt-1">సెట్టింగ్స్</span>
         </Link>

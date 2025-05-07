@@ -7,7 +7,7 @@ import html2canvas from 'html2canvas';
  */
 export const captureScreenshot = async (element: HTMLElement): Promise<string> => {
   try {
-    // First, make sure all images are loaded
+    // First, make sure all images are loaded with timeout
     const images = element.querySelectorAll('img');
     await Promise.all(
       Array.from(images).map(img => {
@@ -15,6 +15,8 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
         return new Promise<void>((resolve) => {
           img.onload = () => resolve();
           img.onerror = () => resolve(); // Continue even if image fails
+          // Add timeout to prevent hanging on image load
+          setTimeout(resolve, 2000); // 2 second timeout per image
         });
       })
     );
@@ -42,12 +44,16 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     const nextImages = clone.querySelectorAll('[data-nimg]');
     nextImages.forEach(img => {
       if (img instanceof HTMLImageElement) {
-        // Try to get the original image source
-        const originalImg = element.querySelector(`img[src="${img.src}"]`);
-        if (originalImg instanceof HTMLImageElement) {
-          img.style.objectFit = 'cover';
-          img.style.width = '100%';
-          img.style.height = '100%';
+        try {
+          // Try to get the original image source
+          const originalImg = element.querySelector(`img[src="${img.src}"]`);
+          if (originalImg instanceof HTMLImageElement) {
+            img.style.objectFit = 'cover';
+            img.style.width = '100%';
+            img.style.height = '100%';
+          }
+        } catch (e) {
+          console.warn('Error fixing Next.js image:', e);
         }
       }
     });
@@ -55,8 +61,8 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     // Append to body temporarily
     document.body.appendChild(clone);
 
-    // Wait a moment for the clone to render properly
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait a moment for the clone to render properly - increased for better reliability
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Optimize screenshot capture for better quality and reliability
     const canvas = await html2canvas(clone, {
@@ -75,30 +81,49 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
                el.tagName === 'STYLE';
       },
       onclone: (document, clonedElement) => {
-        // Make sure all elements are visible
-        const allElements = clonedElement.querySelectorAll('*');
-        allElements.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.visibility = 'visible';
-            el.style.opacity = '1';
+        try {
+          // Make sure all elements are visible
+          const allElements = clonedElement.querySelectorAll('*');
+          allElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.visibility = 'visible';
+              el.style.opacity = '1';
 
-            // Fix any elements with relative positioning
-            if (window.getComputedStyle(el).position === 'relative') {
-              el.style.position = 'static';
+              // Fix any elements with relative positioning
+              if (window.getComputedStyle(el).position === 'relative') {
+                el.style.position = 'static';
+              }
             }
-          }
-        });
+          });
+        } catch (e) {
+          console.warn('Error in onclone handler:', e);
+        }
         return clonedElement;
       }
     });
 
     // Remove the clone from the DOM
-    document.body.removeChild(clone);
+    if (document.body.contains(clone)) {
+      document.body.removeChild(clone);
+    }
 
     // Use higher quality for better image
     return canvas.toDataURL('image/png', 0.9);
   } catch (error) {
     console.error('Error capturing screenshot:', error);
+
+    // Clean up any clones that might be left in the DOM
+    try {
+      const orphanedClones = document.querySelectorAll('[style*="z-index: 9999"][style*="position: fixed"]');
+      orphanedClones.forEach(clone => {
+        if (clone.parentNode) {
+          clone.parentNode.removeChild(clone);
+        }
+      });
+    } catch (e) {
+      console.warn('Error cleaning up orphaned clones:', e);
+    }
+
     // Return a fallback image URL if screenshot fails
     return '/images/fallback-share-image.svg';
   }
@@ -152,19 +177,26 @@ export const shareContent = async (
       if (shareUrl) {
         // For WhatsApp on mobile, try to use the app directly
         if (platform === 'whatsapp' && isMobile) {
-          // Create an anchor element to use the proper URL scheme
-          const link = document.createElement('a');
-          link.href = shareUrl;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.click();
+          try {
+            // First try the direct app URL scheme
+            const link = document.createElement('a');
+            link.href = shareUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.click();
 
-          // Fallback in case the app link doesn't work (after a short delay)
-          setTimeout(() => {
-            // If we're still here, try the web version
+            // Fallback in case the app link doesn't work (after a short delay)
+            setTimeout(() => {
+              // Try the web API version as a fallback
+              window.open(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`, '_blank');
+            }, 800); // Increased timeout for better reliability
+          } catch (error) {
+            console.error('Error opening WhatsApp:', error);
+            // Final fallback - just open the web version
             window.open(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`, '_blank');
-          }, 500);
+          }
         } else {
+          // For desktop or other platforms
           window.open(shareUrl, '_blank');
         }
         return;

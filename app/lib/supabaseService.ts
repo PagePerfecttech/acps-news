@@ -257,21 +257,19 @@ export const deleteComment = async (commentId: string): Promise<boolean> => {
   }
 };
 
-// Subscribe to real-time changes
+// Subscribe to real-time changes (legacy method - use realtimeManager instead)
 export const subscribeToChanges = (
   table: string,
-  callback: (payload: any) => void
+  callback: (payload: any) => void,
+  event: 'INSERT' | 'UPDATE' | 'DELETE' | '*' = '*',
+  filter?: string,
+  filterValue?: string
 ) => {
-  return supabase
-    .channel(`${table}-changes`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table },
-      payload => {
-        callback(payload);
-      }
-    )
-    .subscribe();
+  // Import here to avoid circular dependencies
+  const { subscribeToChanges: subscribe } = require('./realtimeManager');
+
+  // Use the new subscription manager
+  return subscribe(table, callback, event, filter, filterValue);
 };
 
 // Like an article

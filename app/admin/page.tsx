@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { FiEdit, FiTrash2, FiPlus, FiImage, FiFileText, FiDollarSign, FiMessageSquare, FiThumbsUp, FiRefreshCw } from 'react-icons/fi';
 import { NewsArticle, Ad, Comment } from '../types';
 import { isSupabaseConfigured } from '../lib/supabase';
+import EnvironmentStatus from '../components/EnvironmentStatus';
+import ConnectionStatus from '../components/ConnectionStatus';
 import {
   fetchNewsArticles,
   fetchAds,
@@ -717,10 +719,16 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Data source indicator */}
-      <div className="mt-4 text-xs text-gray-500 text-right">
-        Data source: {usingSupabase ? 'Supabase (real-time)' : 'Local Storage'}
-        {refreshing && <span className="ml-2 animate-pulse">Refreshing...</span>}
+      {/* Environment and Connection Status */}
+      <div className="mt-6 space-y-4">
+        <EnvironmentStatus />
+        <ConnectionStatus showDetails={true} className="mt-4" />
+
+        {/* Data source indicator */}
+        <div className="mt-4 text-xs text-gray-500 text-right">
+          Data source: {usingSupabase ? 'Supabase (real-time)' : 'Local Storage'}
+          {refreshing && <span className="ml-2 animate-pulse">Refreshing...</span>}
+        </div>
       </div>
     </div>
   );
