@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '../../../lib/supabase';
 import { fetchRssFeedById, fetchRssFeedItems, updateRssFeed, fetchRssFeeds } from '../../../lib/databaseService';
 import { processRssFeed } from '../../../lib/rssProcessor';
+import { RssFeed } from '../../../types';
 
 // POST /api/rss/process - Process all RSS feeds or a specific feed
 export async function POST(request: NextRequest) {

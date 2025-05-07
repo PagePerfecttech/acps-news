@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FiRefreshCw, FiPlus, FiEdit, FiTrash2, FiRss, FiCheck, FiX } from 'react-icons/fi';
 import { RssFeed } from '../types';
-import { fetchRssFeeds, fetchRssFeedItems, addRssFeed, updateRssFeed, deleteRssFeed } from '../lib/supabaseService';
+import { fetchRssFeeds, fetchRssFeedItems, addRssFeed, updateRssFeed, deleteRssFeed } from '../lib/databaseService';
 import { processRssFeed } from '../lib/rssProcessor';
 import { showErrorNotification, showSuccessNotification } from './Notification';
 
@@ -13,7 +13,7 @@ export default function RssFeedManager() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingFeed, setEditingFeed] = useState<RssFeed | null>(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -22,18 +22,23 @@ export default function RssFeedManager() {
     auto_fetch: true,
     fetch_interval: 60,
   });
-  
+
   // Load feeds on component mount
   useEffect(() => {
     loadFeeds();
   }, []);
-  
+
   // Load RSS feeds
   const loadFeeds = async () => {
     setLoading(true);
     try {
-      const feedsData = await fetchRssFeeds();
-      setFeeds(feedsData);
+      const result = await fetchRssFeeds();
+      if (result.success && result.data) {
+        setFeeds(result.data);
+      } else {
+        console.error('Error loading RSS feeds:', result.error);
+        showErrorNotification('Failed to load RSS feeds', 'Error');
+      }
     } catch (error) {
       console.error('Error loading RSS feeds:', error);
       showErrorNotification('Failed to load RSS feeds', 'Error');
@@ -41,50 +46,52 @@ export default function RssFeedManager() {
       setLoading(false);
     }
   };
-  
+
   // Handle form input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     });
   };
-  
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingFeed) {
         // Update existing feed
-        const success = await updateRssFeed(editingFeed.id, {
+        const result = await updateRssFeed(editingFeed.id, {
           ...formData,
           fetch_interval: Number(formData.fetch_interval),
         });
-        
-        if (success) {
+
+        if (result.success) {
           showSuccessNotification('RSS feed updated successfully', 'Success');
           setEditingFeed(null);
         } else {
           showErrorNotification('Failed to update RSS feed', 'Error');
+          console.error('Update error:', result.error);
         }
       } else {
         // Add new feed
-        const success = await addRssFeed({
+        const result = await addRssFeed({
           ...formData,
           fetch_interval: Number(formData.fetch_interval),
         });
-        
-        if (success) {
+
+        if (result.success) {
           showSuccessNotification('RSS feed added successfully', 'Success');
           setShowAddForm(false);
         } else {
           showErrorNotification('Failed to add RSS feed', 'Error');
+          console.error('Add error:', result.error);
         }
       }
-      
+
       // Reset form and reload feeds
       resetForm();
       loadFeeds();
@@ -93,7 +100,7 @@ export default function RssFeedManager() {
       showErrorNotification('An error occurred while saving the RSS feed', 'Error');
     }
   };
-  
+
   // Reset form
   const resetForm = () => {
     setFormData({
@@ -104,7 +111,7 @@ export default function RssFeedManager() {
       fetch_interval: 60,
     });
   };
-  
+
   // Start editing a feed
   const handleEdit = (feed: RssFeed) => {
     setEditingFeed(feed);
@@ -117,47 +124,50 @@ export default function RssFeedManager() {
     });
     setShowAddForm(true);
   };
-  
+
   // Cancel editing
   const handleCancel = () => {
     setEditingFeed(null);
     setShowAddForm(false);
     resetForm();
   };
-  
+
   // Delete a feed
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this RSS feed?')) {
       return;
     }
-    
+
     try {
-      const success = await deleteRssFeed(id);
-      
-      if (success) {
+      const result = await deleteRssFeed(id);
+
+      if (result.success) {
         showSuccessNotification('RSS feed deleted successfully', 'Success');
         loadFeeds();
       } else {
         showErrorNotification('Failed to delete RSS feed', 'Error');
+        console.error('Delete error:', result.error);
       }
     } catch (error) {
       console.error('Error deleting RSS feed:', error);
       showErrorNotification('An error occurred while deleting the RSS feed', 'Error');
     }
   };
-  
+
   // Process a feed
   const handleProcess = async (feed: RssFeed) => {
     setProcessing(feed.id);
-    
+
     try {
       // Get existing items to avoid duplicates
-      const existingItems = await fetchRssFeedItems(feed.id);
-      const existingGuids = existingItems.map(item => item.guid);
-      
+      const itemsResult = await fetchRssFeedItems(feed.id);
+      const existingGuids = itemsResult.success && itemsResult.data
+        ? itemsResult.data.map(item => item.rss_item_guid)
+        : [];
+
       // Process the feed
       const result = await processRssFeed(feed, existingGuids);
-      
+
       if (result.success) {
         if (result.newArticles > 0) {
           showSuccessNotification(
@@ -186,7 +196,7 @@ export default function RssFeedManager() {
       setProcessing(null);
     }
   };
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <div className="flex justify-between items-center mb-4">
@@ -206,7 +216,7 @@ export default function RssFeedManager() {
           )}
         </button>
       </div>
-      
+
       {/* Add/Edit Form */}
       {showAddForm && (
         <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-md">
@@ -300,7 +310,7 @@ export default function RssFeedManager() {
           </div>
         </form>
       )}
-      
+
       {/* Loading state */}
       {loading ? (
         <div className="animate-pulse">

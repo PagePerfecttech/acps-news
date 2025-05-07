@@ -42,21 +42,22 @@ export const parseRssFeed = async (url: string): Promise<RssFeedData | null> => 
     // Use a CORS proxy if needed
     const proxyUrl = process.env.NEXT_PUBLIC_CORS_PROXY || '';
     const fetchUrl = `${proxyUrl}${url}`;
-    
+
     const response = await fetch(fetchUrl, {
       headers: {
         'Accept': 'application/rss+xml, application/xml, text/xml',
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
     }
-    
+
     const xml = await response.text();
-    
+
     // Use a dynamic import for the RSS parser to avoid server-side issues
-    const Parser = (await import('rss-parser')).default;
+    const parserModule = await import('rss-parser');
+    const Parser = parserModule.default;
     const parser = new Parser({
       customFields: {
         item: [
@@ -66,9 +67,9 @@ export const parseRssFeed = async (url: string): Promise<RssFeedData | null> => 
         ],
       },
     });
-    
+
     const feed = await parser.parseString(xml);
-    
+
     return {
       title: feed.title || '',
       description: feed.description || '',
@@ -93,19 +94,19 @@ export const extractImageFromRssItem = (item: RssItem): string | null => {
   if (item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image/')) {
     return item.enclosure.url;
   }
-  
+
   // Check for media:content
   if (item.media && item.media.$ && item.media.$.url && item.media.$.type?.startsWith('image/')) {
     return item.media.$.url;
   }
-  
+
   // Try to extract image from content or description
   const content = item.content || item.contentSnippet || item.description || '';
   const imgMatch = content.match(/<img[^>]+src="([^">]+)"/i);
   if (imgMatch && imgMatch[1]) {
     return imgMatch[1];
   }
-  
+
   return null;
 };
 
@@ -113,19 +114,19 @@ export const extractImageFromRssItem = (item: RssItem): string | null => {
 export const cleanHtml = (html: string): string => {
   // Remove script tags and their content
   let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  
+
   // Remove style tags and their content
   cleaned = cleaned.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  
+
   // Remove iframe tags and their content
   cleaned = cleaned.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
-  
+
   // Remove HTML comments
   cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
-  
+
   // Remove excessive whitespace
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
-  
+
   return cleaned;
 };
 
@@ -133,10 +134,10 @@ export const cleanHtml = (html: string): string => {
 export const extractTextFromHtml = (html: string): string => {
   // First clean the HTML
   const cleaned = cleanHtml(html);
-  
+
   // Replace HTML tags with spaces
   let text = cleaned.replace(/<[^>]+>/g, ' ');
-  
+
   // Decode HTML entities
   text = text.replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -144,10 +145,10 @@ export const extractTextFromHtml = (html: string): string => {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
-  
+
   // Remove excessive whitespace
   text = text.replace(/\s+/g, ' ').trim();
-  
+
   return text;
 };
 
@@ -155,18 +156,18 @@ export const extractTextFromHtml = (html: string): string => {
 export const createSummary = (content: string, maxLength: number = 200): string => {
   // Extract text from HTML content
   const text = extractTextFromHtml(content);
-  
+
   // Truncate to maxLength
   if (text.length <= maxLength) {
     return text;
   }
-  
+
   // Find the last space before maxLength
   const lastSpace = text.lastIndexOf(' ', maxLength);
   if (lastSpace === -1) {
     return text.substring(0, maxLength) + '...';
   }
-  
+
   return text.substring(0, lastSpace) + '...';
 };
 
@@ -178,19 +179,19 @@ export const rssItemToNewsArticle = (
 ): Omit<NewsArticle, 'id' | 'created_at' | 'updated_at'> => {
   // Extract content
   const content = item.content || item.contentSnippet || item.description || '';
-  
+
   // Extract image
   const imageUrl = extractImageFromRssItem(item);
-  
+
   // Create summary
   const summary = createSummary(content);
-  
+
   // Get author
   const author = item.creator || item.author || 'Unknown';
-  
+
   // Get publication date
   const pubDate = item.isoDate || item.pubDate || new Date().toISOString();
-  
+
   return {
     title: item.title || 'Untitled',
     content: cleanHtml(content),
@@ -222,7 +223,7 @@ export const processRssFeed = async (
   try {
     // Parse the RSS feed
     const rssFeed = await parseRssFeed(feed.url);
-    
+
     if (!rssFeed) {
       return {
         success: false,
@@ -231,25 +232,25 @@ export const processRssFeed = async (
         message: 'Failed to parse RSS feed',
       };
     }
-    
+
     // Track results
     let newArticles = 0;
     let errors = 0;
-    
+
     // Process each item
     for (const item of rssFeed.items) {
       // Skip if we already have this item
       if (existingGuids.includes(item.guid || '')) {
         continue;
       }
-      
+
       // Convert to news article
       const article = rssItemToNewsArticle(item, feed.id, feed.category);
-      
+
       // Save to database
       try {
         const result: DatabaseResult<NewsArticle> = await createNewsArticle(article);
-        
+
         if (result.success) {
           newArticles++;
         } else {
@@ -261,7 +262,7 @@ export const processRssFeed = async (
         console.error('Error processing RSS item:', error);
       }
     }
-    
+
     // Show notification
     if (newArticles > 0) {
       showSuccessNotification(
@@ -274,14 +275,14 @@ export const processRssFeed = async (
         'RSS Feed Processed'
       );
     }
-    
+
     if (errors > 0) {
       showErrorNotification(
         `Encountered ${errors} errors while processing ${feed.name}`,
         'RSS Processing Errors'
       );
     }
-    
+
     return {
       success: true,
       newArticles,
@@ -290,12 +291,12 @@ export const processRssFeed = async (
     };
   } catch (error) {
     console.error('Error processing RSS feed:', error);
-    
+
     showErrorNotification(
       `Failed to process RSS feed: ${error}`,
       'RSS Processing Failed'
     );
-    
+
     return {
       success: false,
       newArticles: 0,

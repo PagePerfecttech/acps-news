@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured, getConnectionStatus } from './supabase';
-import { NewsArticle, Ad, Comment, Category, User } from '../types';
+import { NewsArticle, Ad, Comment, Category, User, RssFeed } from '../types';
 
 // Error types
 export enum DatabaseErrorType {
@@ -939,6 +939,171 @@ export const deleteAd = async (id: string, options: DatabaseOptions = {}): Promi
     },
     '', // No cache key for delete operations
     'ads',
+    'delete',
+    { ...options, bypassCache: true, fallbackToCache: false }
+  );
+};
+
+// RSS Feed Functions
+
+// Fetch all RSS feeds
+export const fetchRssFeeds = async (options: DatabaseOptions = {}): Promise<DatabaseResult<RssFeed[]>> => {
+  return executeQuery<RssFeed[]>(
+    async () => {
+      const result = await supabase
+        .from('rss_feeds')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      return { data: result.data, error: null };
+    },
+    'rss_feeds:all',
+    'rss_feeds',
+    'fetchAll',
+    options
+  );
+};
+
+// Fetch a single RSS feed by ID
+export const fetchRssFeedById = async (id: string, options: DatabaseOptions = {}): Promise<DatabaseResult<RssFeed>> => {
+  return executeQuery<RssFeed>(
+    async () => {
+      const result = await supabase
+        .from('rss_feeds')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      return { data: result.data, error: null };
+    },
+    `rss_feeds:${id}`,
+    'rss_feeds',
+    'fetchById',
+    options
+  );
+};
+
+// Fetch RSS feed items by feed ID
+export const fetchRssFeedItems = async (feedId: string, options: DatabaseOptions = {}): Promise<DatabaseResult<any[]>> => {
+  return executeQuery<any[]>(
+    async () => {
+      const result = await supabase
+        .from('news_articles')
+        .select('id, rss_item_guid')
+        .eq('rss_feed_id', feedId);
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      return { data: result.data, error: null };
+    },
+    `rss_feed_items:${feedId}`,
+    'news_articles',
+    'fetchByFeedId',
+    options
+  );
+};
+
+// Add a new RSS feed
+export const addRssFeed = async (feed: Omit<RssFeed, 'id' | 'created_at' | 'updated_at'>, options: DatabaseOptions = {}): Promise<DatabaseResult<RssFeed>> => {
+  return executeQuery<RssFeed>(
+    async () => {
+      const now = new Date().toISOString();
+
+      const result = await supabase
+        .from('rss_feeds')
+        .insert({
+          name: feed.name,
+          url: feed.url,
+          category: feed.category,
+          auto_fetch: feed.auto_fetch,
+          fetch_interval: feed.fetch_interval,
+          active: true,
+          created_at: now,
+          updated_at: now
+        })
+        .select()
+        .single();
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      // Clear cache for RSS feeds
+      clearCache('rss_feeds:all');
+
+      return { data: result.data, error: null };
+    },
+    '', // No cache key for create operations
+    'rss_feeds',
+    'create',
+    { ...options, bypassCache: true, fallbackToCache: false }
+  );
+};
+
+// Update an RSS feed
+export const updateRssFeed = async (id: string, feed: Partial<RssFeed>, options: DatabaseOptions = {}): Promise<DatabaseResult<RssFeed>> => {
+  return executeQuery<RssFeed>(
+    async () => {
+      const now = new Date().toISOString();
+
+      const result = await supabase
+        .from('rss_feeds')
+        .update({
+          ...feed,
+          updated_at: now
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      // Clear cache for this feed and all feeds
+      clearCache(`rss_feeds:${id}`);
+      clearCache('rss_feeds:all');
+
+      return { data: result.data, error: null };
+    },
+    '', // No cache key for update operations
+    'rss_feeds',
+    'update',
+    { ...options, bypassCache: true, fallbackToCache: false }
+  );
+};
+
+// Delete an RSS feed
+export const deleteRssFeed = async (id: string, options: DatabaseOptions = {}): Promise<DatabaseResult<boolean>> => {
+  return executeQuery<boolean>(
+    async () => {
+      const result = await supabase
+        .from('rss_feeds')
+        .delete()
+        .eq('id', id);
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      // Clear cache for this feed and all feeds
+      clearCache(`rss_feeds:${id}`);
+      clearCache('rss_feeds:all');
+
+      return { data: true, error: null };
+    },
+    '', // No cache key for delete operations
+    'rss_feeds',
     'delete',
     { ...options, bypassCache: true, fallbackToCache: false }
   );
