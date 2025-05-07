@@ -100,3 +100,4 @@ export function useRealtimeSubscription(
     connectionStatus,
     subscriptionStatus
   };
+}
