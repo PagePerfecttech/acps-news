@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../lib/supabase';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { getRssFeeds, addRssFeed, updateRssFeed, deleteRssFeed, processRssFeed } from '../../lib/rssService';
+import { fetchRssFeeds, addRssFeed, updateRssFeed, deleteRssFeed } from '../../lib/databaseService';
+import { RssFeed } from '../../types';
 
 // GET /api/rss - Get all RSS feeds
 export async function GET() {
   try {
     const usingSupabase = await isSupabaseConfigured();
-    
+
     if (!usingSupabase) {
       return NextResponse.json(
         { error: 'Supabase not configured' },
         { status: 500 }
       );
     }
-    
-    const feeds = await getRssFeeds();
-    
+
+    const result = await fetchRssFeeds();
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Failed to fetch RSS feeds', details: result.error?.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      data: feeds
+      data: result.data
     });
   } catch (error) {
     console.error('Error in GET /api/rss:', error);
@@ -34,43 +41,42 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const usingSupabase = await isSupabaseConfigured();
-    
+
     if (!usingSupabase) {
       return NextResponse.json(
         { error: 'Supabase not configured' },
         { status: 500 }
       );
     }
-    
+
     const body = await request.json();
-    
+
     // Validate required fields
-    if (!body.name || !body.url || !body.category_id || !body.user_id) {
+    if (!body.name || !body.url || !body.category) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields (name, url, category)' },
         { status: 400 }
       );
     }
-    
-    const feed = await addRssFeed({
+
+    const result = await addRssFeed({
       name: body.name,
       url: body.url,
-      category_id: body.category_id,
-      user_id: body.user_id,
-      active: body.active !== undefined ? body.active : true,
-      fetch_frequency: body.fetch_frequency || 60
+      category: body.category,
+      auto_fetch: body.auto_fetch !== undefined ? body.auto_fetch : true,
+      fetch_interval: body.fetch_interval || 60
     });
-    
-    if (!feed) {
+
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Failed to create RSS feed' },
+        { error: 'Failed to create RSS feed', details: result.error?.message },
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json({
       success: true,
-      data: feed
+      data: result.data
     });
   } catch (error) {
     console.error('Error in POST /api/rss:', error);
@@ -85,36 +91,36 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const usingSupabase = await isSupabaseConfigured();
-    
+
     if (!usingSupabase) {
       return NextResponse.json(
         { error: 'Supabase not configured' },
         { status: 500 }
       );
     }
-    
+
     const body = await request.json();
-    
+
     // Get the feed ID from the URL
     const url = new URL(request.url);
     const id = url.pathname.split('/').pop();
-    
+
     if (!id) {
       return NextResponse.json(
         { error: 'Missing feed ID' },
         { status: 400 }
       );
     }
-    
-    const success = await updateRssFeed(id, body);
-    
-    if (!success) {
+
+    const result = await updateRssFeed(id, body);
+
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Failed to update RSS feed' },
+        { error: 'Failed to update RSS feed', details: result.error?.message },
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json({
       success: true
     });
@@ -131,34 +137,34 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const usingSupabase = await isSupabaseConfigured();
-    
+
     if (!usingSupabase) {
       return NextResponse.json(
         { error: 'Supabase not configured' },
         { status: 500 }
       );
     }
-    
+
     // Get the feed ID from the URL
     const url = new URL(request.url);
     const id = url.pathname.split('/').pop();
-    
+
     if (!id) {
       return NextResponse.json(
         { error: 'Missing feed ID' },
         { status: 400 }
       );
     }
-    
-    const success = await deleteRssFeed(id);
-    
-    if (!success) {
+
+    const result = await deleteRssFeed(id);
+
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Failed to delete RSS feed' },
+        { error: 'Failed to delete RSS feed', details: result.error?.message },
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json({
       success: true
     });

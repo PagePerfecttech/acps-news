@@ -56,9 +56,8 @@ export const parseRssFeed = async (url: string): Promise<RssFeedData | null> => 
     const xml = await response.text();
 
     // Use a dynamic import for the RSS parser to avoid server-side issues
-    const parserModule = await import('rss-parser');
-    const Parser = parserModule.default;
-    const parser = new Parser({
+    const Parser = (await import('rss-parser'));
+    const parser = new Parser.default({
       customFields: {
         item: [
           ['media:content', 'media'],
