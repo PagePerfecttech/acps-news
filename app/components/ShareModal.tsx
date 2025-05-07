@@ -42,18 +42,45 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       setTimeout(() => {
         // Use a fallback image if it takes too long
         resolve('/images/fallback-share-image.svg');
-      }, 3000); // 3 seconds timeout
+      }, 5000); // 5 seconds timeout (increased from 3s)
     });
 
     try {
+      // First, make sure the element is fully visible and rendered
       const element = document.getElementById(elementId);
       if (element) {
+        // Ensure all images are loaded before capturing
+        const images = element.querySelectorAll('img');
+        if (images.length > 0) {
+          await Promise.all(
+            Array.from(images).map(img => {
+              if (img.complete) return Promise.resolve();
+              return new Promise<void>((resolve) => {
+                img.onload = () => resolve();
+                img.onerror = () => resolve(); // Continue even if image fails
+                // Set a timeout in case the image never loads
+                setTimeout(resolve, 2000);
+              });
+            })
+          );
+        }
+
+        // Wait a moment for any animations or transitions to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Race between screenshot capture and timeout
         const dataUrl = await Promise.race([
           captureScreenshot(element),
           timeoutPromise
         ]);
-        setScreenshotUrl(dataUrl);
+
+        // Verify that we got a valid data URL
+        if (dataUrl.startsWith('data:image/')) {
+          setScreenshotUrl(dataUrl);
+        } else {
+          console.error('Invalid screenshot data URL');
+          setScreenshotUrl('/images/fallback-share-image.svg');
+        }
       } else {
         console.error('Element not found:', elementId);
         setScreenshotUrl('/images/fallback-share-image.svg');

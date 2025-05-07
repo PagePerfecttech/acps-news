@@ -22,17 +22,41 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     // Create a clone of the element to avoid modifying the original
     const clone = element.cloneNode(true) as HTMLElement;
 
-    // Set fixed dimensions to ensure consistent capture
+    // Prepare the clone for screenshot
     clone.style.width = '100%';
     clone.style.height = 'auto';
-    clone.style.position = 'absolute';
+    clone.style.position = 'fixed'; // Use fixed instead of absolute
     clone.style.top = '0';
     clone.style.left = '0';
-    clone.style.zIndex = '-1';
+    clone.style.zIndex = '9999'; // Use a high z-index to ensure it's on top
     clone.style.transform = 'none'; // Remove any transforms
+    clone.style.backgroundColor = '#ffffff'; // Ensure white background
+    clone.style.overflow = 'visible'; // Make sure content is visible
+
+    // Make sure the clone is visible but not interactive
+    clone.style.pointerEvents = 'none';
+    clone.style.opacity = '1';
+    clone.style.visibility = 'visible';
+
+    // Fix Next.js Image components which might not render properly
+    const nextImages = clone.querySelectorAll('[data-nimg]');
+    nextImages.forEach(img => {
+      if (img instanceof HTMLImageElement) {
+        // Try to get the original image source
+        const originalImg = element.querySelector(`img[src="${img.src}"]`);
+        if (originalImg instanceof HTMLImageElement) {
+          img.style.objectFit = 'cover';
+          img.style.width = '100%';
+          img.style.height = '100%';
+        }
+      }
+    });
 
     // Append to body temporarily
     document.body.appendChild(clone);
+
+    // Wait a moment for the clone to render properly
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Optimize screenshot capture for better quality and reliability
     const canvas = await html2canvas(clone, {
@@ -57,6 +81,11 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
           if (el instanceof HTMLElement) {
             el.style.visibility = 'visible';
             el.style.opacity = '1';
+
+            // Fix any elements with relative positioning
+            if (window.getComputedStyle(el).position === 'relative') {
+              el.style.position = 'static';
+            }
           }
         });
         return clonedElement;
@@ -103,7 +132,14 @@ export const shareContent = async (
 
       switch (platform) {
         case 'whatsapp':
-          shareUrl = `https://${isMobile ? 'api' : 'web'}.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`;
+          // Use the proper WhatsApp URL scheme for mobile devices
+          if (isMobile) {
+            // Direct WhatsApp app URL for mobile
+            shareUrl = `whatsapp://send?text=${encodedText}%20${encodedUrl}`;
+          } else {
+            // Web WhatsApp for desktop
+            shareUrl = `https://web.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`;
+          }
           break;
         case 'facebook':
           shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
@@ -114,7 +150,23 @@ export const shareContent = async (
       }
 
       if (shareUrl) {
-        window.open(shareUrl, '_blank');
+        // For WhatsApp on mobile, try to use the app directly
+        if (platform === 'whatsapp' && isMobile) {
+          // Create an anchor element to use the proper URL scheme
+          const link = document.createElement('a');
+          link.href = shareUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.click();
+
+          // Fallback in case the app link doesn't work (after a short delay)
+          setTimeout(() => {
+            // If we're still here, try the web version
+            window.open(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`, '_blank');
+          }, 500);
+        } else {
+          window.open(shareUrl, '_blank');
+        }
         return;
       }
     }
@@ -149,12 +201,31 @@ export const shareContent = async (
     document.body.removeChild(input);
 
     // Show share options
+    const whatsappUrl = isMobile
+      ? `whatsapp://send?text=${encodeURIComponent(`${title}\n\n${text} ${url}`)}`
+      : `https://web.whatsapp.com/send?text=${encodeURIComponent(`${title}\n\n${text} ${url}`)}`;
+
     const shareMessage = 'Share options:\n\n' +
       '1. Text copied to clipboard!\n' +
-      '2. Open in WhatsApp: ' +
-      `https://${isMobile ? 'api' : 'web'}.whatsapp.com/send?text=${encodeURIComponent(`${title}\n\n${text} ${url}`)}`;
+      '2. Open in WhatsApp: Click the link below\n\n' +
+      'If the link doesn\'t open WhatsApp automatically, copy the text and share manually.';
 
-    alert(shareMessage);
+    // Create a clickable link for WhatsApp instead of showing the URL in the alert
+    if (confirm(shareMessage)) {
+      // If user clicks OK, try to open WhatsApp
+      const link = document.createElement('a');
+      link.href = whatsappUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.click();
+
+      // Fallback for mobile if the app link doesn't work
+      if (isMobile) {
+        setTimeout(() => {
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${title}\n\n${text} ${url}`)}`, '_blank');
+        }, 500);
+      }
+    }
   } catch (error) {
     console.error('Error sharing content:', error);
 
