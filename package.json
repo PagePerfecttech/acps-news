@@ -12,7 +12,8 @@
     "setup": "npm run init-db && npm run setup-rss",
     "install-deps": "node scripts/install-dependencies.js",
     "add-telugu-feeds": "node scripts/add-telugu-feeds.js",
-    "fix-users": "node scripts/fix-users-table.js"
+    "fix-users": "node scripts/fix-users-table.js",
+    "test-rss": "node scripts/test-rss-feeds.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
