@@ -1024,10 +1024,10 @@ export const addRssFeed = async (feed: Omit<RssFeed, 'id' | 'created_at' | 'upda
         .insert({
           name: feed.name,
           url: feed.url,
-          category: feed.category,
-          auto_fetch: feed.auto_fetch,
-          fetch_interval: feed.fetch_interval,
+          category_id: feed.category_id,
+          user_id: feed.user_id || 'system',
           active: true,
+          fetch_frequency: feed.fetch_frequency,
           created_at: now,
           updated_at: now
         })

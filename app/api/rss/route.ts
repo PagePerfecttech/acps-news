@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    if (!body.name || !body.url || !body.category) {
+    if (!body.name || !body.url || !body.category_id) {
       return NextResponse.json(
-        { error: 'Missing required fields (name, url, category)' },
+        { error: 'Missing required fields (name, url, category_id)' },
         { status: 400 }
       );
     }
@@ -62,9 +62,10 @@ export async function POST(request: NextRequest) {
     const result = await addRssFeed({
       name: body.name,
       url: body.url,
-      category: body.category,
-      auto_fetch: body.auto_fetch !== undefined ? body.auto_fetch : true,
-      fetch_interval: body.fetch_interval || 60
+      category_id: body.category_id,
+      user_id: body.user_id || 'system',
+      active: body.active !== undefined ? body.active : true,
+      fetch_frequency: body.fetch_frequency || 60
     });
 
     if (!result.success) {

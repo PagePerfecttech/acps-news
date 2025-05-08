@@ -12,20 +12,21 @@ export default function AddUserPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'contributor',
     profile_pic: '',
     bio: ''
   });
-  
+
   const [previewImage, setPreviewImage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -33,28 +34,28 @@ export default function AddUserPage() {
       // For demo purposes, we'll just create a local URL
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
-      
+
       // In a real app, you would upload the file to a server and get the URL
       setFormData(prev => ({
         ...prev,
         profile_pic: imageUrl, // In a real app, this would be the URL from your server
       }));
-      
+
       console.log('File selected:', file.name, 'size:', (file.size / 1024).toFixed(2) + 'KB');
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
-    
+
     try {
       const newUser = await addUser(formData);
-      
+
       if (newUser) {
         setMessage({ type: 'success', text: 'User added successfully!' });
-        
+
         // Redirect to users list after 2 seconds
         setTimeout(() => {
           router.push('/admin/users');
@@ -68,7 +69,7 @@ export default function AddUserPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -81,7 +82,7 @@ export default function AddUserPage() {
           Back to Users
         </Link>
       </div>
-      
+
       {/* Message display */}
       {message.text && (
         <div
@@ -92,7 +93,7 @@ export default function AddUserPage() {
           {message.text}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         {/* Name */}
         <div className="mb-4">
@@ -109,7 +110,7 @@ export default function AddUserPage() {
             required
           />
         </div>
-        
+
         {/* Email */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -125,7 +126,23 @@ export default function AddUserPage() {
             required
           />
         </div>
-        
+
+        {/* Password */}
+        <div className="mb-4">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
+            required
+          />
+        </div>
+
         {/* Role */}
         <div className="mb-4">
           <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
@@ -144,7 +161,7 @@ export default function AddUserPage() {
             <option value="user">User</option>
           </select>
         </div>
-        
+
         {/* Profile Picture */}
         <div className="mb-4">
           <label htmlFor="profile_pic" className="block text-sm font-medium text-gray-700 mb-1">
@@ -175,7 +192,7 @@ export default function AddUserPage() {
                 onChange={handleImageUpload}
               />
             </div>
-            
+
             {/* Image Preview */}
             {(previewImage || formData.profile_pic) && (
               <div className="mt-2 border rounded-md p-2 bg-gray-50">
@@ -191,7 +208,7 @@ export default function AddUserPage() {
             )}
           </div>
         </div>
-        
+
         {/* Bio */}
         <div className="mb-6">
           <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
@@ -207,7 +224,7 @@ export default function AddUserPage() {
             placeholder="Brief description about the user"
           ></textarea>
         </div>
-        
+
         {/* Submit Button */}
         <div className="flex justify-end">
           <button

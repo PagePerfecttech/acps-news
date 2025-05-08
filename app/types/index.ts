@@ -53,6 +53,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  password?: string; // Optional in the interface but required for new users
   role: 'admin' | 'user' | 'contributor';
   profile_pic?: string;
   bio?: string;

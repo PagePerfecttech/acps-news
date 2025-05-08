@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FiSave, FiUpload, FiRefreshCw } from 'react-icons/fi';
 import { getSettings, saveSettings, SiteSettings } from '../../lib/settingsService';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SiteSettings>({
@@ -12,12 +13,12 @@ export default function SettingsPage() {
     share_link: '',
     logo_url: '',
   });
-  
+
   const [previewLogo, setPreviewLogo] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
-  
+
   // Load settings when component mounts
   useEffect(() => {
     const loadSettings = async () => {
@@ -34,44 +35,84 @@ export default function SettingsPage() {
         setLoading(false);
       }
     };
-    
+
     loadSettings();
   }, []);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setSettings(prev => ({ ...prev, [name]: value }));
   };
-  
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you would upload the file to a server or cloud storage
-      // For demo purposes, we'll just create a local URL
-      const logoUrl = URL.createObjectURL(file);
-      setPreviewLogo(logoUrl);
-      
-      // In a real app, you would upload the file to a server and get the URL
-      setSettings(prev => ({
-        ...prev,
-        logo_url: logoUrl, // In a real app, this would be the URL from your server
-      }));
-      
-      console.log('Logo selected:', file.name, 'size:', (file.size / 1024).toFixed(2) + 'KB');
+      try {
+        // Show preview immediately for better UX
+        const previewUrl = URL.createObjectURL(file);
+        setPreviewLogo(previewUrl);
+
+        // Set loading state
+        setIsSubmitting(true);
+
+        // Create form data for upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        formData.append('bucket', 'site-assets');
+
+        // Upload the image using the API
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          console.error('Error uploading logo:', result.error);
+          setMessage({
+            type: 'error',
+            text: `Failed to upload logo: ${result.error || 'Unknown error'}`
+          });
+          // Keep the preview but don't update the form data
+        } else {
+          // Update settings with the actual storage URL
+          setSettings(prev => ({
+            ...prev,
+            logo_url: result.url,
+          }));
+          console.log('Logo uploaded successfully:', result.url);
+        }
+      } catch (error) {
+        console.error('Error in logo upload:', error);
+        setMessage({
+          type: 'error',
+          text: 'Failed to upload logo. Please try again.'
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
-  
+
+  // Get the refreshSettings function from the context
+  const { refreshSettings } = useSettings();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
-    
+
     try {
       const success = await saveSettings(settings);
-      
+
       if (success) {
+        // Refresh the settings in the context to update the UI
+        await refreshSettings();
+
         setMessage({ type: 'success', text: 'Settings saved successfully!' });
-        
+
         // Clear message after 3 seconds
         setTimeout(() => {
           setMessage({ type: '', text: '' });
@@ -86,7 +127,7 @@ export default function SettingsPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -94,13 +135,13 @@ export default function SettingsPage() {
       </div>
     );
   }
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Site Settings</h1>
       </div>
-      
+
       {/* Message display */}
       {message.text && (
         <div
@@ -111,7 +152,7 @@ export default function SettingsPage() {
           {message.text}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         {/* Site Name */}
         <div className="mb-4">
@@ -128,7 +169,7 @@ export default function SettingsPage() {
             required
           />
         </div>
-        
+
         {/* Primary Color */}
         <div className="mb-4">
           <label htmlFor="primary_color" className="block text-sm font-medium text-gray-700 mb-1">
@@ -153,7 +194,7 @@ export default function SettingsPage() {
             />
           </div>
         </div>
-        
+
         {/* Secondary Color */}
         <div className="mb-4">
           <label htmlFor="secondary_color" className="block text-sm font-medium text-gray-700 mb-1">
@@ -178,7 +219,7 @@ export default function SettingsPage() {
             />
           </div>
         </div>
-        
+
         {/* Share Link */}
         <div className="mb-4">
           <label htmlFor="share_link" className="block text-sm font-medium text-gray-700 mb-1">
@@ -195,7 +236,7 @@ export default function SettingsPage() {
             required
           />
         </div>
-        
+
         {/* Logo Upload */}
         <div className="mb-6">
           <label htmlFor="logo_url" className="block text-sm font-medium text-gray-700 mb-1">
@@ -226,7 +267,7 @@ export default function SettingsPage() {
                 onChange={handleLogoUpload}
               />
             </div>
-            
+
             {/* Logo Preview */}
             {previewLogo && (
               <div className="mt-2 border rounded-md p-2 bg-gray-50">
@@ -242,7 +283,7 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
-        
+
         {/* Submit Button */}
         <div className="flex justify-end">
           <button

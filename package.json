@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "init-db": "node scripts/init-database.js",
+    "setup-rss": "node scripts/setup-rss.js",
+    "setup": "npm run init-db && npm run setup-rss",
+    "install-deps": "node scripts/install-dependencies.js",
+    "add-telugu-feeds": "node scripts/add-telugu-feeds.js",
+    "fix-users": "node scripts/fix-users-table.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
@@ -30,6 +36,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
+    "dotenv": "^16.4.5",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
     "tailwindcss": "^4",

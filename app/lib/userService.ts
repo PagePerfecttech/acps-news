@@ -146,11 +146,16 @@ export const addUser = async (user: Omit<User, 'id' | 'created_at'>): Promise<Us
   if (usingSupabase) {
     try {
       // Add user to Supabase
+      const now = new Date().toISOString();
       const newUser = {
         ...user,
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString()
+        created_at: now,
+        updated_at: now
       };
+
+      // Log the user object for debugging (without password)
+      const { password, ...logUser } = newUser;
+      console.log('Adding user to Supabase:', logUser);
 
       const { data, error } = await supabase
         .from('users')
@@ -160,6 +165,21 @@ export const addUser = async (user: Omit<User, 'id' | 'created_at'>): Promise<Us
 
       if (error) {
         console.error('Error adding user to Supabase:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+
+        // Check for specific error types
+        if (error.code === '23505') {
+          // Unique violation (e.g., email already exists)
+          console.error('User with this email already exists');
+          return null;
+        }
+
+        if (error.code === '42P01') {
+          // Table doesn't exist
+          console.error('Users table does not exist. Please run the fix-users-table.js script');
+          return null;
+        }
+
         // Fall back to localStorage
         return addLocalUser(user);
       }

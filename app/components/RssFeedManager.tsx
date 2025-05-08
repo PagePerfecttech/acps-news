@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { FiRefreshCw, FiPlus, FiEdit, FiTrash2, FiRss, FiCheck, FiX } from 'react-icons/fi';
-import { RssFeed } from '../types';
-import { fetchRssFeeds, fetchRssFeedItems, addRssFeed, updateRssFeed, deleteRssFeed } from '../lib/databaseService';
+import { RssFeed, Category } from '../types';
+import { fetchRssFeeds, fetchRssFeedItems, addRssFeed, updateRssFeed, deleteRssFeed, fetchCategories } from '../lib/databaseService';
 import { processRssFeed } from '../lib/rssProcessor';
 import { showErrorNotification, showSuccessNotification } from './Notification';
 
 export default function RssFeedManager() {
   const [feeds, setFeeds] = useState<RssFeed[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -18,19 +19,48 @@ export default function RssFeedManager() {
   const [formData, setFormData] = useState({
     name: '',
     url: '',
-    category: '',
-    auto_fetch: true,
-    fetch_interval: 60,
+    category_id: '',
+    user_id: 'system', // Default user ID for system-generated content
+    active: true,
+    fetch_frequency: 60,
   });
 
-  // Load feeds on component mount
+  // Load feeds and categories on component mount
   useEffect(() => {
-    loadFeeds();
+    loadData();
   }, []);
 
-  // Load RSS feeds
-  const loadFeeds = async () => {
+  // Load RSS feeds and categories
+  const loadData = async () => {
     setLoading(true);
+    try {
+      // Load feeds
+      const feedsResult = await fetchRssFeeds();
+      if (feedsResult.success && feedsResult.data) {
+        setFeeds(feedsResult.data);
+      } else {
+        console.error('Error loading RSS feeds:', feedsResult.error);
+        showErrorNotification('Failed to load RSS feeds', 'Error');
+      }
+
+      // Load categories
+      const categoriesResult = await fetchCategories();
+      if (categoriesResult.success && categoriesResult.data) {
+        setCategories(categoriesResult.data);
+      } else {
+        console.error('Error loading categories:', categoriesResult.error);
+        showErrorNotification('Failed to load categories', 'Error');
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showErrorNotification('Failed to load data', 'Error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reload just the feeds
+  const loadFeeds = async () => {
     try {
       const result = await fetchRssFeeds();
       if (result.success && result.data) {
@@ -42,8 +72,6 @@ export default function RssFeedManager() {
     } catch (error) {
       console.error('Error loading RSS feeds:', error);
       showErrorNotification('Failed to load RSS feeds', 'Error');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -62,16 +90,23 @@ export default function RssFeedManager() {
     e.preventDefault();
 
     try {
+      // Validate required fields
+      if (!formData.name || !formData.url || !formData.category_id) {
+        showErrorNotification('Please fill in all required fields', 'Validation Error');
+        return;
+      }
+
       if (editingFeed) {
         // Update existing feed
         const result = await updateRssFeed(editingFeed.id, {
           ...formData,
-          fetch_interval: Number(formData.fetch_interval),
+          fetch_frequency: Number(formData.fetch_frequency),
         });
 
         if (result.success) {
           showSuccessNotification('RSS feed updated successfully', 'Success');
           setEditingFeed(null);
+          setShowAddForm(false);
         } else {
           showErrorNotification('Failed to update RSS feed', 'Error');
           console.error('Update error:', result.error);
@@ -80,7 +115,7 @@ export default function RssFeedManager() {
         // Add new feed
         const result = await addRssFeed({
           ...formData,
-          fetch_interval: Number(formData.fetch_interval),
+          fetch_frequency: Number(formData.fetch_frequency),
         });
 
         if (result.success) {
@@ -106,9 +141,10 @@ export default function RssFeedManager() {
     setFormData({
       name: '',
       url: '',
-      category: '',
-      auto_fetch: true,
-      fetch_interval: 60,
+      category_id: '',
+      user_id: 'system',
+      active: true,
+      fetch_frequency: 60,
     });
   };
 
@@ -118,9 +154,10 @@ export default function RssFeedManager() {
     setFormData({
       name: feed.name,
       url: feed.url,
-      category: feed.category,
-      auto_fetch: feed.auto_fetch,
-      fetch_interval: feed.fetch_interval,
+      category_id: feed.category_id || '',
+      user_id: feed.user_id || 'system',
+      active: feed.active,
+      fetch_frequency: feed.fetch_frequency,
     });
     setShowAddForm(true);
   };
@@ -255,32 +292,28 @@ export default function RssFeedManager() {
                 Category
               </label>
               <select
-                name="category"
-                value={formData.category}
+                name="category_id"
+                value={formData.category_id}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 required
               >
                 <option value="">Select a category</option>
-                <option value="General">General</option>
-                <option value="Technology">Technology</option>
-                <option value="Business">Business</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Sports">Sports</option>
-                <option value="Health">Health</option>
-                <option value="Science">Science</option>
-                <option value="Politics">Politics</option>
-                <option value="RSS">RSS</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fetch Interval (minutes)
+                Fetch Frequency (minutes)
               </label>
               <input
                 type="number"
-                name="fetch_interval"
-                value={formData.fetch_interval}
+                name="fetch_frequency"
+                value={formData.fetch_frequency}
                 onChange={handleInputChange}
                 min="5"
                 max="1440"
@@ -292,13 +325,13 @@ export default function RssFeedManager() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  name="auto_fetch"
-                  checked={formData.auto_fetch}
+                  name="active"
+                  checked={formData.active}
                   onChange={handleInputChange}
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
                 <span className="ml-2 text-sm text-gray-700">
-                  Automatically fetch new articles
+                  Active (automatically fetch new articles)
                 </span>
               </label>
             </div>
@@ -349,10 +382,10 @@ export default function RssFeedManager() {
                   Category
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Auto Fetch
+                  Active
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Interval
+                  Frequency
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -370,18 +403,18 @@ export default function RssFeedManager() {
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary bg-opacity-10">
-                      {feed.category}
+                      {categories.find(cat => cat.id === feed.category_id)?.name || 'Unknown'}
                     </span>
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                    {feed.auto_fetch ? (
+                    {feed.active ? (
                       <FiCheck className="text-green-500" />
                     ) : (
                       <FiX className="text-red-500" />
                     )}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                    {feed.fetch_interval} min
+                    {feed.fetch_frequency} min
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
                     <button

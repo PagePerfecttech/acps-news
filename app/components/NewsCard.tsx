@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FiX, FiThumbsUp, FiMessageSquare, FiEye, FiShare2 } from 'react-icons/fi';
+import { FiX, FiThumbsUp, FiMessageSquare, FiEye } from 'react-icons/fi';
 import { NewsArticle, Comment } from '../types';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { subscribeToChanges } from '../lib/supabaseService';
 import UserProfile from './UserProfile';
 import { useSettings } from '../contexts/SettingsContext';
-import ShareModal from './ShareModal';
+import ShareButton from './ShareButton';
 
 interface NewsCardProps {
   article: NewsArticle;
@@ -28,7 +28,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [usingSupabase, setUsingSupabase] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  // Removed showShareModal state as we're using ShareButton component
   const { settings } = useSettings();
 
   // Check if Supabase is configured
@@ -242,10 +242,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
     }
   };
 
-  // Handle share button click
-  const handleShare = () => {
-    setShowShareModal(true);
-  };
+  // Removed handleShare function as we're using ShareButton component
 
   // Check if content exceeds 400 characters to show Read More button
   const showReadMore = article.content.length > 400;
@@ -322,10 +319,13 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
                   <FiEye className="h-4 w-4 text-gray-500 mr-1" />
                   <span className="text-xs">{stats.views}</span>
                 </div>
-                <button onClick={handleShare} className="flex items-center hover:text-blue-500">
-                  <FiShare2 className="h-4 w-4 mr-1" />
-                  <span className="text-xs">Share</span>
-                </button>
+                <ShareButton
+                  title={article.title}
+                  elementId={`news-card-${article.id}`}
+                  className="flex items-center hover:text-blue-500"
+                  iconSize={16}
+                />
+                <span className="text-xs ml-1">Share</span>
               </div>
             </div>
           </div>
@@ -402,15 +402,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
       )}
     </div>
 
-    {/* Share Modal */}
-    {showShareModal && (
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        title={article.title}
-        elementId={`news-card-${article.id}`}
-      />
-    )}
+    {/* ShareModal is now handled by the ShareButton component */}
     </>
   );
 }

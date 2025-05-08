@@ -174,7 +174,7 @@ export const createSummary = (content: string, maxLength: number = 200): string 
 export const rssItemToNewsArticle = (
   item: RssItem,
   feedId: string,
-  categoryName: string = 'RSS'
+  categoryId: string
 ): Omit<NewsArticle, 'id' | 'created_at' | 'updated_at'> => {
   // Extract content
   const content = item.content || item.contentSnippet || item.description || '';
@@ -195,7 +195,7 @@ export const rssItemToNewsArticle = (
     title: item.title || 'Untitled',
     content: cleanHtml(content),
     summary,
-    category: categoryName,
+    category: categoryId, // Use category ID instead of name
     image_url: imageUrl || '',
     video_url: '',
     video_type: '',
@@ -244,7 +244,7 @@ export const processRssFeed = async (
       }
 
       // Convert to news article
-      const article = rssItemToNewsArticle(item, feed.id, feed.category);
+      const article = rssItemToNewsArticle(item, feed.id, feed.category_id);
 
       // Save to database
       try {
