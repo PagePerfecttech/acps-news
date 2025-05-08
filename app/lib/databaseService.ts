@@ -952,14 +952,23 @@ export const fetchRssFeeds = async (options: DatabaseOptions = {}): Promise<Data
     async () => {
       const result = await supabase
         .from('rss_feeds')
-        .select('*')
+        .select(`
+          *,
+          category:categories(id, name, slug)
+        `)
         .order('created_at', { ascending: false });
 
       if (result.error) {
         return { data: null, error: result.error };
       }
 
-      return { data: result.data, error: null };
+      // Process the result to include category information
+      const feeds = result.data.map(feed => ({
+        ...feed,
+        category: feed.category || null
+      }));
+
+      return { data: feeds, error: null };
     },
     'rss_feeds:all',
     'rss_feeds',

@@ -52,7 +52,7 @@ export const applyThemeColors = (settings: SiteSettings): void => {
 
   // Set primary color
   document.documentElement.style.setProperty('--primary-color', settings.primary_color);
-  
+
   // Set secondary color
   document.documentElement.style.setProperty('--secondary-color', settings.secondary_color);
 
@@ -68,6 +68,17 @@ export const applyThemeColors = (settings: SiteSettings): void => {
     const { r, g, b } = secondaryRgb;
     document.documentElement.style.setProperty('--secondary-rgb', `${r}, ${g}, ${b}`);
   }
+
+  // Update site name in title and any elements with data-site-name attribute
+  if (settings.site_name) {
+    document.title = settings.site_name;
+
+    // Update any elements with data-site-name attribute
+    const siteNameElements = document.querySelectorAll('[data-site-name]');
+    siteNameElements.forEach(element => {
+      element.textContent = settings.site_name;
+    });
+  }
 };
 
 /**
@@ -79,7 +90,7 @@ export const applyThemeColors = (settings: SiteSettings): void => {
 export const getColorWithOpacity = (color: string, opacity: number): string => {
   const rgb = hexToRgb(color);
   if (!rgb) return color;
-  
+
   const { r, g, b } = rgb;
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
@@ -93,14 +104,14 @@ export const getColorWithOpacity = (color: string, opacity: number): string => {
 export const adjustColor = (color: string, percent: number): string => {
   const rgb = hexToRgb(color);
   if (!rgb) return color;
-  
+
   const { r, g, b } = rgb;
-  
+
   const factor = percent / 100;
   const adjustValue = (value: number): number => {
     return Math.round(Math.min(255, Math.max(0, value + value * factor)));
   };
-  
+
   return rgbToHex(
     adjustValue(r),
     adjustValue(g),

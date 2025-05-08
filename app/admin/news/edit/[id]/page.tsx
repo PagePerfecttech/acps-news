@@ -67,40 +67,103 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you would upload the file to a server or cloud storage
-      // For demo purposes, we'll just create a local URL
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewImage(imageUrl);
+      try {
+        // Show preview immediately for better UX
+        const previewUrl = URL.createObjectURL(file);
+        setPreviewImage(previewUrl);
 
-      // In a real app, you would upload the file to a server and get the URL
-      // For now, we'll use the local URL for preview and simulate a server URL
-      setFormData(prev => ({
-        ...prev,
-        image_url: imageUrl, // In a real app, this would be the URL from your server
-      }));
+        // Set loading state
+        setIsSubmitting(true);
 
-      console.log('File selected:', file.name, 'size:', (file.size / 1024).toFixed(2) + 'KB');
+        // Create form data for upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        formData.append('bucket', 'news-images');
+
+        // Upload the image using the API
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          console.error('Error uploading image:', result.error);
+          setMessage({
+            type: 'error',
+            text: `Failed to upload image: ${result.error || 'Unknown error'}`
+          });
+          // Keep the preview but don't update the form data
+        } else {
+          // Update form with the actual storage URL
+          setFormData(prev => ({
+            ...prev,
+            image_url: result.url,
+          }));
+          console.log('Image uploaded successfully:', result.url);
+        }
+      } catch (error) {
+        console.error('Error in image upload:', error);
+        setMessage({
+          type: 'error',
+          text: 'Failed to upload image. Please try again.'
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you would upload the file to a server or cloud storage
-      // For demo purposes, we'll just create a local URL
-      const videoUrl = URL.createObjectURL(file);
+      try {
+        // Set loading state
+        setIsSubmitting(true);
 
-      // In a real app, you would upload the file to a server and get the URL
-      setFormData(prev => ({
-        ...prev,
-        video_url: videoUrl,
-        video_type: 'uploaded'
-      }));
+        // Create form data for upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'video');
+        formData.append('bucket', 'news-videos');
 
-      console.log('Video selected:', file.name, 'size:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
+        // Upload the video using the API
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          console.error('Error uploading video:', result.error);
+          setMessage({
+            type: 'error',
+            text: `Failed to upload video: ${result.error || 'Unknown error'}`
+          });
+        } else {
+          // Update form with the actual storage URL
+          setFormData(prev => ({
+            ...prev,
+            video_url: result.url,
+            video_type: 'uploaded'
+          }));
+          console.log('Video uploaded successfully:', result.url);
+        }
+      } catch (error) {
+        console.error('Error in video upload:', error);
+        setMessage({
+          type: 'error',
+          text: 'Failed to upload video. Please try again.'
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 

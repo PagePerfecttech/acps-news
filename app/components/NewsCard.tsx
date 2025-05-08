@@ -236,7 +236,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
       // Fallback
       return (
         <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
-          <span className="text-white text-xl font-bold">FlipNews</span>
+          <span className="text-white text-xl font-bold" data-site-name>FlipNews</span>
         </div>
       );
     }

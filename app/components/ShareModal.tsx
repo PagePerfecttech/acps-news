@@ -119,6 +119,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
       const siteName = settings?.site_name || 'FlipNews';
 
+      const authorName = title.split(' - ')[0] || '';
       const shareText = `${title}\n\nRead More News like this at ${shareLink}`;
       const shareUrl = shareLink;
 
@@ -283,7 +284,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
                   style={{ maxHeight: '70vh', objectFit: 'contain' }}
                 />
                 <div className="absolute bottom-2 right-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs font-bold">
-                  {settings?.site_name || 'FlipNews'}
+                  <span data-site-name>{settings?.site_name || 'FlipNews'}</span>
                 </div>
               </div>
             ) : (

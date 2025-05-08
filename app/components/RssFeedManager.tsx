@@ -429,7 +429,7 @@ export default function RssFeedManager() {
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary bg-opacity-10">
-                      {categories.find(cat => cat.id === feed.category_id)?.name || 'Unknown'}
+                      {feed.category?.name || categories.find(cat => cat.id === feed.category_id)?.name || 'Unknown'}
                     </span>
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">

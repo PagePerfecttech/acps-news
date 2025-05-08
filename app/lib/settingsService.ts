@@ -167,7 +167,17 @@ const saveLocalSettings = (settings: SiteSettings): boolean => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    localStorage.setItem('flipnews_settings', JSON.stringify(settings));
+    // Make sure we're saving a complete settings object
+    const currentSettings = getLocalSettings();
+    const updatedSettings = { ...currentSettings, ...settings };
+
+    localStorage.setItem('flipnews_settings', JSON.stringify(updatedSettings));
+
+    // Also update document title if site_name is changed
+    if (settings.site_name && typeof document !== 'undefined') {
+      document.title = settings.site_name;
+    }
+
     return true;
   } catch (error) {
     console.error('Error saving settings to localStorage:', error);

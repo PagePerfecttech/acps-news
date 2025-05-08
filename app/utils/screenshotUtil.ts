@@ -38,6 +38,16 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     wrapper.style.overflow = 'hidden';
     wrapper.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
 
+    // Add a gradient background similar to the image provided
+    const gradientOverlay = document.createElement('div');
+    gradientOverlay.style.position = 'absolute';
+    gradientOverlay.style.top = '0';
+    gradientOverlay.style.left = '0';
+    gradientOverlay.style.width = '100%';
+    gradientOverlay.style.height = '45vh';
+    gradientOverlay.style.background = 'linear-gradient(to right, #4299e1, #9f7aea)';
+    gradientOverlay.style.zIndex = '-1';
+
     // Prepare the clone for screenshot
     clone.style.width = '100%';
     clone.style.height = 'auto';
@@ -51,6 +61,9 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     clone.style.pointerEvents = 'none';
     clone.style.opacity = '1';
     clone.style.visibility = 'visible';
+
+    // Add the gradient overlay to the wrapper
+    wrapper.appendChild(gradientOverlay);
 
     // Add the clone to the wrapper
     wrapper.appendChild(clone);
