@@ -280,8 +280,9 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
                   src={screenshotUrl}
                   alt="News Screenshot"
                   className="w-full h-auto"
+                  style={{ maxHeight: '70vh', objectFit: 'contain' }}
                 />
-                <div className="absolute bottom-2 right-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs">
+                <div className="absolute bottom-2 right-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs font-bold">
                   {settings?.site_name || 'FlipNews'}
                 </div>
               </div>

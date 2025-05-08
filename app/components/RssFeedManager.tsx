@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FiRefreshCw, FiPlus, FiEdit, FiTrash2, FiRss, FiCheck, FiX } from 'react-icons/fi';
 import { RssFeed, Category } from '../types';
-import { fetchRssFeeds, fetchRssFeedItems, addRssFeed, updateRssFeed, deleteRssFeed, fetchCategories } from '../lib/databaseService';
+import { fetchRssFeeds, fetchRssFeedItems, addRssFeed, updateRssFeed, deleteRssFeed, fetchCategories, createCategory } from '../lib/databaseService';
 import { processRssFeed } from '../lib/rssProcessor';
 import { showErrorNotification, showSuccessNotification } from './Notification';
 
@@ -35,8 +35,10 @@ export default function RssFeedManager() {
     setLoading(true);
     try {
       // Load feeds
+      console.log('Loading RSS feeds...');
       const feedsResult = await fetchRssFeeds();
       if (feedsResult.success && feedsResult.data) {
+        console.log('RSS feeds loaded successfully:', feedsResult.data.length);
         setFeeds(feedsResult.data);
       } else {
         console.error('Error loading RSS feeds:', feedsResult.error);
@@ -44,12 +46,36 @@ export default function RssFeedManager() {
       }
 
       // Load categories
+      console.log('Loading categories...');
       const categoriesResult = await fetchCategories();
+      console.log('Categories result:', categoriesResult);
+
       if (categoriesResult.success && categoriesResult.data) {
+        console.log('Categories loaded successfully:', categoriesResult.data.length);
         setCategories(categoriesResult.data);
       } else {
         console.error('Error loading categories:', categoriesResult.error);
         showErrorNotification('Failed to load categories', 'Error');
+
+        // If categories failed to load, try to create some default categories
+        console.log('Attempting to create default categories...');
+        try {
+          // Create a default category if none exist
+          const defaultCategory = {
+            name: 'General',
+            slug: 'general'
+          };
+
+          const createResult = await createCategory(defaultCategory);
+          if (createResult.success && createResult.data) {
+            console.log('Default category created:', createResult.data);
+            setCategories([createResult.data]);
+          } else {
+            console.error('Failed to create default category:', createResult.error);
+          }
+        } catch (createError) {
+          console.error('Error creating default category:', createError);
+        }
       }
     } catch (error) {
       console.error('Error loading data:', error);

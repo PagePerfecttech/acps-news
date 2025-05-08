@@ -24,21 +24,43 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     // Create a clone of the element to avoid modifying the original
     const clone = element.cloneNode(true) as HTMLElement;
 
+    // Get the original element's dimensions and styles
+    const originalRect = element.getBoundingClientRect();
+    const originalStyles = window.getComputedStyle(element);
+
+    // Create a wrapper div to maintain the original dimensions and styling
+    const wrapper = document.createElement('div');
+    wrapper.style.width = `${originalRect.width}px`;
+    wrapper.style.maxWidth = '100%';
+    wrapper.style.margin = '0 auto';
+    wrapper.style.backgroundColor = originalStyles.backgroundColor || '#ffffff';
+    wrapper.style.borderRadius = originalStyles.borderRadius;
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+
     // Prepare the clone for screenshot
     clone.style.width = '100%';
     clone.style.height = 'auto';
-    clone.style.position = 'fixed'; // Use fixed instead of absolute
-    clone.style.top = '0';
-    clone.style.left = '0';
-    clone.style.zIndex = '9999'; // Use a high z-index to ensure it's on top
+    clone.style.position = 'relative'; // Use relative instead of fixed
     clone.style.transform = 'none'; // Remove any transforms
-    clone.style.backgroundColor = '#ffffff'; // Ensure white background
+    clone.style.backgroundColor = originalStyles.backgroundColor || '#ffffff';
     clone.style.overflow = 'visible'; // Make sure content is visible
+    clone.style.borderRadius = originalStyles.borderRadius;
 
     // Make sure the clone is visible but not interactive
     clone.style.pointerEvents = 'none';
     clone.style.opacity = '1';
     clone.style.visibility = 'visible';
+
+    // Add the clone to the wrapper
+    wrapper.appendChild(clone);
+
+    // Position the wrapper for screenshot
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.right = '0';
+    wrapper.style.zIndex = '9999';
 
     // Fix Next.js Image components which might not render properly
     const nextImages = clone.querySelectorAll('[data-nimg]');
@@ -59,13 +81,13 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     });
 
     // Append to body temporarily
-    document.body.appendChild(clone);
+    document.body.appendChild(wrapper);
 
     // Wait a moment for the clone to render properly - increased for better reliability
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Optimize screenshot capture for better quality and reliability
-    const canvas = await html2canvas(clone, {
+    const canvas = await html2canvas(wrapper, {
       allowTaint: true,
       useCORS: true,
       scale: 2, // Higher scale for better quality
@@ -102,9 +124,9 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
       }
     });
 
-    // Remove the clone from the DOM
-    if (document.body.contains(clone)) {
-      document.body.removeChild(clone);
+    // Remove the wrapper from the DOM
+    if (document.body.contains(wrapper)) {
+      document.body.removeChild(wrapper);
     }
 
     // Use higher quality for better image
@@ -112,16 +134,25 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
   } catch (error) {
     console.error('Error capturing screenshot:', error);
 
-    // Clean up any clones that might be left in the DOM
+    // Clean up any wrappers or clones that might be left in the DOM
     try {
-      const orphanedClones = document.querySelectorAll('[style*="z-index: 9999"][style*="position: fixed"]');
+      // Clean up wrappers
+      const orphanedWrappers = document.querySelectorAll('[style*="z-index: 9999"][style*="position: fixed"]');
+      orphanedWrappers.forEach(wrapper => {
+        if (wrapper.parentNode) {
+          wrapper.parentNode.removeChild(wrapper);
+        }
+      });
+
+      // Also check for any orphaned clones with our specific styling
+      const orphanedClones = document.querySelectorAll('[style*="pointerEvents: none"][style*="position: relative"]');
       orphanedClones.forEach(clone => {
         if (clone.parentNode) {
           clone.parentNode.removeChild(clone);
         }
       });
     } catch (e) {
-      console.warn('Error cleaning up orphaned clones:', e);
+      console.warn('Error cleaning up orphaned elements:', e);
     }
 
     // Return a fallback image URL if screenshot fails
