@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FiX, FiThumbsUp, FiMessageSquare, FiEye } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiX, FiThumbsUp, FiMessageSquare, FiEye, FiExternalLink } from 'react-icons/fi';
 import { NewsArticle, Comment } from '../types';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { subscribeToChanges } from '../lib/supabaseService';
@@ -326,6 +327,13 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
                   iconSize={16}
                 />
                 <span className="text-xs ml-1">Share</span>
+                <Link
+                  href={`/news/${article.id}`}
+                  className="flex items-center text-green-600 hover:text-green-700"
+                  title="Open article in new page"
+                >
+                  <FiExternalLink className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
@@ -339,12 +347,21 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
             {/* Sticky header */}
             <div className="sticky top-0 bg-yellow-500 flex justify-between items-center z-10 px-4 py-3">
               <h3 className="text-base font-bold pr-4 truncate">{article.title}</h3>
-              <button
-                onClick={() => toggleFullContent(false)}
-                className="bg-yellow-600 p-1 text-black rounded-full hover:bg-yellow-700 transition-colors"
-              >
-                <FiX size={18} />
-              </button>
+              <div className="flex items-center space-x-2">
+                <Link
+                  href={`/news/${article.id}`}
+                  className="bg-yellow-600 p-1 text-black rounded-full hover:bg-yellow-700 transition-colors"
+                  title="Open in new page"
+                >
+                  <FiExternalLink size={18} />
+                </Link>
+                <button
+                  onClick={() => toggleFullContent(false)}
+                  className="bg-yellow-600 p-1 text-black rounded-full hover:bg-yellow-700 transition-colors"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
             </div>
 
             {/* No media in popup as per user request */}

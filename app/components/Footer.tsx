@@ -57,6 +57,16 @@ export default function Footer() {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <Link href="/debug" className="text-gray-400 hover:text-white transition-colors">
+                  Debug Tools
+                </Link>
+              </li>
+              <li>
+                <Link href="/setup" className="text-gray-400 hover:text-white transition-colors">
+                  Supabase Setup
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -20,7 +20,7 @@ export default function ConnectionStatus({ showDetails = false, className = '' }
   }>({ total: 0, active: 0, inactive: 0, error: 0 });
   const [showTooltip, setShowTooltip] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
-  const [lastChecked, setLastChecked] = useState<number | null>(null);
+  const [lastChecked, setLastChecked] = useState<number>(0);
 
   useEffect(() => {
     // Get initial status
@@ -29,7 +29,7 @@ export default function ConnectionStatus({ showDetails = false, className = '' }
     // Set up interval to check status
     const interval = setInterval(() => {
       setStatus(getConnectionStatus());
-      
+
       // Get subscription status
       const subStatus = getAllSubscriptionsStatus();
       setSubscriptions({
@@ -117,9 +117,14 @@ export default function ConnectionStatus({ showDetails = false, className = '' }
             </div>
           </div>
 
-          {lastChecked && (
+          {lastChecked > 0 && (
             <div className="text-xs text-gray-500 mb-2">
-              Last checked: {new Date(lastChecked).toLocaleTimeString()}
+              Last checked: {new Date(lastChecked).toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+              })}
             </div>
           )}
 

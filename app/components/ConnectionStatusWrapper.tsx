@@ -9,20 +9,26 @@ export default function ConnectionStatusWrapper() {
   const pathname = usePathname();
   const [showStatus, setShowStatus] = useState(false);
   const { connectionStatus } = useSettings();
-  
-  // Only show in admin pages or when there's a connection issue
+
+  // Only show in admin/setup pages or when there's a connection issue
   useEffect(() => {
     const isAdminPage = pathname?.startsWith('/admin');
+    const isSetupPage = pathname?.startsWith('/setup');
+    const isDebugPage = pathname?.startsWith('/debug');
     const hasConnectionIssue = connectionStatus === 'error' || connectionStatus === 'disconnected';
-    
-    setShowStatus(isAdminPage || hasConnectionIssue);
+
+    setShowStatus(isAdminPage || isSetupPage || isDebugPage || hasConnectionIssue);
   }, [pathname, connectionStatus]);
-  
+
   if (!showStatus) return null;
-  
+
   return (
     <div className="connection-indicator">
-      <ConnectionStatus showDetails={pathname?.startsWith('/admin')} />
+      <ConnectionStatus showDetails={
+        pathname?.startsWith('/admin') ||
+        pathname?.startsWith('/setup') ||
+        pathname?.startsWith('/debug')
+      } />
     </div>
   );
 }

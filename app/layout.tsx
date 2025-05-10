@@ -4,6 +4,7 @@ import "./globals.css";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import ConnectionStatusWrapper from "./components/ConnectionStatusWrapper";
 import { NotificationProvider } from "./components/Notification";
+import SupabaseInitializer from "./components/SupabaseInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
       >
         <SettingsProvider>
           <NotificationProvider>
+            <SupabaseInitializer />
             <main className="flex-grow">
               {children}
             </main>

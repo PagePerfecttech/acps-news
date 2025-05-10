@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiRefreshCw, FiExternalLink, FiSearch, FiInfo } from 'react-icons/fi';
-import { logAllArticles, getAllArticleIds, checkArticleExists } from '../lib/debugUtils';
+import { getAllArticleIds, checkArticleExists } from '../lib/debugUtils';
 import { getNewsArticles } from '../lib/dataService';
 import { isSupabaseConfigured } from '../lib/supabase';
 

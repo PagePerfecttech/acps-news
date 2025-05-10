@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import NewsCard from "./components/NewsCard";
 import AdBanner from "./components/AdBanner";
+import RefreshButton from "./components/RefreshButton";
 import { NewsArticle, Ad } from "./types";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCards, Virtual, Mousewheel } from 'swiper/modules';
@@ -23,39 +24,55 @@ export default function Home() {
 
   // Load articles and ads from data service
   useEffect(() => {
+    // Force clear any cached data to ensure we get fresh data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('flipnews_articles_cache');
+      console.log('Cleared article cache on home page load');
+    }
+
     // Get articles and ads from data service
-    const newsArticles = getNewsArticles();
-    const adsList = getAds();
+    const fetchData = async () => {
+      try {
+        const [newsArticles, adsList] = await Promise.all([
+          getNewsArticles(),
+          getAds()
+        ]);
 
-    setArticles(newsArticles);
-    setAds(adsList);
+        setArticles(newsArticles);
+        setAds(adsList);
 
-    // Create a combined array of content (news articles and ads)
-    const adFrequency = 3; // Show ad after every 3 news articles
-    const newCombinedContent: Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }> = [];
+        // Create a combined array of content (news articles and ads)
+        const adFrequency = 3; // Show ad after every 3 news articles
+        const newCombinedContent: Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }> = [];
 
-    // Populate the combined content array
-    newsArticles.forEach((article, index) => {
-      // Add the news article
-      newCombinedContent.push({
-        type: 'news',
-        content: article,
-        index: newCombinedContent.length
-      });
+        // Populate the combined content array
+        newsArticles.forEach((article, index) => {
+          // Add the news article
+          newCombinedContent.push({
+            type: 'news',
+            content: article,
+            index: newCombinedContent.length
+          });
 
-      // Add an ad after every 'adFrequency' articles
-      if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList.length > 0) {
-        // Use different ads based on position
-        const adIndex = Math.floor(index / adFrequency) % adsList.length;
-        newCombinedContent.push({
-          type: 'ad',
-          content: adsList[adIndex],
-          index: newCombinedContent.length
+          // Add an ad after every 'adFrequency' articles
+          if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList.length > 0) {
+            // Use different ads based on position
+            const adIndex = Math.floor(index / adFrequency) % adsList.length;
+            newCombinedContent.push({
+              type: 'ad',
+              content: adsList[adIndex],
+              index: newCombinedContent.length
+            });
+          }
         });
-      }
-    });
 
-    setCombinedContent(newCombinedContent);
+        setCombinedContent(newCombinedContent);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Handle swiper slide change
@@ -94,6 +111,55 @@ export default function Home() {
       return `${newsIndex + 1} / ${articles.length}`;
     }
     return '';
+  };
+
+  // Function to refresh the content
+  const refreshContent = async () => {
+    // Force clear any cached data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('flipnews_articles_cache');
+      console.log('Cache cleared via manual refresh');
+    }
+
+    try {
+      // Get fresh articles and ads
+      const [newsArticles, adsList] = await Promise.all([
+        getNewsArticles(),
+        getAds()
+      ]);
+
+      setArticles(newsArticles);
+      setAds(adsList);
+
+      // Recreate the combined content
+      const adFrequency = 3; // Show ad after every 3 news articles
+      const newCombinedContent: Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }> = [];
+
+      // Populate the combined content array
+      newsArticles.forEach((article, index) => {
+        // Add the news article
+        newCombinedContent.push({
+          type: 'news',
+          content: article,
+          index: newCombinedContent.length
+        });
+
+        // Add an ad after every 'adFrequency' articles
+        if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList.length > 0) {
+          // Use different ads based on position
+          const adIndex = Math.floor(index / adFrequency) % adsList.length;
+          newCombinedContent.push({
+            type: 'ad',
+            content: adsList[adIndex],
+            index: newCombinedContent.length
+          });
+        }
+      });
+
+      setCombinedContent(newCombinedContent);
+    } catch (error) {
+      console.error('Error refreshing content:', error);
+    }
   };
 
   return (
@@ -135,10 +201,15 @@ export default function Home() {
         </Swiper>
 
         {/* Position indicator */}
-        <div className="fixed top-4 right-4 z-20">
+        <div className="fixed top-4 right-4 z-20 flex items-center space-x-2">
           <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
             {getCurrentPosition()}
           </div>
+          <RefreshButton
+            className="!py-1 !px-2 text-xs"
+            label="Refresh"
+            onRefresh={refreshContent}
+          />
         </div>
 
         {/* Swipe instruction overlay - only shown initially */}

@@ -38,22 +38,36 @@ export const getSettings = async (): Promise<SiteSettings> => {
 
     if (usingSupabase) {
       try {
-        // Try to get settings from Supabase
-        const { data, error } = await supabase
+        // Try to get settings from Supabase as key-value pairs
+        const { data: keyValueSettings, error: keyValueError } = await supabase
           .from('site_settings')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+          .select('*');
 
-        if (error) {
-          console.error('Error fetching settings from Supabase:', error);
+        if (keyValueError) {
+          console.error('Error fetching key-value settings from Supabase:', keyValueError);
           // Fall back to localStorage
           return getLocalSettings();
         }
 
-        if (data) {
-          return data as SiteSettings;
+        if (keyValueSettings && keyValueSettings.length > 0) {
+          // Convert key-value pairs to settings object
+          const settingsObj: Record<string, string> = {};
+          keyValueSettings.forEach((item: { key: string; value: string }) => {
+            settingsObj[item.key] = item.value;
+          });
+
+          console.log('Retrieved settings from site_settings table:', settingsObj);
+
+          // Map to our settings format
+          const mappedSettings: SiteSettings = {
+            site_name: settingsObj.site_name || defaultSettings.site_name,
+            primary_color: settingsObj.primary_color || defaultSettings.primary_color,
+            secondary_color: settingsObj.secondary_color || defaultSettings.secondary_color,
+            share_link: settingsObj.share_link || defaultSettings.share_link,
+            logo_url: settingsObj.logo_url || defaultSettings.logo_url,
+          };
+
+          return mappedSettings;
         } else {
           console.log('No settings found in Supabase, using localStorage');
           return getLocalSettings();
@@ -95,46 +109,48 @@ export const saveSettings = async (settings: SiteSettings): Promise<boolean> => 
 
     if (usingSupabase) {
       try {
-        // Save to Supabase
+        // Save to Supabase as key-value pairs
         const now = new Date().toISOString();
 
-        // Check if settings already exist
-        const { data: existingSettings, error: queryError } = await supabase
-          .from('site_settings')
-          .select('id')
-          .limit(1)
-          .single();
+        // Create an array of settings to save
+        const settingsToSave = [
+          { key: 'site_name', value: settings.site_name },
+          { key: 'primary_color', value: settings.primary_color },
+          { key: 'secondary_color', value: settings.secondary_color },
+          { key: 'share_link', value: settings.share_link },
+        ];
 
-        // If there's an error querying, fall back to localStorage
-        if (queryError) {
-          console.error('Error checking existing settings:', queryError);
-          return saveLocalSettings(settings);
+        if (settings.logo_url) {
+          settingsToSave.push({ key: 'logo_url', value: settings.logo_url });
         }
 
-        let result;
+        // Add additional settings for the app
+        settingsToSave.push({ key: 'app_version', value: '1.0.0' });
+        settingsToSave.push({ key: 'last_updated', value: now });
 
-        if (existingSettings) {
-          // Update existing settings
-          result = await supabase
+        console.log('Saving settings to Supabase:', settingsToSave);
+
+        // Upsert each setting
+        let hasError = false;
+        for (const setting of settingsToSave) {
+          const { error } = await supabase
             .from('site_settings')
-            .update({
-              ...settings,
+            .upsert({
+              key: setting.key,
+              value: setting.value,
               updated_at: now
-            })
-            .eq('id', existingSettings.id);
-        } else {
-          // Insert new settings
-          result = await supabase
-            .from('site_settings')
-            .insert({
-              ...settings,
-              created_at: now,
-              updated_at: now
+            }, {
+              onConflict: 'key'
             });
+
+          if (error) {
+            console.error(`Error upserting setting ${setting.key}:`, error);
+            hasError = true;
+          }
         }
 
-        if (result.error) {
-          console.error('Error saving settings to Supabase:', result.error);
+        if (hasError) {
+          console.warn('Some settings failed to save to Supabase, falling back to localStorage');
           // Fall back to localStorage
           return saveLocalSettings(settings);
         }
