@@ -15,8 +15,17 @@ export default function NewsManagement() {
 
   // Load articles when component mounts
   useEffect(() => {
-    const loadedArticles = getNewsArticles();
-    setArticles(loadedArticles);
+    const fetchArticles = async () => {
+      try {
+        const loadedArticles = await getNewsArticles();
+        setArticles(loadedArticles);
+      } catch (error) {
+        console.error('Error loading articles:', error);
+        setMessage({ type: 'error', text: 'Failed to load articles. Please refresh the page.' });
+      }
+    };
+
+    fetchArticles();
   }, []);
 
   // Get unique categories from articles
@@ -39,17 +48,17 @@ export default function NewsManagement() {
     });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this article?')) {
       setIsDeleting(true);
 
       try {
-        const success = deleteNewsArticle(id);
+        const success = await deleteNewsArticle(id);
 
         if (success) {
           // Update the articles list
           setArticles(prev => prev.filter(article => article.id !== id));
-          setMessage({ type: 'success', text: 'Article deleted successfully!' });
+          setMessage({ type: 'success', text: 'Article deleted successfully from Supabase and local storage!' });
 
           // Clear message after 3 seconds
           setTimeout(() => {

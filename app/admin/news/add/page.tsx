@@ -204,12 +204,12 @@ export default function AddNewsPage() {
       console.log('Adding new article:', newArticle);
 
       // Add the article using the data service
-      const success = addNewsArticle(newArticle);
+      const success = await addNewsArticle(newArticle);
 
       if (success) {
         setMessage({
           type: 'success',
-          text: 'News article created successfully!'
+          text: 'News article created successfully and saved to Supabase!'
         });
 
         // Navigate to the news list after a short delay

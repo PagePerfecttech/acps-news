@@ -198,10 +198,17 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
       console.log('Updating article:', updatedArticle);
 
       // Update the article using the data service
-      const success = updateNewsArticle(updatedArticle);
+      const success = await updateNewsArticle(updatedArticle);
 
       if (success) {
-        setMessage({ type: 'success', text: 'Article updated successfully!' });
+        // Clear any cached data to ensure fresh data is loaded on the front end
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('flipnews_articles_cache');
+          localStorage.setItem('flipnews_articles_updated', Date.now().toString());
+          console.log('Article updated and cache cleared');
+        }
+
+        setMessage({ type: 'success', text: 'Article updated successfully and saved to Supabase!' });
         setTimeout(() => {
           router.push('/admin/news');
         }, 1500);
