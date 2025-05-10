@@ -221,9 +221,18 @@ export default function AddNewsPage() {
       }
     } catch (error) {
       console.error('Error adding article:', error);
+      let errorMessage = 'Failed to create news article. Please try again.';
+
+      // Add more detailed error information
+      if (error instanceof Error) {
+        errorMessage += ` Error: ${error.message}`;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage += ` Error: ${JSON.stringify(error)}`;
+      }
+
       setMessage({
         type: 'error',
-        text: 'Failed to create news article. Please try again.'
+        text: errorMessage
       });
     } finally {
       setIsSubmitting(false);

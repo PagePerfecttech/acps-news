@@ -351,49 +351,86 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
       if (configured) {
         console.log('Adding article to Supabase:', newArticle.title);
 
-        // Find category ID if needed
+        // Use the category name directly as category_id for now
+        // This simplifies the process until we have proper category management
         let categoryId = newArticle.category;
-        if (typeof categoryId === 'string' && isNaN(Number(categoryId))) {
-          // If category is a name rather than an ID, look up the ID
-          const { data: categoryData } = await supabase
-            .from('categories')
-            .select('id, name')
-            .eq('name', newArticle.category)
-            .single();
 
-          if (categoryData) {
-            categoryId = categoryData.id;
+        // If we have categories table, try to find the ID
+        try {
+          if (typeof categoryId === 'string') {
+            // Check if categories table exists
+            const { count, error: countError } = await supabase
+              .from('categories')
+              .select('*', { count: 'exact', head: true });
+
+            if (!countError && count && count > 0) {
+              // If category is a name rather than an ID, look up the ID
+              const { data: categoryData } = await supabase
+                .from('categories')
+                .select('id, name')
+                .eq('name', newArticle.category)
+                .single();
+
+              if (categoryData) {
+                categoryId = categoryData.id;
+              }
+            }
           }
+        } catch (categoryError) {
+          console.warn('Error looking up category, using name as ID:', categoryError);
+          // Continue with the category name as the ID
         }
 
-        // Insert the article into Supabase
-        const { data, error } = await supabase
-          .from('news_articles')
-          .insert({
-            title: newArticle.title,
-            content: newArticle.content,
-            summary: newArticle.summary,
-            category_id: categoryId,
-            image_url: newArticle.image_url,
-            video_url: newArticle.video_url,
-            video_type: newArticle.video_type,
-            author: newArticle.author,
-            likes: newArticle.likes || 0,
-            views: 0,
-            published: newArticle.published !== false,
-            created_at: newArticle.created_at,
-            updated_at: newArticle.updated_at
-          })
-          .select()
-          .single();
+        // Prepare the article data
+        const articleData = {
+          title: newArticle.title,
+          content: newArticle.content,
+          summary: newArticle.summary,
+          category_id: categoryId,
+          image_url: newArticle.image_url,
+          video_url: newArticle.video_url,
+          video_type: newArticle.video_type,
+          author: newArticle.author,
+          likes: newArticle.likes || 0,
+          views: 0,
+          published: newArticle.published !== false,
+          created_at: newArticle.created_at || new Date().toISOString(),
+          updated_at: newArticle.updated_at || new Date().toISOString()
+        };
 
-        if (error) {
-          console.error('Error adding article to Supabase:', error);
-        } else {
-          console.log('Article added to Supabase successfully:', data.id);
+        console.log('Inserting article with data:', articleData);
 
-          // Update the article ID with the one from Supabase
-          newArticle.id = data.id;
+        try {
+          // Insert the article into Supabase
+          const { data, error } = await supabase
+            .from('news_articles')
+            .insert(articleData)
+            .select()
+            .single();
+
+          if (error) {
+            console.error('Error adding article to Supabase:', error);
+
+            // Try a simpler insert without select
+            const { error: simpleError } = await supabase
+              .from('news_articles')
+              .insert(articleData);
+
+            if (simpleError) {
+              console.error('Error with simple insert:', simpleError);
+              throw simpleError;
+            } else {
+              console.log('Article added to Supabase with simple insert (ID unknown)');
+            }
+          } else {
+            console.log('Article added to Supabase successfully:', data.id);
+
+            // Update the article ID with the one from Supabase
+            newArticle.id = data.id;
+          }
+        } catch (insertError) {
+          console.error('Exception during Supabase insert:', insertError);
+          // Continue to localStorage as fallback
         }
       }
     } catch (supabaseError) {
