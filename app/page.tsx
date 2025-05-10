@@ -66,14 +66,17 @@ export default function Home() {
           });
 
           // Add an ad after every 'adFrequency' articles
-          if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList.length > 0) {
+          if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList && Array.isArray(adsList) && adsList.length > 0) {
             // Use different ads based on position
             const adIndex = Math.floor(index / adFrequency) % adsList.length;
-            newCombinedContent.push({
-              type: 'ad',
-              content: adsList[adIndex],
-              index: newCombinedContent.length
-            });
+            // Make sure we have a valid ad at this index
+            if (adsList[adIndex] && adsList[adIndex].id) {
+              newCombinedContent.push({
+                type: 'ad',
+                content: adsList[adIndex],
+                index: newCombinedContent.length
+              });
+            }
           }
         });
 
@@ -168,14 +171,17 @@ export default function Home() {
         });
 
         // Add an ad after every 'adFrequency' articles
-        if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList.length > 0) {
+        if ((index + 1) % adFrequency === 0 && index < newsArticles.length - 1 && adsList && Array.isArray(adsList) && adsList.length > 0) {
           // Use different ads based on position
           const adIndex = Math.floor(index / adFrequency) % adsList.length;
-          newCombinedContent.push({
-            type: 'ad',
-            content: adsList[adIndex],
-            index: newCombinedContent.length
-          });
+          // Make sure we have a valid ad at this index
+          if (adsList[adIndex] && adsList[adIndex].id) {
+            newCombinedContent.push({
+              type: 'ad',
+              content: adsList[adIndex],
+              index: newCombinedContent.length
+            });
+          }
         }
       });
 

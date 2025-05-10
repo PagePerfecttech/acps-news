@@ -9,7 +9,15 @@ interface AdBannerProps {
 }
 
 export default function AdBanner({ ad, fullScreen = false }: AdBannerProps) {
-  if (!ad.active) return null;
+  // Handle invalid or undefined ad objects
+  if (!ad || !ad.id || ad.active === false) {
+    // Return a fallback ad banner
+    return (
+      <div className={`${fullScreen ? 'h-full' : 'h-[200px]'} w-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center`}>
+        <span className="text-gray-500 text-lg font-medium">Advertisement Placeholder</span>
+      </div>
+    );
+  }
 
   // Function to render the appropriate ad content based on type
   const renderAdContent = () => {

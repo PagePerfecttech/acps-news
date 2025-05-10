@@ -49,25 +49,41 @@ export const getSettings = async (): Promise<SiteSettings> => {
           return getLocalSettings();
         }
 
-        if (keyValueSettings && keyValueSettings.length > 0) {
-          // Convert key-value pairs to settings object
-          const settingsObj: Record<string, string> = {};
-          keyValueSettings.forEach((item: { key: string; value: string }) => {
-            settingsObj[item.key] = item.value;
-          });
+        if (keyValueSettings && Array.isArray(keyValueSettings) && keyValueSettings.length > 0) {
+          try {
+            // Convert key-value pairs to settings object
+            const settingsObj: Record<string, string> = {};
+            keyValueSettings.forEach((item: { key: string; value: any }) => {
+              if (item && item.key) {
+                // Handle different value formats (string, JSON, etc.)
+                let parsedValue = item.value;
+                if (typeof parsedValue === 'string' && (parsedValue.startsWith('"') || parsedValue.startsWith('{'))) {
+                  try {
+                    parsedValue = JSON.parse(parsedValue);
+                  } catch (e) {
+                    // Keep as string if parsing fails
+                  }
+                }
+                settingsObj[item.key] = parsedValue;
+              }
+            });
 
-          console.log('Retrieved settings from site_settings table:', settingsObj);
+            console.log('Retrieved settings from site_settings table:', settingsObj);
 
-          // Map to our settings format
-          const mappedSettings: SiteSettings = {
-            site_name: settingsObj.site_name || defaultSettings.site_name,
-            primary_color: settingsObj.primary_color || defaultSettings.primary_color,
-            secondary_color: settingsObj.secondary_color || defaultSettings.secondary_color,
-            share_link: settingsObj.share_link || defaultSettings.share_link,
-            logo_url: settingsObj.logo_url || defaultSettings.logo_url,
-          };
+            // Map to our settings format
+            const mappedSettings: SiteSettings = {
+              site_name: settingsObj.site_name || settingsObj.app_name || defaultSettings.site_name,
+              primary_color: settingsObj.primary_color || settingsObj.theme_primary_color || defaultSettings.primary_color,
+              secondary_color: settingsObj.secondary_color || settingsObj.theme_secondary_color || defaultSettings.secondary_color,
+              share_link: settingsObj.share_link || defaultSettings.share_link,
+              logo_url: settingsObj.logo_url || defaultSettings.logo_url,
+            };
 
-          return mappedSettings;
+            return mappedSettings;
+          } catch (parseError) {
+            console.error('Error parsing settings from Supabase:', parseError);
+            return getLocalSettings();
+          }
         } else {
           console.log('No settings found in Supabase, using localStorage');
           return getLocalSettings();
