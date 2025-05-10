@@ -83,25 +83,36 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (!usingSupabase || !article) return;
 
-    // Subscribe to likes changes
-    const likesSubscription = subscribeToChanges('likes', (payload) => {
-      if (payload.new && payload.new.news_id === article.id) {
-        setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
-      }
-    });
+    let likesSubscription: { unsubscribe: () => void } | null = null;
+    let commentsSubscription: { unsubscribe: () => void } | null = null;
 
-    // Subscribe to comments changes
-    const commentsSubscription = subscribeToChanges('comments', (payload) => {
-      if (payload.new && payload.new.news_id === article.id) {
-        setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
-        // Refresh article to get the new comment
-        fetchArticle(true);
-      }
-    });
+    try {
+      // Subscribe to likes changes
+      likesSubscription = subscribeToChanges('likes', (payload) => {
+        if (payload.new && payload.new.news_id === article.id) {
+          setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
+        }
+      });
+
+      // Subscribe to comments changes
+      commentsSubscription = subscribeToChanges('comments', (payload) => {
+        if (payload.new && payload.new.news_id === article.id) {
+          setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
+          // Refresh article to get the new comment
+          fetchArticle(true);
+        }
+      });
+    } catch (error) {
+      console.error('Error setting up real-time subscriptions:', error);
+    }
 
     return () => {
-      likesSubscription.unsubscribe();
-      commentsSubscription.unsubscribe();
+      try {
+        if (likesSubscription) likesSubscription.unsubscribe();
+        if (commentsSubscription) commentsSubscription.unsubscribe();
+      } catch (error) {
+        console.error('Error unsubscribing from real-time subscriptions:', error);
+      }
     };
   }, [usingSupabase, article]);
 
@@ -115,8 +126,26 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
       if (useSupabase) {
         // First try Supabase
         console.log('Trying to fetch article from Supabase:', params.id);
-        fetchedArticle = await getNewsArticleById(params.id);
-        articleStats = await getArticleStats(params.id);
+        try {
+          fetchedArticle = await getNewsArticleById(params.id);
+
+          // Only try to get stats if we found the article
+          if (fetchedArticle) {
+            try {
+              articleStats = await getArticleStats(params.id);
+            } catch (statsError) {
+              console.error('Error fetching article stats:', statsError);
+              // Provide default stats if there's an error
+              articleStats = {
+                likes: fetchedArticle.likes || 0,
+                comments: fetchedArticle.comments?.length || 0,
+                views: 0
+              };
+            }
+          }
+        } catch (supabaseError) {
+          console.error('Error fetching from Supabase:', supabaseError);
+        }
       }
 
       // If not found in Supabase or not using Supabase, try localStorage
