@@ -123,10 +123,32 @@ export default function Home() {
 
   // Calculate the current position for display
   const getCurrentPosition = () => {
+    if (!combinedContent || !Array.isArray(combinedContent) || combinedContent.length === 0) {
+      return '';
+    }
+
+    // Make sure currentIndex is valid
+    if (currentIndex < 0 || currentIndex >= combinedContent.length) {
+      return '';
+    }
+
     const currentItem = combinedContent[currentIndex];
-    if (currentItem?.type === 'news') {
-      const newsIndex = articles.findIndex(article => article.id === (currentItem.content as NewsArticle).id);
-      return `${newsIndex + 1} / ${articles.length}`;
+    if (currentItem?.type === 'news' && articles && Array.isArray(articles) && articles.length > 0) {
+      try {
+        const newsIndex = articles.findIndex(article =>
+          article && article.id && (currentItem.content as NewsArticle).id &&
+          article.id === (currentItem.content as NewsArticle).id
+        );
+
+        if (newsIndex === -1) {
+          return `? / ${articles.length}`;
+        }
+
+        return `${newsIndex + 1} / ${articles.length}`;
+      } catch (error) {
+        console.error('Error in getCurrentPosition:', error);
+        return '';
+      }
     }
     return '';
   };
@@ -201,7 +223,7 @@ export default function Home() {
   }
 
   // Show loading state or empty content while loading
-  if (loading && combinedContent.length === 0) {
+  if (loading && (!combinedContent || combinedContent.length === 0)) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
@@ -213,8 +235,14 @@ export default function Home() {
   }
 
   // Show empty state if no content after loading
-  if (!loading && combinedContent.length === 0) {
+  if (!loading && (!combinedContent || combinedContent.length === 0)) {
     return <NewsFallback error={new Error("No news articles found")} onRetry={refreshContent} />;
+  }
+
+  // Safety check for combinedContent
+  if (!combinedContent) {
+    console.error('combinedContent is undefined or null');
+    return <NewsFallback error={new Error("Unable to load content")} onRetry={refreshContent} />;
   }
 
   return (
@@ -237,22 +265,31 @@ export default function Home() {
           }}
           virtual
         >
-          {combinedContent.map((item, index) => (
-            <SwiperSlide key={`${item.type}-${item.index}`} virtualIndex={index}>
-              {item.type === 'news' ? (
-                <NewsCard
-                  article={item.content as NewsArticle}
-                  index={articles.findIndex(article => article.id === (item.content as NewsArticle).id) + 1}
-                  totalArticles={articles.length}
-                  onPopupStateChange={handlePopupStateChange}
-                />
-              ) : (
-                <div className="w-full h-full">
-                  <AdBanner ad={item.content as Ad} fullScreen={true} />
-                </div>
-              )}
-            </SwiperSlide>
-          ))}
+          {combinedContent && combinedContent.map((item, index) => {
+            if (!item || !item.type || !item.content) {
+              console.error('Invalid item in combinedContent:', item);
+              return null;
+            }
+
+            return (
+              <SwiperSlide key={`${item.type}-${item.index || index}`} virtualIndex={index}>
+                {item.type === 'news' ? (
+                  <NewsCard
+                    article={item.content as NewsArticle}
+                    index={articles && articles.length > 0 ?
+                      (articles.findIndex(article => article && article.id === (item.content as NewsArticle).id) + 1) :
+                      index + 1}
+                    totalArticles={articles ? articles.length : 0}
+                    onPopupStateChange={handlePopupStateChange}
+                  />
+                ) : (
+                  <div className="w-full h-full">
+                    <AdBanner ad={item.content as Ad} fullScreen={true} />
+                  </div>
+                )}
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
         {/* Position indicator */}
