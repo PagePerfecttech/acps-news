@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import NewsCard from "./components/NewsCard";
 import AdBanner from "./components/AdBanner";
 import RefreshButton from "./components/RefreshButton";
+import NewsFallback from "./components/NewsFallback";
 import { NewsArticle, Ad } from "./types";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCards, Virtual, Mousewheel } from 'swiper/modules';
@@ -21,6 +22,8 @@ export default function Home() {
   const [combinedContent, setCombinedContent] = useState<Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }>>([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [swiperInstance, setSwiperInstance] = useState<any>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Load articles and ads from data service
   useEffect(() => {
@@ -30,6 +33,9 @@ export default function Home() {
       console.log('Cleared article cache on home page load');
     }
 
+    setLoading(true);
+    setError(null);
+
     // Get articles and ads from data service
     const fetchData = async () => {
       try {
@@ -37,6 +43,11 @@ export default function Home() {
           getNewsArticles(),
           getAds()
         ]);
+
+        // Check if we got valid data
+        if (!newsArticles || newsArticles.length === 0) {
+          throw new Error('No news articles found. Please try again later.');
+        }
 
         setArticles(newsArticles);
         setAds(adsList);
@@ -67,8 +78,12 @@ export default function Home() {
         });
 
         setCombinedContent(newCombinedContent);
+        setError(null);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError(error instanceof Error ? error : new Error('Failed to load news articles'));
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -121,12 +136,20 @@ export default function Home() {
       console.log('Cache cleared via manual refresh');
     }
 
+    setLoading(true);
+    setError(null);
+
     try {
       // Get fresh articles and ads
       const [newsArticles, adsList] = await Promise.all([
         getNewsArticles(),
         getAds()
       ]);
+
+      // Check if we got valid data
+      if (!newsArticles || newsArticles.length === 0) {
+        throw new Error('No news articles found. Please try again later.');
+      }
 
       setArticles(newsArticles);
       setAds(adsList);
@@ -157,10 +180,36 @@ export default function Home() {
       });
 
       setCombinedContent(newCombinedContent);
+      setError(null);
     } catch (error) {
       console.error('Error refreshing content:', error);
+      setError(error instanceof Error ? error : new Error('Failed to refresh news articles'));
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Show error fallback if there's an error
+  if (error) {
+    return <NewsFallback error={error} onRetry={refreshContent} />;
+  }
+
+  // Show loading state or empty content while loading
+  if (loading && combinedContent.length === 0) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading news articles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no content after loading
+  if (!loading && combinedContent.length === 0) {
+    return <NewsFallback error={new Error("No news articles found")} onRetry={refreshContent} />;
+  }
 
   return (
     <div className="w-full h-screen overflow-hidden bg-gray-100">

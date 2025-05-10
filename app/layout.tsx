@@ -5,6 +5,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import ConnectionStatusWrapper from "./components/ConnectionStatusWrapper";
 import { NotificationProvider } from "./components/Notification";
 import SupabaseInitializer from "./components/SupabaseInitializer";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,10 +36,12 @@ export default function RootLayout({
         <SettingsProvider>
           <NotificationProvider>
             <SupabaseInitializer />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <ConnectionStatusWrapper />
+            <ErrorBoundary>
+              <main className="flex-grow">
+                {children}
+              </main>
+              <ConnectionStatusWrapper />
+            </ErrorBoundary>
           </NotificationProvider>
         </SettingsProvider>
       </body>
