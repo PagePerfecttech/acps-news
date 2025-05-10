@@ -10,8 +10,8 @@ export default function EditAd({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { id } = params;
 
-  // Find the ad with the given ID using the data service
-  const ad = getAdById(id);
+  const [ad, setAd] = useState<Ad | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -25,6 +25,38 @@ export default function EditAd({ params }: { params: { id: string } }) {
     videoUrl: '',
     youtubeUrl: '',
   });
+
+  // Fetch the ad when component mounts
+  useEffect(() => {
+    const fetchAd = async () => {
+      try {
+        const fetchedAd = await getAdById(id);
+        setAd(fetchedAd);
+        if (fetchedAd) {
+          // Initialize form data with ad values
+          setFormData({
+            title: fetchedAd.title || '',
+            description: fetchedAd.description || '',
+            text_content: fetchedAd.text_content || '',
+            link_url: fetchedAd.link_url || '',
+            frequency: fetchedAd.frequency || 3,
+            active: fetchedAd.active !== false,
+            mediaType: fetchedAd.video_url ? (fetchedAd.video_type === 'youtube' ? 'youtube' : 'video') :
+                      fetchedAd.image_url ? 'image' : 'text',
+            imageUrl: fetchedAd.image_url || '',
+            videoUrl: fetchedAd.video_url || '',
+            youtubeUrl: fetchedAd.video_url || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching ad:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAd();
+  }, [id]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });

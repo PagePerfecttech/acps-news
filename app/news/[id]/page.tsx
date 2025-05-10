@@ -7,6 +7,8 @@ import { FiClock, FiTag, FiUser, FiShare2, FiArrowLeft, FiThumbsUp, FiMessageSqu
 import { NewsArticle, Comment } from '../../types';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getNewsArticleById, getArticleStats, subscribeToChanges } from '../../lib/supabaseService';
+import { getNewsArticleById as getLocalArticleById } from '../../lib/dataService';
+import ArticleNotFound from '../../components/ArticleNotFound';
 
 // Mock data for demonstration
 const mockArticles: Record<string, NewsArticle> = {
@@ -64,30 +66,30 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
     const checkSupabase = async () => {
       const configured = await isSupabaseConfigured();
       setUsingSupabase(configured);
-      
+
       // Fetch article data
       fetchArticle(configured);
-      
+
       // Record view
       if (configured) {
         recordView();
       }
     };
-    
+
     checkSupabase();
   }, [params.id]);
-  
+
   // Set up real-time subscriptions
   useEffect(() => {
     if (!usingSupabase || !article) return;
-    
+
     // Subscribe to likes changes
     const likesSubscription = subscribeToChanges('likes', (payload) => {
       if (payload.new && payload.new.news_id === article.id) {
         setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
       }
     });
-    
+
     // Subscribe to comments changes
     const commentsSubscription = subscribeToChanges('comments', (payload) => {
       if (payload.new && payload.new.news_id === article.id) {
@@ -96,7 +98,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
         fetchArticle(true);
       }
     });
-    
+
     return () => {
       likesSubscription.unsubscribe();
       commentsSubscription.unsubscribe();
@@ -108,24 +110,54 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
     try {
       let fetchedArticle;
       let articleStats;
-      
+
+      // Try multiple sources for the article
       if (useSupabase) {
-        // Fetch from Supabase
+        // First try Supabase
+        console.log('Trying to fetch article from Supabase:', params.id);
         fetchedArticle = await getNewsArticleById(params.id);
         articleStats = await getArticleStats(params.id);
-      } else {
-        // Use mock data for demo
-        fetchedArticle = mockArticles[params.id];
-        articleStats = { 
-          likes: fetchedArticle?.likes || 0, 
-          comments: fetchedArticle?.comments?.length || 0, 
-          views: 0 
-        };
       }
-      
+
+      // If not found in Supabase or not using Supabase, try localStorage
+      if (!fetchedArticle) {
+        console.log('Trying to fetch article from localStorage:', params.id);
+        try {
+          fetchedArticle = await getLocalArticleById(params.id);
+
+          if (fetchedArticle) {
+            console.log('Article found in localStorage');
+            articleStats = {
+              likes: fetchedArticle.likes || 0,
+              comments: fetchedArticle.comments?.length || 0,
+              views: 0
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching from localStorage:', error);
+        }
+      }
+
+      // If still not found, try mock data as last resort
+      if (!fetchedArticle) {
+        console.log('Trying to fetch article from mock data:', params.id);
+        fetchedArticle = mockArticles[params.id];
+
+        if (fetchedArticle) {
+          console.log('Article found in mock data');
+          articleStats = {
+            likes: fetchedArticle.likes || 0,
+            comments: fetchedArticle.comments?.length || 0,
+            views: 0
+          };
+        } else {
+          console.log('Article not found in any source');
+        }
+      }
+
       if (fetchedArticle) {
         setArticle(fetchedArticle);
-        setStats(articleStats);
+        setStats(articleStats || { likes: 0, comments: 0, views: 0 });
       }
     } catch (error) {
       console.error('Error fetching article:', error);
@@ -133,7 +165,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
       setLoading(false);
     }
   };
-  
+
   // Record view
   const recordView = async () => {
     try {
@@ -146,19 +178,19 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
       console.error('Error recording view:', error);
     }
   };
-  
+
   // Handle like
   const handleLike = async () => {
     try {
       // Optimistic update
       setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
-      
+
       const response = await fetch('/api/news/like', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ articleId: params.id })
       });
-      
+
       if (!response.ok) {
         // Revert optimistic update if failed
         setStats(prev => ({ ...prev, likes: prev.likes - 1 }));
@@ -169,28 +201,28 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
       setStats(prev => ({ ...prev, likes: prev.likes - 1 }));
     }
   };
-  
+
   // Handle comment submission
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch('/api/news/comment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           articleId: params.id,
-          content: commentText 
+          content: commentText
         })
       });
-      
+
       if (response.ok) {
         // Clear form
         setCommentText('');
-        
+
         if (!usingSupabase) {
           // If not using Supabase real-time, update manually
           setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
@@ -231,18 +263,19 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
 
   if (!article) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Article Not Found</h1>
-          <p className="mb-6">The article you're looking for doesn't exist or has been removed.</p>
-          <Link
-            href="/"
-            className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <FiArrowLeft className="mr-2" /> Back to Home
-          </Link>
-        </div>
-      </div>
+      <ArticleNotFound
+        articleId={params.id}
+        onRetry={() => {
+          setLoading(true);
+          // Force clear any cached data
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('flipnews_articles_cache');
+            console.log('Cache cleared for retry');
+          }
+          // Try fetching again from all sources
+          fetchArticle(usingSupabase);
+        }}
+      />
     );
   }
 

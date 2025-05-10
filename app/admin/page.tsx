@@ -72,11 +72,17 @@ export default function AdminDashboard() {
           setStats(statsData);
         } else {
           // Fallback to localStorage data
-          const articlesData = getNewsArticles();
-          const adsData = getAds();
+          try {
+            const [articlesData, adsData] = await Promise.all([
+              getNewsArticles(),
+              getAds()
+            ]);
 
-          setArticles(articlesData);
-          setAds(adsData);
+            setArticles(articlesData);
+            setAds(adsData);
+          } catch (error) {
+            console.error('Error fetching data from localStorage:', error);
+          }
 
           // Get all comments from articles
           const comments: (Comment & { article_title?: string })[] = [];
@@ -224,11 +230,17 @@ export default function AdminDashboard() {
         setStats(statsData);
       } else {
         // Refresh from localStorage
-        const articlesData = getNewsArticles();
-        const adsData = getAds();
+        try {
+          const [articlesData, adsData] = await Promise.all([
+            getNewsArticles(),
+            getAds()
+          ]);
 
-        setArticles(articlesData);
-        setAds(adsData);
+          setArticles(articlesData);
+          setAds(adsData);
+        } catch (error) {
+          console.error('Error refreshing data from localStorage:', error);
+        }
 
         // Get all comments from articles
         const comments: (Comment & { article_title?: string })[] = [];

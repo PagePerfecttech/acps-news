@@ -10,9 +10,8 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
   const router = useRouter();
   const { id } = params;
 
-  // Find the article with the given ID using the data service
-  const article = getNewsArticleById(id);
-
+  const [article, setArticle] = useState<NewsArticle | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -26,6 +25,22 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
     tags: '',
     published: true
   });
+
+  // Fetch the article when component mounts
+  useEffect(() => {
+    const fetchArticle = async () => {
+      try {
+        const fetchedArticle = await getNewsArticleById(id);
+        setArticle(fetchedArticle);
+      } catch (error) {
+        console.error('Error fetching article:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticle();
+  }, [id]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });

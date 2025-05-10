@@ -16,8 +16,17 @@ export default function AdManagement() {
 
   // Load ads when component mounts
   useEffect(() => {
-    const loadedAds = getAds();
-    setAds(loadedAds);
+    const fetchAds = async () => {
+      try {
+        const loadedAds = await getAds();
+        setAds(loadedAds);
+      } catch (error) {
+        console.error('Error loading ads:', error);
+        setMessage({ type: 'error', text: 'Failed to load ads. Please refresh the page.' });
+      }
+    };
+
+    fetchAds();
   }, []);
 
   // Filter ads based on search term and status
