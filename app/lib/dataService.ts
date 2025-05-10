@@ -567,11 +567,63 @@ export const getAdById = async (id: string): Promise<Ad | undefined> => {
 };
 
 // Update an ad
-export const updateAd = (updatedAd: Ad): boolean => {
+export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    const ads = getAds();
+    // Try to update in Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { supabase, isSupabaseConfigured } = await import('./supabase');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Updating ad in Supabase:', updatedAd.title);
+
+        // Prepare the ad data
+        const adData = {
+          title: updatedAd.title,
+          description: updatedAd.description,
+          text_content: updatedAd.text_content,
+          image_url: updatedAd.image_url,
+          video_url: updatedAd.video_url,
+          video_type: updatedAd.video_type,
+          link_url: updatedAd.link_url,
+          frequency: updatedAd.frequency || 5,
+          active: updatedAd.active !== false,
+          updated_at: new Date().toISOString()
+        };
+
+        console.log('Updating ad with data:', adData);
+
+        try {
+          // Update the ad in Supabase
+          const { error } = await supabase
+            .from('ads')
+            .update(adData)
+            .eq('id', updatedAd.id);
+
+          if (error) {
+            console.error('Error updating ad in Supabase:', error);
+            throw error;
+          } else {
+            console.log('Ad updated in Supabase successfully');
+          }
+        } catch (updateError) {
+          console.error('Exception during Supabase update:', updateError);
+          // Continue to localStorage as fallback
+        }
+      }
+    } catch (supabaseError) {
+      console.error('Error with Supabase when updating ad:', supabaseError);
+      // Continue to update localStorage even if Supabase fails
+    }
+
+    // Also update in localStorage as a fallback
+    const adsPromise = getAds();
+    const ads = await adsPromise;
     const index = ads.findIndex(ad => ad.id === updatedAd.id);
 
     if (index === -1) return false;
@@ -586,11 +638,79 @@ export const updateAd = (updatedAd: Ad): boolean => {
 };
 
 // Add a new ad
-export const addAd = (newAd: Ad): boolean => {
+export const addAd = async (newAd: Ad): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    const ads = getAds();
+    // Try to add to Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { supabase, isSupabaseConfigured } = await import('./supabase');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Adding ad to Supabase:', newAd.title);
+
+        // Prepare the ad data
+        const adData = {
+          title: newAd.title,
+          description: newAd.description,
+          text_content: newAd.text_content,
+          image_url: newAd.image_url,
+          video_url: newAd.video_url,
+          video_type: newAd.video_type,
+          link_url: newAd.link_url,
+          frequency: newAd.frequency || 5,
+          active: newAd.active !== false,
+          created_at: newAd.created_at || new Date().toISOString(),
+          updated_at: newAd.updated_at || new Date().toISOString()
+        };
+
+        console.log('Inserting ad with data:', adData);
+
+        try {
+          // Insert the ad into Supabase
+          const { data, error } = await supabase
+            .from('ads')
+            .insert(adData)
+            .select()
+            .single();
+
+          if (error) {
+            console.error('Error adding ad to Supabase:', error);
+
+            // Try a simpler insert without select
+            const { error: simpleError } = await supabase
+              .from('ads')
+              .insert(adData);
+
+            if (simpleError) {
+              console.error('Error with simple insert:', simpleError);
+              throw simpleError;
+            } else {
+              console.log('Ad added to Supabase with simple insert (ID unknown)');
+            }
+          } else {
+            console.log('Ad added to Supabase successfully:', data.id);
+
+            // Update the ad ID with the one from Supabase
+            newAd.id = data.id;
+          }
+        } catch (insertError) {
+          console.error('Exception during Supabase insert:', insertError);
+          // Continue to localStorage as fallback
+        }
+      }
+    } catch (supabaseError) {
+      console.error('Error with Supabase when adding ad:', supabaseError);
+      // Continue to add to localStorage even if Supabase fails
+    }
+
+    // Also add to localStorage as a fallback
+    const adsPromise = getAds();
+    const ads = await adsPromise;
     ads.unshift(newAd); // Add to the beginning of the array
     localStorage.setItem('flipnews_ads', JSON.stringify(ads));
     return true;
@@ -601,11 +721,41 @@ export const addAd = (newAd: Ad): boolean => {
 };
 
 // Delete an ad
-export const deleteAd = (id: string): boolean => {
+export const deleteAd = async (id: string): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    const ads = getAds();
+    // Try to delete from Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { supabase, isSupabaseConfigured } = await import('./supabase');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Deleting ad from Supabase:', id);
+
+        // Delete the ad from Supabase
+        const { error } = await supabase
+          .from('ads')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          console.error('Error deleting ad from Supabase:', error);
+        } else {
+          console.log('Ad deleted from Supabase successfully');
+        }
+      }
+    } catch (supabaseError) {
+      console.error('Error with Supabase when deleting ad:', supabaseError);
+      // Continue to delete from localStorage even if Supabase fails
+    }
+
+    // Also delete from localStorage as a fallback
+    const adsPromise = getAds();
+    const ads = await adsPromise;
     const filteredAds = ads.filter(ad => ad.id !== id);
     localStorage.setItem('flipnews_ads', JSON.stringify(filteredAds));
     return true;

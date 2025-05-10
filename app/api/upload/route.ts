@@ -26,20 +26,20 @@ export async function POST(request: NextRequest) {
   try {
     // Check if using Supabase
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-    
+
     if (bucketError) {
       return NextResponse.json(
         { error: 'Storage not configured', details: bucketError.message },
         { status: 500 }
       );
     }
-    
+
     // Get form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const type = formData.get('type') as string || 'image';
     const bucket = formData.get('bucket') as string || 'news-images';
-    
+
     // Validate file
     if (!file) {
       return NextResponse.json(
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     // Validate file type
     if (type === 'image' && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
       return NextResponse.json(
@@ -55,14 +55,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     if (type === 'video' && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: 'Invalid video type. Allowed types: ' + ALLOWED_VIDEO_TYPES.join(', ') },
         { status: 400 }
       );
     }
-    
+
     // Validate file size
     if (type === 'image' && file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json(
@@ -70,57 +70,93 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     if (type === 'video' && file.size > MAX_VIDEO_SIZE) {
       return NextResponse.json(
         { error: `Video size exceeds maximum allowed size (${MAX_VIDEO_SIZE / 1024 / 1024}MB)` },
         { status: 400 }
       );
     }
-    
+
     // Check if bucket exists
     const bucketExists = buckets?.some(b => b.name === bucket);
-    
+
     if (!bucketExists) {
       // Create bucket if it doesn't exist
       const { error: createError } = await supabase.storage.createBucket(bucket, {
         public: true,
         fileSizeLimit: type === 'video' ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE,
       });
-      
+
       if (createError) {
+        console.error('Failed to create bucket:', createError);
         return NextResponse.json(
           { error: 'Failed to create storage bucket', details: createError.message },
           { status: 500 }
         );
       }
+
+      // Set bucket to public
+      const { error: policyError } = await supabase.storage.from(bucket).createSignedUrl('dummy.txt', 1);
+      if (policyError && !policyError.message.includes('not found')) {
+        console.error('Error checking bucket policy:', policyError);
+      }
+
+      // Try to update bucket policy to public
+      try {
+        // This is a workaround to make the bucket public
+        const { error: updateError } = await supabase.rpc('update_bucket_policy', {
+          bucket_name: bucket,
+          policy: 'public'
+        });
+
+        if (updateError) {
+          console.warn('Could not update bucket policy via RPC, trying alternative method:', updateError);
+        }
+      } catch (policyError) {
+        console.warn('Error setting bucket policy:', policyError);
+      }
     }
-    
+
     // Generate a unique file name
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${fileName}`;
-    
+
     // Upload the file
     const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(filePath, file);
-    
+
     if (uploadError) {
       return NextResponse.json(
         { error: 'Failed to upload file', details: uploadError.message },
         { status: 500 }
       );
     }
-    
+
     // Get the public URL
     const { data } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
-    
+
+    // Make sure the URL is properly formatted
+    let publicUrl = data.publicUrl;
+
+    // Log the URL for debugging
+    console.log('Generated public URL:', publicUrl);
+
+    // Ensure the URL has the correct protocol
+    if (!publicUrl.startsWith('http')) {
+      publicUrl = `https://${publicUrl.replace(/^\/\//, '')}`;
+    }
+
+    // Add cache-busting parameter to prevent caching issues
+    publicUrl = `${publicUrl}?t=${Date.now()}`;
+
     return NextResponse.json({
       success: true,
-      url: data.publicUrl
+      url: publicUrl
     });
   } catch (error: any) {
     console.error('Error in upload API:', error);

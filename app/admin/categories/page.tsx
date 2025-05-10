@@ -17,19 +17,37 @@ export default function CategoryManagement() {
 
   // Load categories when component mounts
   useEffect(() => {
-    const loadedCategories = getCategories();
-    setCategories(loadedCategories);
+    const loadCategories = async () => {
+      try {
+        const loadedCategories = getCategories();
+        setCategories(loadedCategories);
 
-    // Count articles per category
-    const articles = getNewsArticles();
-    const counts: Record<string, number> = {};
+        // Count articles per category
+        const articlesPromise = getNewsArticles();
+        const articles = await articlesPromise;
+        const counts: Record<string, number> = {};
 
-    loadedCategories.forEach(category => {
-      counts[category.id] = articles.filter(article => article.category === category.name).length;
-    });
+        if (Array.isArray(articles)) {
+          loadedCategories.forEach(category => {
+            counts[category.id] = articles.filter(article => article.category === category.name).length;
+          });
+        } else {
+          console.error('Articles is not an array:', articles);
+          // Set all counts to 0 if articles is not an array
+          loadedCategories.forEach(category => {
+            counts[category.id] = 0;
+          });
+        }
 
-    setArticleCounts(counts);
-    setIsLoading(false);
+        setArticleCounts(counts);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCategories();
   }, []);
 
   // Filter categories based on search term
