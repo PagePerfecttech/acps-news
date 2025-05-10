@@ -15,6 +15,7 @@ CREATE INDEX IF NOT EXISTS idx_site_settings_key ON site_settings(key);
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Allow anonymous users to read site settings
+DROP POLICY IF EXISTS "Allow anonymous read access to site_settings" ON site_settings;
 CREATE POLICY "Allow anonymous read access to site_settings"
   ON site_settings
   FOR SELECT
@@ -22,6 +23,7 @@ CREATE POLICY "Allow anonymous read access to site_settings"
   USING (true);
 
 -- Allow authenticated users to read site settings
+DROP POLICY IF EXISTS "Allow authenticated read access to site_settings" ON site_settings;
 CREATE POLICY "Allow authenticated read access to site_settings"
   ON site_settings
   FOR SELECT
@@ -29,6 +31,7 @@ CREATE POLICY "Allow authenticated read access to site_settings"
   USING (true);
 
 -- Allow service role to manage site settings
+DROP POLICY IF EXISTS "Allow service role full access to site_settings" ON site_settings;
 CREATE POLICY "Allow service role full access to site_settings"
   ON site_settings
   FOR ALL

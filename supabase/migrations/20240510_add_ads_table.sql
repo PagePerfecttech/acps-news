@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS ads (
 ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
 
 -- Allow anonymous users to read active ads
+DROP POLICY IF EXISTS "Allow anonymous read access to active ads" ON ads;
 CREATE POLICY "Allow anonymous read access to active ads"
   ON ads
   FOR SELECT
@@ -25,6 +26,7 @@ CREATE POLICY "Allow anonymous read access to active ads"
   USING (active = true);
 
 -- Allow authenticated users to read all ads
+DROP POLICY IF EXISTS "Allow authenticated read access to all ads" ON ads;
 CREATE POLICY "Allow authenticated read access to all ads"
   ON ads
   FOR SELECT
@@ -32,6 +34,7 @@ CREATE POLICY "Allow authenticated read access to all ads"
   USING (true);
 
 -- Allow service role to manage ads
+DROP POLICY IF EXISTS "Allow service role full access to ads" ON ads;
 CREATE POLICY "Allow service role full access to ads"
   ON ads
   FOR ALL
