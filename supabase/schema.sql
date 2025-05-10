@@ -168,7 +168,7 @@ BEGIN
   SET views = views + 1
   WHERE id = article_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Function to increment likes
 CREATE OR REPLACE FUNCTION increment_likes(article_id UUID)
@@ -178,7 +178,7 @@ BEGIN
   SET likes = likes + 1
   WHERE id = article_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Site settings table
 CREATE TABLE site_settings (

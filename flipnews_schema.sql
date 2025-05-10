@@ -277,7 +277,7 @@ BEGIN
   END IF;
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger for likes
 CREATE TRIGGER update_likes_count_trigger
