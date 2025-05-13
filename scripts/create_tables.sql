@@ -92,12 +92,14 @@ CREATE TABLE site_settings (
 -- Create ads table
 CREATE TABLE ads (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR(255) NOT NULL,
-  image_url TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  text_content TEXT,
+  image_url TEXT,
+  video_url TEXT,
+  video_type TEXT,
   link_url TEXT,
-  position VARCHAR(50) NOT NULL,
-  start_date TIMESTAMP WITH TIME ZONE,
-  end_date TIMESTAMP WITH TIME ZONE,
+  frequency INTEGER DEFAULT 5,
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
