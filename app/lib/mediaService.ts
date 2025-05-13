@@ -188,7 +188,8 @@ export const uploadVideo = async (
  * @returns Array of providers in order of preference
  */
 const determineProviderOrder = (preferredProvider?: StorageProvider): StorageProvider[] => {
-  const defaultOrder: StorageProvider[] = ['supabase', 'cloudinary', 'imgbb', 'local'];
+  // Prioritize Cloudinary over Supabase
+  const defaultOrder: StorageProvider[] = ['cloudinary', 'supabase', 'imgbb', 'local'];
 
   if (!preferredProvider) {
     return defaultOrder;

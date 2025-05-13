@@ -13,6 +13,7 @@ FlipNews is a modern news application that displays articles in a card format wi
 - Ad management with frequency control
 - Media upload capabilities
 - Supabase database integration
+- Cloudinary media storage integration
 
 ## Tech Stack
 
@@ -21,7 +22,8 @@ FlipNews is a modern news application that displays articles in a card format wi
 - TypeScript
 - Tailwind CSS
 - Swiper.js
-- Supabase (PostgreSQL database, authentication, storage)
+- Supabase (PostgreSQL database, authentication)
+- Cloudinary (Image and video storage, transformations, and delivery)
 
 ## Getting Started
 
@@ -30,6 +32,7 @@ FlipNews is a modern news application that displays articles in a card format wi
 - Node.js 16.x or later
 - npm or yarn
 - Supabase account (for database)
+- Cloudinary account (for media storage)
 
 ### Installation
 
@@ -51,6 +54,9 @@ Create a `.env.local` file with the following variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+NEXT_PUBLIC_CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 ```
 
 4. Run the development server
@@ -62,9 +68,11 @@ yarn dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application
 
-## Database Setup
+## Database and Storage Setup
 
 See the `DEPLOYMENT.md` file for detailed instructions on setting up the Supabase database.
+
+For Cloudinary setup instructions, see the `CLOUDINARY_SETUP.md` file.
 
 ## Admin Panel
 
