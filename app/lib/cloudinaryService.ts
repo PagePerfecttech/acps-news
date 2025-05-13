@@ -3,6 +3,7 @@
  *
  * This service provides functions for uploading images and videos to Cloudinary.
  * It serves as an alternative to Supabase Storage.
+ * Fixed to prevent "t.map is not a function" error.
  */
 
 // We need to use a browser-compatible approach for Cloudinary
