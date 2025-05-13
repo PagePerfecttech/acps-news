@@ -98,13 +98,16 @@ const uploadToCloudinary = async (
       formData.append('public_id', options.public_id);
     }
 
-    if (options.tags) {
+    if (options.tags && Array.isArray(options.tags)) {
       formData.append('tags', options.tags.join(','));
     }
 
+    // Get cloud name from environment variable directly to avoid potential issues
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo';
+
     // Upload to Cloudinary
     const uploadResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudinary.config().cloud_name}/${options.resource_type}/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/${options.resource_type}/upload`,
       {
         method: 'POST',
         body: formData,
@@ -143,7 +146,7 @@ export const uploadImage = async (
     const result = await uploadToCloudinary(fileData as string, {
       folder,
       resource_type: 'image',
-      tags: ['flipnews', folder],
+      tags: folder ? ['flipnews', folder] : ['flipnews'],
     });
 
     return {
