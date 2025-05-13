@@ -293,8 +293,8 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
 
   // Removed handleShare function as we&apos;re using ShareButton component
 
-  // Check if content exceeds 400 characters to show Read More button
-  const showReadMore = article.content && article.content.length > 400;
+  // Check if content exceeds 700 characters to show Read More button
+  const showReadMore = article.content && article.content.length > 700;
 
   return (
     <>
@@ -330,22 +330,33 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
               {article.title}
             </h3>
 
-            {/* Description (limited to exactly 4 lines) */}
-            <p className="text-sm text-gray-700 leading-snug line-clamp-4">
-              {article.content}
-            </p>
+            {/* Description with max height and fade out effect */}
+            <div className="relative max-h-[8em] overflow-hidden">
+              <p className="text-sm text-gray-700 leading-snug">
+                {article.content}
+              </p>
 
-            {/* Read More button - more prominent */}
-            <div className="mt-2 flex justify-center">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFullContent(true);
-                }}
-                className="bg-primary text-black font-medium text-sm px-4 py-2 rounded-md hover:bg-primary-80 transition-colors w-full"
-              >
-                Read Full Article
-              </button>
+              {/* Gradient overlay to fade out text */}
+              {showReadMore && (
+                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent"></div>
+              )}
+
+              {/* Floating Read More button - only shown if content is long enough */}
+              {showReadMore && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFullContent(true);
+                  }}
+                  className="absolute bottom-0 left-[50%] transform -translate-x-1/2 translate-y-1/2
+                             bg-primary text-black font-medium text-xs px-3 py-1 rounded-full
+                             hover:bg-primary-80 transition-colors shadow-lg z-10
+                             flex items-center justify-center"
+                  aria-label="Read full article"
+                >
+                  <span>Read More</span>
+                </button>
+              )}
             </div>
           </div>
 
