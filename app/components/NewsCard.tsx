@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiX, FiThumbsUp, FiMessageSquare, FiEye, FiExternalLink } from 'react-icons/fi';
@@ -29,8 +29,57 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [usingSupabase, setUsingSupabase] = useState(false);
+  // State for showing/hiding the floating stats
+  const [showStats, setShowStats] = useState(true);
+  // Timer reference for auto-hiding stats
+  const statsTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Removed showShareModal state as we&apos;re using ShareButton component
   const { settings } = useSettings();
+
+  // Timer to hide stats after 8 seconds
+  useEffect(() => {
+    // Start the timer when component mounts
+    statsTimerRef.current = setTimeout(() => {
+      setShowStats(false);
+    }, 8000); // 8 seconds
+
+    // Function to show stats when user interacts with the card
+    const handleInteraction = () => {
+      // Clear any existing timer
+      if (statsTimerRef.current) {
+        clearTimeout(statsTimerRef.current);
+      }
+
+      // Show the stats
+      setShowStats(true);
+
+      // Set a new timer to hide stats after 8 seconds
+      statsTimerRef.current = setTimeout(() => {
+        setShowStats(false);
+      }, 8000);
+    };
+
+    // Add event listeners for user interaction
+    const cardElement = document.getElementById(`news-card-${article.id}`);
+    if (cardElement) {
+      cardElement.addEventListener('click', handleInteraction);
+      cardElement.addEventListener('touchstart', handleInteraction);
+    }
+
+    // Cleanup function
+    return () => {
+      // Clear the timer when component unmounts
+      if (statsTimerRef.current) {
+        clearTimeout(statsTimerRef.current);
+      }
+
+      // Remove event listeners
+      if (cardElement) {
+        cardElement.removeEventListener('click', handleInteraction);
+        cardElement.removeEventListener('touchstart', handleInteraction);
+      }
+    };
+  }, [article.id]);
 
   // Check if Supabase is configured
   useEffect(() => {
@@ -293,105 +342,126 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
 
   // Removed handleShare function as we&apos;re using ShareButton component
 
-  // Check if content exceeds 700 characters to show Read More button
-  const showReadMore = article.content && article.content.length > 700;
+  // Check if content exceeds 140 words to show Read More button
+  const showReadMore = article.content && article.content.split(/\s+/).filter(word => word.length > 0).length > 140;
 
   return (
     <>
       <div className="w-full h-[100vh] perspective-1000">
         {/* Full screen card optimized for mobile */}
         <div id={`news-card-${article.id}`} className="w-full h-full overflow-hidden bg-white flex flex-col relative">
-          {/* Media (image or video) */}
-          <div className="h-[45vh]">
+          {/* Media (image or video) - 50% of screen height */}
+          <div className="h-[50vh]">
             {renderMedia()}
           </div>
 
-        {/* Content - white background with black text */}
-        <div className="flex-grow flex flex-col p-0 bg-white text-black">
-          {/* Category on left, author on right */}
-          <div className="px-3 py-2 bg-primary flex justify-between items-center">
-            {/* Category on left */}
-            <div>
-              <span className="text-xs font-medium text-black px-2 py-1 bg-primary-80 rounded-sm">
-                {article.category || 'General'}
-              </span>
+          {/* Content - white background with black text */}
+          <div className="flex-grow flex flex-col justify-between p-0 bg-white text-black">
+            {/* Top content area */}
+            <div className="flex flex-col">
+              {/* Category on left, author on right - 4% of screen height */}
+              <div className="px-3 h-[4vh] bg-primary flex justify-between items-center">
+                {/* Category on left */}
+                <div>
+                  <span className="text-xs font-medium text-black px-2 py-1 bg-primary-80 rounded-sm">
+                    {article.category || 'General'}
+                  </span>
+                </div>
+
+                {/* Author on right */}
+                <div className="flex items-center">
+                  <UserProfile authorName={article.author} size="small" showName={true} />
+                </div>
+              </div>
+
+              {/* Title area - 6% of screen height */}
+              <div className="px-3 py-1 h-[6vh] flex items-center">
+                {/* Title - limited to 2 lines */}
+                <h3 className="text-base font-bold line-clamp-2">
+                  {article.title}
+                </h3>
+              </div>
+
+              {/* Description area - 40% of screen height */}
+              <div className="px-3 py-1 h-[40vh] overflow-hidden">
+                {/* Description with fade out effect */}
+                <div className="relative h-full overflow-hidden">
+                  <p className="text-sm text-gray-700 leading-snug">
+                    {article.content}
+                  </p>
+
+                  {/* Gradient overlay to fade out text */}
+                  {showReadMore && (
+                    <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent"></div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Author on right */}
-            <div className="flex items-center">
-              <UserProfile authorName={article.author} size="small" showName={true} />
-            </div>
-          </div>
-
-          {/* Title and content area */}
-          <div className="px-3 py-2">
-            {/* Title - limited to 2 lines */}
-            <h3 className="text-base font-bold line-clamp-2 mb-1">
-              {article.title}
-            </h3>
-
-            {/* Description with max height and fade out effect */}
-            <div className="relative max-h-[8em] overflow-hidden">
-              <p className="text-sm text-gray-700 leading-snug">
-                {article.content}
-              </p>
-
-              {/* Gradient overlay to fade out text */}
-              {showReadMore && (
-                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent"></div>
-              )}
-
-              {/* Floating Read More button - only shown if content is long enough */}
-              {showReadMore && (
+            {/* Read More button in the middle */}
+            {showReadMore && (
+              <div className="absolute left-1/2 top-[80%] transform -translate-x-1/2 -translate-y-1/2 z-10">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFullContent(true);
                   }}
-                  className="absolute bottom-0 left-[50%] transform -translate-x-1/2 translate-y-1/2
-                             bg-primary text-black font-medium text-xs px-3 py-1 rounded-full
-                             hover:bg-primary-80 transition-colors shadow-lg z-10
-                             flex items-center justify-center"
+                  className="bg-primary text-black font-medium text-xs px-4 py-2 rounded-full
+                           hover:bg-primary-80 transition-colors shadow-lg
+                           flex items-center justify-center"
                   aria-label="Read full article"
                 >
                   <span>Read More</span>
                 </button>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
 
-          {/* Stats at the bottom - horizontal */}
-          <div className="px-3 py-2 border-t border-gray-200">
-            {/* Stats */}
-            <div className="flex justify-center items-center">
-              <div className="flex items-center space-x-6">
-                <button onClick={handleLike} className="flex items-center hover:text-red-500">
-                  <FiThumbsUp className="h-4 w-4 mr-1" />
-                  <span className="text-xs">{stats.likes}</span>
-                </button>
-                <div className="flex items-center">
-                  <FiMessageSquare className="h-4 w-4 text-blue-500 mr-1" />
-                  <span className="text-xs">{stats.comments}</span>
-                </div>
-                <div className="flex items-center">
-                  <FiEye className="h-4 w-4 text-gray-500 mr-1" />
-                  <span className="text-xs">{stats.views}</span>
-                </div>
+            {/* Floating vertical stats on the right side */}
+            <div
+              className={`fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 bg-white bg-opacity-90 p-3 rounded-full shadow-lg z-20 transition-opacity duration-500 ${
+                showStats ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLike();
+                }}
+                className="flex flex-col items-center hover:text-red-500 transition-transform hover:scale-110"
+              >
+                <FiThumbsUp className="h-5 w-5" />
+                <span className="text-xs mt-1">{stats.likes}</span>
+              </button>
+
+              <div className="flex flex-col items-center text-blue-500">
+                <FiMessageSquare className="h-5 w-5" />
+                <span className="text-xs mt-1">{stats.comments}</span>
+              </div>
+
+              <div className="flex flex-col items-center text-gray-500">
+                <FiEye className="h-5 w-5" />
+                <span className="text-xs mt-1">{stats.views}</span>
+              </div>
+
+              <div className="flex flex-col items-center text-blue-500">
                 <ShareButton
                   title={article.title}
                   elementId={`news-card-${article.id}`}
-                  className="flex items-center hover:text-blue-500"
-                  iconSize={16}
+                  className="flex flex-col items-center hover:text-blue-700 transition-transform hover:scale-110"
+                  iconSize={20}
                 />
-                <span className="text-xs ml-1">Share</span>
-                <Link
-                  href={`/news/${article.id}`}
-                  className="flex items-center text-green-600 hover:text-green-700"
-                  title="Open article in new page"
-                >
-                  <FiExternalLink className="h-4 w-4" />
-                </Link>
+                <span className="text-xs mt-1">Share</span>
               </div>
+
+              <Link
+                href={`/news/${article.id}`}
+                className="flex flex-col items-center text-green-600 hover:text-green-700 transition-transform hover:scale-110"
+                title="Open article in new page"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FiExternalLink className="h-5 w-5" />
+                <span className="text-xs mt-1">Open</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -533,7 +603,6 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
           </div>
         </div>
       )}
-    </div>
 
     {/* ShareModal is now handled by the ShareButton component */}
     </>
