@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import * as mediaService from '../../lib/mediaService';
 
 // Define allowed file types
 const ALLOWED_IMAGE_TYPES = [
@@ -24,21 +24,12 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 // POST /api/upload - Upload a file
 export async function POST(request: NextRequest) {
   try {
-    // Check if using Supabase
-    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-
-    if (bucketError) {
-      return NextResponse.json(
-        { error: 'Storage not configured', details: bucketError.message },
-        { status: 500 }
-      );
-    }
-
     // Get form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const type = formData.get('type') as string || 'image';
     const bucket = formData.get('bucket') as string || 'news-images';
+    const preferredProvider = formData.get('provider') as string || undefined;
 
     // Validate file
     if (!file) {
@@ -78,59 +69,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if bucket exists
-    const bucketExists = buckets?.some(b => b.name === bucket);
-
-    if (!bucketExists) {
-      console.warn(`⚠️ Bucket ${bucket} doesn't exist! Please create it manually in the Supabase dashboard.`);
-      console.warn('Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
-
-      // Return a more helpful error message
-      return NextResponse.json(
-        {
-          error: 'Storage bucket not found',
-          details: `The bucket "${bucket}" does not exist. Please create it manually in the Supabase dashboard.`,
-          instructions: 'Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets and create the bucket.'
-        },
-        { status: 400 }
-      );
-    }
-
     // Generate a unique file name
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `${fileName}`;
 
-    // Convert File to ArrayBuffer for upload
-    const arrayBuffer = await file.arrayBuffer();
-    const fileData = new Uint8Array(arrayBuffer);
+    // Get configured providers
+    const configuredProviders = await mediaService.getConfiguredProviders();
+    console.log('Configured storage providers:', configuredProviders);
 
-    // Upload the file
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, fileData, {
-        contentType: file.type,
-        cacheControl: '3600',
-        upsert: true
+    // Upload the file using the media service
+    let result;
+    if (type === 'image') {
+      result = await mediaService.uploadImage(file, {
+        folder: bucket as any,
+        preferredProvider: preferredProvider as any,
+        fileName
       });
+    } else {
+      result = await mediaService.uploadVideo(file, {
+        preferredProvider: preferredProvider as any,
+        fileName
+      });
+    }
 
-    if (uploadError) {
+    if (!result.url) {
       return NextResponse.json(
-        { error: 'Failed to upload file', details: uploadError.message },
+        {
+          error: 'Failed to upload file',
+          details: result.error || 'No storage provider available',
+          provider: result.provider
+        },
         { status: 500 }
       );
     }
 
-    // Get the public URL
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-
     // Make sure the URL is properly formatted
-    let publicUrl = data.publicUrl;
+    let publicUrl = result.url;
 
     // Log the URL for debugging
-    console.log('Generated public URL:', publicUrl);
+    console.log(`Generated public URL (via ${result.provider}):`, publicUrl);
 
     // Ensure the URL has the correct protocol
     if (!publicUrl.startsWith('http')) {
@@ -142,7 +119,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: publicUrl
+      url: publicUrl,
+      provider: result.provider
     });
   } catch (error: any) {
     console.error('Error in upload API:', error);

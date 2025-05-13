@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { FiHome, FiFileText, FiImage, FiMessageSquare, FiLogOut, FiMenu, FiX, FiTag, FiSettings, FiUsers, FiRss } from 'react-icons/fi';
+import { FiHome, FiFileText, FiImage, FiMessageSquare, FiLogOut, FiMenu, FiX, FiTag, FiSettings, FiUsers, FiRss, FiDatabase } from 'react-icons/fi';
 import { useSettings } from '../contexts/SettingsContext';
 
 export default function AdminLayout({
@@ -139,6 +139,15 @@ export default function AdminLayout({
             >
               <FiUsers size={20} />
               <span>User Management</span>
+            </Link>
+            <Link
+              href="/admin/storage"
+              className="flex items-center space-x-2 p-2 rounded-md hover:bg-opacity-80 transition-colors"
+              style={{ backgroundColor: pathname?.startsWith('/admin/storage') ? `${settings.primary_color}40` : 'transparent' }}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FiDatabase size={20} />
+              <span>Storage</span>
             </Link>
             <Link
               href="/admin/settings"
