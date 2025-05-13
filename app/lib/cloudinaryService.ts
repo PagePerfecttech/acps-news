@@ -61,7 +61,12 @@ const uploadToCloudinary = async (
   }
 ): Promise<any> => {
   try {
-    console.log('Starting Cloudinary upload process...');
+    console.log('Starting Cloudinary upload process...', {
+      folder: options.folder,
+      resource_type: options.resource_type,
+      fileLength: file.length,
+      isBase64: file.startsWith('data:')
+    });
 
     // For server-side uploads
     if (typeof window === 'undefined') {
@@ -87,11 +92,27 @@ const uploadToCloudinary = async (
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Failed to get upload signature:', errorText);
+      console.error('Response status:', response.status);
+      console.error('Response headers:', Object.fromEntries([...response.headers.entries()]));
       throw new Error(`Failed to get upload signature: ${errorText}`);
     }
 
-    const { signature, timestamp, api_key, cloud_name } = await response.json();
-    console.log('Received signature from API:', { signature: signature.substring(0, 10) + '...', timestamp, cloud_name });
+    const responseData = await response.json();
+    console.log('Signature API response:', responseData);
+
+    const { signature, timestamp, api_key, cloud_name } = responseData;
+
+    if (!signature || !timestamp || !api_key || !cloud_name) {
+      console.error('Missing required fields in signature response:', responseData);
+      throw new Error('Missing required fields in signature response');
+    }
+
+    console.log('Received signature from API:', {
+      signature: signature.substring(0, 10) + '...',
+      timestamp,
+      api_key: api_key.substring(0, 5) + '...',
+      cloud_name
+    });
 
     // Create form data for upload
     const formData = new FormData();
@@ -120,22 +141,23 @@ const uploadToCloudinary = async (
     }
 
     // Get cloud name from response or environment variable
-    const cloudName = cloud_name || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dejesejon';
+    const cloudName = cloud_name || 'dejesejon';
     console.log('Using cloud name:', cloudName);
 
     // Upload to Cloudinary
-    console.log(`Uploading to Cloudinary API: https://api.cloudinary.com/v1_1/${cloudName}/${options.resource_type}/upload`);
-    const uploadResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/${options.resource_type}/upload`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${options.resource_type}/upload`;
+    console.log(`Uploading to Cloudinary API: ${uploadUrl}`);
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'POST',
+      body: formData,
+    });
 
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
       console.error('Failed to upload to Cloudinary:', errorText);
+      console.error('Upload response status:', uploadResponse.status);
+      console.error('Upload response headers:', Object.fromEntries([...uploadResponse.headers.entries()]));
       throw new Error(`Failed to upload to Cloudinary: ${errorText}`);
     }
 
@@ -146,8 +168,12 @@ const uploadToCloudinary = async (
     });
 
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading to Cloudinary:', error);
+    console.error('Error message:', error.message);
+    if (error.stack) {
+      console.error('Error stack:', error.stack);
+    }
     throw error;
   }
 };
@@ -164,22 +190,37 @@ export const uploadImage = async (
   folder: 'news-images' | 'user-avatars' | 'site-assets' = 'news-images'
 ): Promise<{ url: string | null; error: string | null }> => {
   try {
-    console.log('Uploading image to Cloudinary...');
+    console.log('Uploading image to Cloudinary...', {
+      fileType: file instanceof File ? file.type : 'string',
+      fileSize: file instanceof File ? file.size : 'N/A',
+      folder
+    });
 
     // Convert File to base64 if needed
     let fileData = file;
     if (file instanceof File) {
+      console.log('Converting File to base64...');
       fileData = await fileToBase64(file);
+      console.log('File converted to base64, length:', (fileData as string).length);
     }
 
+    console.log('Calling uploadToCloudinary...');
     const result = await uploadToCloudinary(fileData as string, {
       folder,
       resource_type: 'image',
       tags: folder ? ['flipnews', folder] : ['flipnews'],
     });
 
-    if (!result || !result.secure_url) {
-      console.error('No secure URL returned from Cloudinary');
+    if (!result) {
+      console.error('No result returned from uploadToCloudinary');
+      return {
+        url: null,
+        error: 'No result returned from Cloudinary upload',
+      };
+    }
+
+    if (!result.secure_url) {
+      console.error('No secure URL returned from Cloudinary, result:', result);
       return {
         url: null,
         error: 'Failed to get secure URL from Cloudinary',
@@ -191,8 +232,12 @@ export const uploadImage = async (
       url: result.secure_url,
       error: null,
     };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error uploading image to Cloudinary:', error);
+    console.error('Error message:', error.message);
+    if (error.stack) {
+      console.error('Error stack:', error.stack);
+    }
     return {
       url: null,
       error: error.message || 'Failed to upload image',
@@ -253,12 +298,19 @@ export const uploadVideo = async (
  * @returns Promise with the base64 string
  */
 const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined' && typeof FileReader !== 'undefined') {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  } else {
+    // Server-side handling
+    console.log('Server-side file handling is not supported in this implementation');
+    return Promise.reject('FileReader is not available in this environment');
+  }
 };
 
 /**

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import * as mediaService from '../../lib/mediaService';
+import * as mediaService from '../../lib/mediaService.fixed';
 
 // Define allowed file types
 const ALLOWED_IMAGE_TYPES = [
@@ -24,12 +24,22 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 // POST /api/upload - Upload a file
 export async function POST(request: NextRequest) {
   try {
+    console.log('Upload API called');
+
     // Get form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const type = formData.get('type') as string || 'image';
     const bucket = formData.get('bucket') as string || 'news-images';
     const preferredProvider = formData.get('provider') as string || undefined;
+
+    console.log('Upload request details:', {
+      fileType: file?.type,
+      fileSize: file?.size,
+      type,
+      bucket,
+      preferredProvider
+    });
 
     // Validate file
     if (!file) {

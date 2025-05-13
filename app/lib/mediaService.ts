@@ -58,8 +58,17 @@ export const uploadImage = async (
 ): Promise<UploadResult> => {
   const { folder = 'news-images', preferredProvider, fileName } = options;
 
+  console.log('uploadImage called with options:', {
+    folder,
+    preferredProvider,
+    fileName,
+    fileType: file.type,
+    fileSize: file.size
+  });
+
   // Determine the order of providers to try
   const providers = determineProviderOrder(preferredProvider);
+  console.log('Providers to try in order:', providers);
 
   // Try each provider in order
   for (const provider of providers) {
@@ -71,35 +80,51 @@ export const uploadImage = async (
       switch (provider) {
         case 'supabase':
           if (await isSupabaseConfigured()) {
+            console.log('Supabase is configured, attempting upload...');
             const uploadResult = await uploadImageToSupabase(file, folder);
+            console.log('Supabase upload result:', uploadResult);
             result = { ...uploadResult, provider };
+          } else {
+            console.log('Supabase is not configured, skipping');
           }
           break;
 
         case 'cloudinary':
           if (cloudinaryService.isCloudinaryConfigured()) {
+            console.log('Cloudinary is configured, attempting upload...');
             const uploadResult = await cloudinaryService.uploadImage(file, folder);
+            console.log('Cloudinary upload result:', uploadResult);
             result = { ...uploadResult, provider };
+          } else {
+            console.log('Cloudinary is not configured, skipping');
           }
           break;
 
         case 'imgbb':
           if (imgbbService.isImgBBConfigured()) {
+            console.log('ImgBB is configured, attempting upload...');
             const uploadResult = await imgbbService.uploadImage(file, fileName);
+            console.log('ImgBB upload result:', uploadResult);
             result = { ...uploadResult, provider };
+          } else {
+            console.log('ImgBB is not configured, skipping');
           }
           break;
 
         case 'local':
           // Local storage fallback (for development/testing)
+          console.log('Using local storage fallback...');
           const localResult = await storeFileLocally(file, 'image');
+          console.log('Local storage result:', localResult);
           result = { ...localResult, provider };
           break;
       }
 
       if (result && result.url) {
-        console.log(`Successfully uploaded image using ${provider}`);
+        console.log(`Successfully uploaded image using ${provider}, URL:`, result.url);
         return result;
+      } else {
+        console.log(`Provider ${provider} failed to return a URL`);
       }
     } catch (error) {
       console.error(`Error uploading image with ${provider}:`, error);

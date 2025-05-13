@@ -107,11 +107,25 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
           // Extract category name from the categories relation
           const categoryName = article.categories?.name || 'Uncategorized';
 
+          // Make sure all required fields are present
           return {
-            ...article,
+            id: article.id,
+            title: article.title,
+            content: article.content || '',
+            summary: article.summary || '',
             category: categoryName, // Set the category field to the category name
+            category_id: article.category_id,
+            author: article.author || 'Anonymous',
+            image_url: article.image_url || '',
+            video_url: article.video_url || '',
+            video_type: article.video_type || '',
+            tags: Array.isArray(article.tags) ? article.tags : [],
+            likes: article.likes || 0,
+            views: article.views || 0,
+            published: article.published !== false,
             comments: article.comments || [],
-            tags: article.tags || []
+            created_at: article.created_at || new Date().toISOString(),
+            updated_at: article.updated_at || new Date().toISOString()
           };
         });
 
@@ -201,10 +215,23 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | unde
 
         // Format the article to match our expected structure
         const article: NewsArticle = {
-          ...data,
+          id: data.id,
+          title: data.title,
+          content: data.content || '',
+          summary: data.summary || '',
           category: data.categories ? data.categories.name : (data.category_id || 'Uncategorized'),
+          category_id: data.category_id,
+          author: data.author || 'Anonymous',
+          image_url: data.image_url || '',
+          video_url: data.video_url || '',
+          video_type: data.video_type || '',
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          likes: data.likes || 0,
+          views: data.views || 0,
+          published: data.published !== false,
           comments: data.comments || [],
-          tags: data.tags || []
+          created_at: data.created_at || new Date().toISOString(),
+          updated_at: data.updated_at || new Date().toISOString()
         };
 
         console.log('Formatted article from Supabase:', article);
@@ -407,19 +434,21 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
         const articleData = {
           title: newArticle.title,
           content: newArticle.content,
-          summary: newArticle.summary,
+          summary: newArticle.summary || '',
           category_id: categoryId,
-          image_url: newArticle.image_url,
-          video_url: newArticle.video_url,
-          video_type: newArticle.video_type,
-          author: newArticle.author,
+          image_url: newArticle.image_url || '',
+          video_url: newArticle.video_url || '',
+          video_type: newArticle.video_type || '',
+          author: newArticle.author || 'Anonymous',
           likes: newArticle.likes || 0,
           views: 0,
           published: newArticle.published !== false,
           created_at: newArticle.created_at || new Date().toISOString(),
           updated_at: newArticle.updated_at || new Date().toISOString(),
-          tags: newArticle.tags || []
+          tags: Array.isArray(newArticle.tags) ? newArticle.tags : []
         };
+
+        console.log('Article data prepared:', articleData);
 
         console.log('Inserting article with data:', articleData);
 

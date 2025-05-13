@@ -4,9 +4,29 @@ import { useState, useEffect } from 'react';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { addNewsArticle, getCategories } from '../../../lib/dataService';
+import { getCategories } from '../../../lib/dataService';
 import { Category } from '../../../types';
 import StorageSetupGuide from '../../../components/StorageSetupGuide';
+
+// Define NewsArticle type
+interface NewsArticle {
+  id: string;
+  title: string;
+  content: string;
+  summary: string;
+  category: string;
+  author: string;
+  image_url?: string;
+  video_url?: string;
+  video_type?: 'youtube' | 'uploaded';
+  tags: string[];
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  likes: number;
+  comments: any[];
+  views: number;
+}
 
 export default function AddNewsPage() {
   const router = useRouter();
@@ -98,8 +118,8 @@ export default function AddNewsPage() {
         formData.append('type', 'image');
         formData.append('bucket', 'news-images');
 
-        // Upload the image using the API
-        const response = await fetch('/api/upload', {
+        // Upload the image using the server-side API
+        const response = await fetch('/api/upload/server', {
           method: 'POST',
           body: formData,
         });
@@ -154,8 +174,8 @@ export default function AddNewsPage() {
         formData.append('type', 'video');
         formData.append('bucket', 'news-videos');
 
-        // Upload the video using the API
-        const response = await fetch('/api/upload', {
+        // Upload the video using the server-side API
+        const response = await fetch('/api/upload/server', {
           method: 'POST',
           body: formData,
         });
@@ -203,12 +223,17 @@ export default function AddNewsPage() {
     setMessage({ type: '', text: '' });
 
     try {
+      console.log('Form submission started');
+      console.log('Form data:', formData);
+
       // Process tags - safely handle empty or undefined tags
       const processedTags = formData.tags
         ? formData.tags.split(',')
             .map(tag => tag.trim())
             .filter(tag => tag.length > 0)
         : [];
+
+      console.log('Processed tags:', processedTags);
 
       // Create a new article object
       const newArticle: NewsArticle = {
@@ -228,15 +253,28 @@ export default function AddNewsPage() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         likes: 0,
-        comments: []
+        comments: [],
+        views: 0
       };
 
-      console.log('Adding new article:', newArticle);
+      console.log('Adding new article with full details:', JSON.stringify(newArticle, null, 2));
 
-      // Add the article using the data service
-      const success = await addNewsArticle(newArticle);
+      // Add the article using the server-side API
+      console.log('Calling server-side API to add news article...');
 
-      if (success) {
+      const response = await fetch('/api/news/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newArticle),
+      });
+
+      const result = await response.json();
+      console.log('Server API result:', result);
+
+      if (response.ok && result.success) {
+        console.log('Article added successfully:', result.id);
         setMessage({
           type: 'success',
           text: 'News article created successfully and saved to Supabase!'
@@ -244,18 +282,24 @@ export default function AddNewsPage() {
 
         // Navigate to the news list after a short delay
         setTimeout(() => {
+          console.log('Navigating to news list');
           router.push('/admin/news');
         }, 1500);
       } else {
-        throw new Error('Failed to add article');
+        console.error('Server API returned error:', result.error);
+        throw new Error(`Failed to add article: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error adding article:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+
       let errorMessage = 'Failed to create news article. Please try again.';
 
       // Add more detailed error information
       if (error instanceof Error) {
         errorMessage += ` Error: ${error.message}`;
+        console.error('Error stack:', error.stack);
       } else if (typeof error === 'object' && error !== null) {
         errorMessage += ` Error: ${JSON.stringify(error)}`;
       }

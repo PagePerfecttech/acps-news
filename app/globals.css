@@ -164,6 +164,18 @@ html, body {
   background-color: rgba(var(--primary-rgb), 0.5) !important;
 }
 
+.bg-primary-70 {
+  background-color: rgba(var(--primary-rgb), 0.7) !important;
+}
+
+.bg-primary-80 {
+  background-color: rgba(var(--primary-rgb), 0.8) !important;
+}
+
+.bg-primary-90 {
+  background-color: rgba(var(--primary-rgb), 0.9) !important;
+}
+
 .text-primary {
   color: var(--primary-color) !important;
 }

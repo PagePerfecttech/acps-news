@@ -211,9 +211,22 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
 
   // Function to render YouTube or uploaded video
   const renderMedia = () => {
+    console.log('Rendering media for article:', article);
+
     if (article.video_url && article.video_type === 'youtube') {
       // Extract YouTube video ID
       const videoId = article.video_url.split('v=')[1]?.split('&')[0];
+      console.log('Rendering YouTube video with ID:', videoId);
+
+      if (!videoId) {
+        console.warn('Invalid YouTube URL:', article.video_url);
+        // Fallback to image or default
+        if (article.image_url) {
+          return renderImage();
+        } else {
+          return renderDefaultMedia();
+        }
+      }
 
       return (
         <div className="relative w-full h-full">
@@ -227,6 +240,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
       );
     } else if (article.video_url) {
       // Uploaded video
+      console.log('Rendering uploaded video:', article.video_url);
       return (
         <div className="relative w-full h-full">
           <video
@@ -237,25 +251,44 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
         </div>
       );
     } else if (article.image_url) {
-      // Image
+      return renderImage();
+    } else {
+      return renderDefaultMedia();
+    }
+  };
+
+  // Helper function to render image
+  const renderImage = () => {
+    console.log('Rendering image:', article.image_url);
+    try {
       return (
         <div className="relative w-full h-full">
           <Image
-            src={article.image_url}
+            src={article.image_url || '/placeholder.jpg'}
             alt={article.title}
             fill
             className="object-cover"
+            onError={() => {
+              console.error('Error loading image:', article.image_url);
+              return renderDefaultMedia();
+            }}
           />
         </div>
       );
-    } else {
-      // Fallback
-      return (
-        <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
-          <span className="text-white text-xl font-bold" data-site-name>FlipNews</span>
-        </div>
-      );
+    } catch (error) {
+      console.error('Error rendering image:', error);
+      return renderDefaultMedia();
     }
+  };
+
+  // Helper function to render default media
+  const renderDefaultMedia = () => {
+    console.log('Rendering default media');
+    return (
+      <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+        <span className="text-white text-xl font-bold" data-site-name>FlipNEWS</span>
+      </div>
+    );
   };
 
   // Removed handleShare function as we&apos;re using ShareButton component
@@ -276,10 +309,10 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
         {/* Content - white background with black text */}
         <div className="flex-grow flex flex-col p-0 bg-white text-black">
           {/* Category on left, author on right */}
-          <div className="px-3 py-2 bg-yellow-500 flex justify-between items-center">
+          <div className="px-3 py-2 bg-primary flex justify-between items-center">
             {/* Category on left */}
             <div>
-              <span className="text-xs font-medium text-black px-2 py-1 bg-yellow-400 rounded-sm">
+              <span className="text-xs font-medium text-black px-2 py-1 bg-primary-80 rounded-sm">
                 {article.category || 'General'}
               </span>
             </div>
@@ -297,26 +330,24 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
               {article.title}
             </h3>
 
-            {/* Description (limited to exactly 7 lines) */}
-            <p className="text-sm text-gray-700 leading-snug line-clamp-7">
+            {/* Description (limited to exactly 4 lines) */}
+            <p className="text-sm text-gray-700 leading-snug line-clamp-4">
               {article.content}
             </p>
-          </div>
 
-          {/* Read More button - transparent */}
-          {showReadMore && (
-            <div className="px-3 pb-2 flex justify-end">
+            {/* Read More button - more prominent */}
+            <div className="mt-2 flex justify-center">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleFullContent(true);
                 }}
-                className="bg-transparent text-gray-600 text-xs px-3 py-1 border border-gray-300 rounded-sm hover:bg-gray-100 transition-colors"
+                className="bg-primary text-black font-medium text-sm px-4 py-2 rounded-md hover:bg-primary-80 transition-colors w-full"
               >
-                Read More
+                Read Full Article
               </button>
             </div>
-          )}
+          </div>
 
           {/* Stats at the bottom - horizontal */}
           <div className="px-3 py-2 border-t border-gray-200">
@@ -360,30 +391,42 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
         <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 overflow-hidden">
           <div className="bg-white text-black w-full max-w-2xl h-[90vh] rounded-lg shadow-xl flex flex-col">
             {/* Sticky header */}
-            <div className="sticky top-0 bg-yellow-500 flex justify-between items-center z-10 px-4 py-3">
+            <div className="sticky top-0 bg-primary flex justify-between items-center z-10 px-4 py-3">
               <h3 className="text-base font-bold pr-4 truncate">{article.title}</h3>
               <div className="flex items-center space-x-2">
                 <Link
                   href={`/news/${article.id}`}
-                  className="bg-yellow-600 p-1 text-black rounded-full hover:bg-yellow-700 transition-colors"
+                  className="bg-primary-80 p-1 text-black rounded-full hover:bg-primary-70 transition-colors"
                   title="Open in new page"
                 >
                   <FiExternalLink size={18} />
                 </Link>
                 <button
                   onClick={() => toggleFullContent(false)}
-                  className="bg-yellow-600 p-1 text-black rounded-full hover:bg-yellow-700 transition-colors"
+                  className="bg-primary-80 p-1 text-black rounded-full hover:bg-primary-70 transition-colors"
                 >
                   <FiX size={18} />
                 </button>
               </div>
             </div>
 
-            {/* No media in popup as per user request */}
-
-            {/* Full content - scrollable container (takes full height since no image) */}
+            {/* Full content - scrollable container */}
             <div className="flex-grow overflow-y-auto overscroll-contain modal-content px-4 py-3 pb-8 h-[calc(90vh-56px)]">
-              {/* Title (added since we removed the image) */}
+              {/* Featured image (if available) */}
+              {article.image_url && (
+                <div className="mb-4 rounded-lg overflow-hidden">
+                  <img
+                    src={article.image_url}
+                    alt={article.title}
+                    className="w-full h-auto object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Title */}
               <h2 className="text-xl font-bold text-gray-900 mb-3">{article.title}</h2>
 
               {/* Author and date */}
@@ -393,10 +436,21 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
                 <span>{new Date(article.created_at).toLocaleDateString()}</span>
               </div>
 
-              {/* Content */}
-              <p className="text-gray-800 text-base leading-relaxed mb-6">
-                {article.content}
-              </p>
+              {/* Category */}
+              <div className="mb-4">
+                <span className="text-xs font-medium text-black px-2 py-1 bg-primary-80 rounded-sm">
+                  {article.category || 'General'}
+                </span>
+              </div>
+
+              {/* Content - with better formatting */}
+              <div className="text-gray-800 text-base leading-relaxed mb-6 article-content">
+                {article.content.split('\n').map((paragraph, index) => (
+                  paragraph.trim() ?
+                    <p key={index} className="mb-4">{paragraph}</p> :
+                    <br key={index} />
+                ))}
+              </div>
 
               {/* Tags */}
               {article.tags && article.tags.length > 0 && (
@@ -408,6 +462,21 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
                   ))}
                 </div>
               )}
+
+              {/* Social sharing */}
+              <div className="my-6 pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-base font-medium">Share this article</h4>
+                  <div className="flex space-x-3">
+                    <ShareButton
+                      title={article.title}
+                      elementId={`news-card-${article.id}`}
+                      className="flex items-center text-blue-600 hover:text-blue-800"
+                      iconSize={20}
+                    />
+                  </div>
+                </div>
+              </div>
 
               {/* Comments section */}
               {article.comments && Array.isArray(article.comments) && article.comments.length > 0 && (
@@ -425,6 +494,27 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
                   </div>
                 </div>
               )}
+
+              {/* Add comment form */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h4 className="text-base font-medium mb-3">Add a Comment</h4>
+                <form onSubmit={handleCommentSubmit}>
+                  <textarea
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    rows={3}
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write your comment here..."
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="mt-2 px-4 py-2 bg-primary text-black rounded-md hover:bg-primary-80 disabled:bg-primary-50"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Comment'}
+                  </button>
+                </form>
+              </div>
 
               {/* Bottom padding for mobile scrolling */}
               <div className="h-12"></div>
