@@ -30,35 +30,61 @@ export default function AddRssFeedPage() {
     const checkSupabase = async () => {
       const configured = await isSupabaseConfigured();
       setSupabaseConfigured(configured);
-      
+
       if (configured) {
         fetchData();
       } else {
         setError('Supabase is not configured. RSS feeds require a database connection.');
       }
     };
-    
+
     checkSupabase();
   }, []);
 
   const fetchData = async () => {
     try {
-      const [fetchedCategories, fetchedUsers] = await Promise.all([
-        getCategories(),
-        getUsers()
-      ]);
-      
-      setCategories(fetchedCategories);
-      setUsers(fetchedUsers);
+      // Fetch categories and users with error handling
+      let fetchedCategories = [];
+      let fetchedUsers = [];
+
+      try {
+        fetchedCategories = await getCategories() || [];
+      } catch (catError) {
+        console.error('Error fetching categories:', catError);
+        fetchedCategories = [];
+      }
+
+      try {
+        fetchedUsers = await getUsers() || [];
+      } catch (userError) {
+        console.error('Error fetching users:', userError);
+        fetchedUsers = [];
+      }
+
+      // Ensure we're setting arrays even if the API returns null or undefined
+      setCategories(Array.isArray(fetchedCategories) ? fetchedCategories : []);
+      setUsers(Array.isArray(fetchedUsers) ? fetchedUsers : []);
+
+      // If no users exist, create a default system user
+      if ((!fetchedUsers || fetchedUsers.length === 0) && typeof window !== 'undefined') {
+        setFormData(prev => ({
+          ...prev,
+          user_id: 'system'
+        }));
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load categories or users');
+
+      // Set empty arrays to prevent map errors
+      setCategories([]);
+      setUsers([]);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -88,13 +114,13 @@ export default function AddRssFeedPage() {
         },
         body: JSON.stringify(formData),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create RSS feed');
       }
-      
+
       // Redirect to RSS feeds list
       router.push('/admin/rss');
     } catch (err: any) {
@@ -183,7 +209,7 @@ export default function AddRssFeedPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 <option value="">Select a category</option>
-                {categories.map(category => (
+                {Array.isArray(categories) && categories.map(category => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -204,11 +230,14 @@ export default function AddRssFeedPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 <option value="">Select a user</option>
-                {users.map(user => (
+                {Array.isArray(users) && users.map(user => (
                   <option key={user.id} value={user.id}>
                     {user.name} ({user.email})
                   </option>
                 ))}
+                {(!Array.isArray(users) || users.length === 0) && (
+                  <option value="system">System (Default)</option>
+                )}
               </select>
             </div>
 

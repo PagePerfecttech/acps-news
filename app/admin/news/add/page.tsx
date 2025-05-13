@@ -193,10 +193,12 @@ export default function AddNewsPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // Process tags
-      const processedTags = formData.tags.split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+      // Process tags - safely handle empty or undefined tags
+      const processedTags = formData.tags
+        ? formData.tags.split(',')
+            .map(tag => tag.trim())
+            .filter(tag => tag.length > 0)
+        : [];
 
       // Create a new article object
       const newArticle: NewsArticle = {
