@@ -6,7 +6,7 @@ const path = require('path');
 
 // Cloudinary configuration
 // Note: These values are from your .env.local file
-const cloudName = 'vrmmedia';
+const cloudName = 'dejesejon';
 const apiKey = '137179496379745';
 const apiSecret = '2iwEKWNqCHLtSWKu9KvFv06zpDw';
 
