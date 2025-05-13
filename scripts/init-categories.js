@@ -1,164 +1,113 @@
 // This script initializes the categories table with default categories
-const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+const fetch = require('node-fetch');
 
-// Get Supabase credentials from environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase credentials
+const supabaseUrl = 'https://tnaqvbrflguwpeafwclz.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuYXF2YnJmbGd1d3BlYWZ3Y2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE3NDIsImV4cCI6MjA2MjU0Nzc0Mn0.wosmLe8bA0LOJQttRD03c7tIa8woLbFNSVWuc0ntcME';
 
 // Default categories to create
 const defaultCategories = [
-  { name: 'News', slug: 'news' },
-  { name: 'Business', slug: 'business' },
-  { name: 'Technology', slug: 'technology' },
-  { name: 'Sports', slug: 'sports' },
-  { name: 'Entertainment', slug: 'entertainment' },
-  { name: 'Lifestyle', slug: 'lifestyle' },
-  { name: 'Health', slug: 'health' },
-  { name: 'Science', slug: 'science' },
-  { name: 'Regional', slug: 'regional' },
-  { name: 'Politics', slug: 'politics' },
-  { name: 'World', slug: 'world' },
-  { name: 'Opinion', slug: 'opinion' },
-  { name: 'Food', slug: 'food' },
-  { name: 'Travel', slug: 'travel' },
-  { name: 'Culture', slug: 'culture' }
+  { name: 'సినిమా', slug: 'cinema' },
+  { name: 'రాజకీయం', slug: 'politics' },
+  { name: 'క్రీడలు', slug: 'sports' },
+  { name: 'వ్యాపారం', slug: 'business' },
+  { name: 'టెక్నాలజీ', slug: 'technology' },
+  { name: 'ఆరోగ్యం', slug: 'health' },
+  { name: 'విద్య', slug: 'education' },
+  { name: 'రాష్ట్రీయం', slug: 'state' },
+  { name: 'జాతీయం', slug: 'national' },
+  { name: 'అంతర్జాతీయం', slug: 'international' }
 ];
 
 async function initCategories() {
   console.log('Initializing categories table...');
 
   try {
-    // Check if the categories table exists
-    const { data: tables, error: tablesError } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'categories');
+    // Check if there are any categories
+    const response = await fetch(`${supabaseUrl}/rest/v1/categories?select=id&limit=1`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (tablesError) {
-      console.error('Error checking tables:', tablesError);
-      return;
-    }
-
-    if (tables.length === 0) {
-      console.log('Categories table does not exist. Creating it...');
-      
-      // Create the categories table
-      const { error: createError } = await supabase.sql`
-        CREATE TABLE IF NOT EXISTS categories (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          name VARCHAR(255) NOT NULL,
-          slug VARCHAR(255) NOT NULL UNIQUE,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `;
-      
-      if (createError) {
-        console.error('Error creating categories table:', createError);
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log('Categories table might not exist. Please create it in the Supabase dashboard.');
         return;
       }
-      
-      console.log('Categories table created successfully!');
-    } else {
-      console.log('Categories table exists.');
-    }
 
-    // Check if there are any categories
-    const { data: existingCategories, error: countError } = await supabase
-      .from('categories')
-      .select('id')
-      .limit(1);
-
-    if (countError) {
-      console.error('Error checking categories count:', countError);
+      const error = await response.text();
+      console.error('Error checking categories:', error);
       return;
     }
+
+    const existingCategories = await response.json();
 
     // If no categories exist, add the default ones
     if (!existingCategories || existingCategories.length === 0) {
       console.log('No categories found. Adding default categories...');
-      
+
       // Add default categories
-      const { data, error } = await supabase
-        .from('categories')
-        .insert(defaultCategories)
-        .select();
-      
-      if (error) {
+      const insertResponse = await fetch(`${supabaseUrl}/rest/v1/categories`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(defaultCategories)
+      });
+
+      if (!insertResponse.ok) {
+        const error = await insertResponse.text();
         console.error('Error adding default categories:', error);
         return;
       }
-      
+
+      const data = await insertResponse.json();
       console.log(`Added ${data.length} default categories.`);
     } else {
       console.log('Categories already exist. Skipping default categories.');
     }
 
-    // Enable RLS on categories table
-    console.log('Setting up RLS policies...');
-    
-    // Enable RLS on categories table
-    const { error: rlsError } = await supabase.sql`
-      ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-    `;
-    
-    if (rlsError) {
-      console.error('Error enabling RLS:', rlsError);
-      // Continue anyway
-    }
-    
-    // Check if policies exist
-    const { data: policies, error: policiesError } = await supabase
-      .from('pg_policies')
-      .select('policyname')
-      .eq('tablename', 'categories');
-    
-    if (policiesError) {
-      console.error('Error checking policies:', policiesError);
-      // Continue anyway
-    }
-    
-    // Create policies if they don't exist
-    if (!policies || policies.length === 0) {
-      console.log('Creating RLS policies...');
-      
-      // Create policy for authenticated users
-      const { error: authPolicyError } = await supabase.sql`
-        CREATE POLICY "Allow full access to authenticated users" ON categories
-        FOR ALL USING (true);
-      `;
-      
-      if (authPolicyError) {
-        console.error('Error creating authenticated policy:', authPolicyError);
-        // Continue anyway
-      }
-      
-      // Create policy for anonymous users
-      const { error: anonPolicyError } = await supabase.sql`
-        CREATE POLICY "Allow read access to anonymous users" ON categories
-        FOR SELECT USING (true);
-      `;
-      
-      if (anonPolicyError) {
-        console.error('Error creating anonymous policy:', anonPolicyError);
-        // Continue anyway
-      }
-      
-      console.log('RLS policies created successfully!');
-    } else {
-      console.log('RLS policies already exist.');
-    }
-    
     console.log('Categories initialization complete!');
   } catch (error) {
     console.error('Error initializing categories:', error);
   }
 }
 
+// Install node-fetch if needed
+async function checkAndInstallDependencies() {
+  try {
+    require('node-fetch');
+    console.log('node-fetch is already installed.');
+    return true;
+  } catch (error) {
+    console.log('Installing node-fetch...');
+    const { execSync } = require('child_process');
+    try {
+      execSync('npm install node-fetch@2', { stdio: 'inherit' });
+      console.log('node-fetch installed successfully.');
+      return true;
+    } catch (installError) {
+      console.error('Failed to install node-fetch:', installError);
+      return false;
+    }
+  }
+}
+
 // Run the function
-initCategories();
+(async () => {
+  console.log('Starting categories initialization script...');
+  const dependenciesInstalled = await checkAndInstallDependencies();
+  console.log('Dependencies check completed:', dependenciesInstalled);
+  if (dependenciesInstalled) {
+    await initCategories();
+  }
+  console.log('Script execution completed.');
+})();

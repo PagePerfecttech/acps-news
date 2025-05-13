@@ -776,7 +776,55 @@ export const deleteAd = async (id: string): Promise<boolean> => {
 // Category Management Functions
 
 // Get all categories
-export const getCategories = (): Category[] => {
+export const getCategories = async (): Promise<Category[]> => {
+  try {
+    // Try to get categories from Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { fetchCategories, isSupabaseConfigured } = await import('./supabaseService');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Fetching categories from Supabase...');
+        const categories = await fetchCategories();
+
+        if (categories && categories.length > 0) {
+          console.log(`Retrieved ${categories.length} categories from Supabase`);
+
+          // Update localStorage with the latest data
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+          }
+
+          return categories;
+        } else {
+          console.warn('No categories found in Supabase, falling back to localStorage');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching categories from Supabase:', error);
+      // Continue to localStorage fallback
+    }
+
+    // Fall back to localStorage if Supabase fails
+    if (typeof window === 'undefined') {
+      // Return the default data on server-side
+      return defaultCategories;
+    }
+
+    initializeData();
+    const categories = localStorage.getItem('flipnews_categories');
+    return categories ? JSON.parse(categories) : defaultCategories;
+  } catch (error) {
+    console.error('Error in getCategories:', error);
+    return defaultCategories;
+  }
+};
+
+// Get all categories (synchronous version for backward compatibility)
+export const getCategoriesSync = (): Category[] => {
   if (typeof window === 'undefined') {
     // Return the default data on server-side
     return defaultCategories;
@@ -788,23 +836,62 @@ export const getCategories = (): Category[] => {
 };
 
 // Get a single category by ID
-export const getCategoryById = (id: string): Category | undefined => {
-  const categories = getCategories();
+export const getCategoryById = async (id: string): Promise<Category | undefined> => {
+  const categories = await getCategories();
   return categories.find(category => category.id === id);
 };
 
 // Get a single category by slug
-export const getCategoryBySlug = (slug: string): Category | undefined => {
-  const categories = getCategories();
+export const getCategoryBySlug = async (slug: string): Promise<Category | undefined> => {
+  const categories = await getCategories();
   return categories.find(category => category.slug === slug);
 };
 
 // Update a category
-export const updateCategory = (updatedCategory: Category): boolean => {
+export const updateCategory = async (updatedCategory: Category): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    const categories = getCategories();
+    // Try to update in Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { updateCategoryInSupabase, isSupabaseConfigured } = await import('./supabaseService');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Updating category in Supabase:', updatedCategory.name);
+
+        const result = await updateCategoryInSupabase(updatedCategory.id, {
+          name: updatedCategory.name,
+          slug: updatedCategory.slug
+        });
+
+        if (result) {
+          console.log('Category updated in Supabase successfully');
+
+          // Update localStorage
+          const categories = await getCategories();
+          const index = categories.findIndex(category => category.id === updatedCategory.id);
+
+          if (index !== -1) {
+            categories[index] = updatedCategory;
+            localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+          }
+
+          return true;
+        } else {
+          console.error('Failed to update category in Supabase');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating category in Supabase:', error);
+      // Continue to localStorage fallback
+    }
+
+    // Fall back to localStorage
+    const categories = await getCategories();
     const index = categories.findIndex(category => category.id === updatedCategory.id);
 
     if (index === -1) return false;
@@ -819,11 +906,55 @@ export const updateCategory = (updatedCategory: Category): boolean => {
 };
 
 // Add a new category
-export const addCategory = (newCategory: Category): boolean => {
+export const addCategory = async (newCategory: Category): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    const categories = getCategories();
+    // Try to add to Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { addCategoryToSupabase, isSupabaseConfigured } = await import('./supabaseService');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Adding category to Supabase:', newCategory.name);
+
+        const categoryData = {
+          name: newCategory.name,
+          slug: newCategory.slug
+        };
+
+        const result = await addCategoryToSupabase(categoryData);
+
+        if (result) {
+          console.log('Category added to Supabase successfully:', result.id);
+
+          // Update localStorage with the new category
+          const categories = await getCategories();
+
+          // Use the ID from Supabase
+          const updatedCategory = {
+            ...newCategory,
+            id: result.id
+          };
+
+          categories.push(updatedCategory);
+          localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+
+          return true;
+        } else {
+          console.error('Failed to add category to Supabase');
+        }
+      }
+    } catch (error) {
+      console.error('Error adding category to Supabase:', error);
+      // Continue to localStorage fallback
+    }
+
+    // Fall back to localStorage
+    const categories = await getCategories();
 
     // Check if slug already exists
     const slugExists = categories.some(category => category.slug === newCategory.slug);
@@ -842,11 +973,43 @@ export const addCategory = (newCategory: Category): boolean => {
 };
 
 // Delete a category
-export const deleteCategory = (id: string): boolean => {
+export const deleteCategory = async (id: string): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    const categories = getCategories();
+    // Try to delete from Supabase first
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { deleteCategoryFromSupabase, isSupabaseConfigured } = await import('./supabaseService');
+
+      // Check if Supabase is configured
+      const configured = await isSupabaseConfigured();
+
+      if (configured) {
+        console.log('Deleting category from Supabase:', id);
+
+        const success = await deleteCategoryFromSupabase(id);
+
+        if (success) {
+          console.log('Category deleted from Supabase successfully');
+
+          // Update localStorage
+          const categories = await getCategories();
+          const filteredCategories = categories.filter(category => category.id !== id);
+          localStorage.setItem('flipnews_categories', JSON.stringify(filteredCategories));
+
+          return true;
+        } else {
+          console.error('Failed to delete category from Supabase');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting category from Supabase:', error);
+      // Continue to localStorage fallback
+    }
+
+    // Fall back to localStorage
+    const categories = await getCategories();
     const filteredCategories = categories.filter(category => category.id !== id);
     localStorage.setItem('flipnews_categories', JSON.stringify(filteredCategories));
     return true;

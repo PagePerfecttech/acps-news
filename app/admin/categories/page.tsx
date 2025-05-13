@@ -19,7 +19,8 @@ export default function CategoryManagement() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const loadedCategories = getCategories();
+        // Use the async version of getCategories
+        const loadedCategories = await getCategories();
         setCategories(loadedCategories);
 
         // Count articles per category
@@ -56,7 +57,7 @@ export default function CategoryManagement() {
     category.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategory.name.trim() === '' || newCategory.slug.trim() === '') {
       setMessage({ type: 'error', text: 'Category name and slug are required' });
       return;
@@ -79,12 +80,26 @@ export default function CategoryManagement() {
     };
 
     try {
-      const success = addCategory(newCategoryObj);
+      // Set loading state
+      setIsLoading(true);
+
+      // Use the async version of addCategory
+      const success = await addCategory(newCategoryObj);
 
       if (success) {
-        // Update the local state
-        setCategories([...categories, newCategoryObj]);
-        setArticleCounts({ ...articleCounts, [newId]: 0 });
+        // Refresh categories from the database to get the correct ID
+        const refreshedCategories = await getCategories();
+        setCategories(refreshedCategories);
+
+        // Update article counts
+        const newCounts = { ...articleCounts };
+        const addedCategory = refreshedCategories.find(c => c.slug === newCategory.slug);
+        if (addedCategory) {
+          newCounts[addedCategory.id] = 0;
+          setArticleCounts(newCounts);
+        }
+
+        // Reset form
         setNewCategory({ name: '', slug: '' });
         setMessage({ type: 'success', text: 'Category added successfully!' });
 
@@ -98,6 +113,8 @@ export default function CategoryManagement() {
     } catch (error) {
       console.error('Error adding category:', error);
       setMessage({ type: 'error', text: 'Failed to add category. Please try again.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,7 +126,7 @@ export default function CategoryManagement() {
     });
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingCategory) return;
 
     if (editingCategory.name.trim() === '' || editingCategory.slug.trim() === '') {
@@ -140,15 +157,16 @@ export default function CategoryManagement() {
     };
 
     try {
-      const success = updateCategory(updatedCategoryObj);
+      // Set loading state
+      setIsLoading(true);
+
+      // Use the async version of updateCategory
+      const success = await updateCategory(updatedCategoryObj);
 
       if (success) {
-        // Update the local state
-        setCategories(categories.map(category =>
-          category.id === editingCategory.id
-            ? updatedCategoryObj
-            : category
-        ));
+        // Refresh categories from the database
+        const refreshedCategories = await getCategories();
+        setCategories(refreshedCategories);
 
         setEditingCategory(null);
         setMessage({ type: 'success', text: 'Category updated successfully!' });
@@ -163,10 +181,12 @@ export default function CategoryManagement() {
     } catch (error) {
       console.error('Error updating category:', error);
       setMessage({ type: 'error', text: 'Failed to update category. Please try again.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = async (id: string) => {
     // Check if there are articles using this category
     const categoryToDelete = categories.find(c => c.id === id);
     if (!categoryToDelete) return;
@@ -186,11 +206,17 @@ export default function CategoryManagement() {
     }
 
     try {
-      const success = deleteCategory(id);
+      // Set loading state
+      setIsLoading(true);
+
+      // Use the async version of deleteCategory
+      const success = await deleteCategory(id);
 
       if (success) {
-        // Update the local state
-        setCategories(categories.filter(category => category.id !== id));
+        // Refresh categories from the database
+        const refreshedCategories = await getCategories();
+        setCategories(refreshedCategories);
+
         setMessage({ type: 'success', text: 'Category deleted successfully!' });
 
         // Clear message after 3 seconds
@@ -203,6 +229,8 @@ export default function CategoryManagement() {
     } catch (error) {
       console.error('Error deleting category:', error);
       setMessage({ type: 'error', text: 'Failed to delete category. Please try again.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -416,3 +416,100 @@ export const hasUserLikedArticle = async (articleId: string, ipAddress: string):
   }
 };
 
+// Category Management Functions
+
+// Fetch all categories
+export const fetchCategories = async (): Promise<Category[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in fetchCategories:', error);
+    return [];
+  }
+};
+
+// Add a new category
+export const addCategoryToSupabase = async (category: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<Category | null> => {
+  try {
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('categories')
+      .insert({
+        name: category.name,
+        slug: category.slug,
+        created_at: now,
+        updated_at: now
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding category:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in addCategoryToSupabase:', error);
+    return null;
+  }
+};
+
+// Update a category
+export const updateCategoryInSupabase = async (id: string, category: Partial<Category>): Promise<Category | null> => {
+  try {
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('categories')
+      .update({
+        ...category,
+        updated_at: now
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating category:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateCategoryInSupabase:', error);
+    return null;
+  }
+};
+
+// Delete a category
+export const deleteCategoryFromSupabase = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting category:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteCategoryFromSupabase:', error);
+    return false;
+  }
+};
+
