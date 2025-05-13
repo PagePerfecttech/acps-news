@@ -18,7 +18,7 @@ export default function NewsFallback({ error, onRetry }: NewsFallbackProps) {
         <h1 className="text-2xl font-bold mb-4">Unable to Load News</h1>
         
         <p className="text-gray-600 mb-6">
-          We're having trouble loading the latest news. This could be due to a network issue or a temporary server problem.
+          We&apos;re having trouble loading the latest news. This could be due to a network issue or a temporary server problem.
         </p>
         
         {error && (

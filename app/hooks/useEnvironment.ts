@@ -204,7 +204,7 @@ export const useEnvironment = (): EnvironmentConfig => {
     }
 
     // Check if any required variables are missing
-    const missingRequired = 
+    const missingRequired =
       (supabaseUrlStatus.required && supabaseUrlStatus.status !== 'valid') ||
       (supabaseAnonKeyStatus.required && supabaseAnonKeyStatus.status !== 'valid');
 
@@ -231,7 +231,8 @@ export const useEnvironment = (): EnvironmentConfig => {
       status: overallStatus,
       missingRequired
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps; // Empty dependency array is fine here as this only needs to run once on mount
+  // and doesn&apos;t depend on any props or state
 
   return config;
 };

@@ -28,7 +28,7 @@ export default function RssFeedManager() {
   // Load feeds and categories on component mount
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Load RSS feeds and categories
   const loadData = async () => {

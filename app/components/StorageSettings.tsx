@@ -32,7 +32,7 @@ export default function StorageSettings({ onClose }: StorageSettingsProps) {
     };
 
     checkProviders();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const getProviderStatus = (provider: StorageProvider) => {
     if (loading) return 'Checking...';

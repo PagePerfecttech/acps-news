@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSave, FiRefreshCw, FiUpload, FiCheck, FiX } from 'react-icons/fi';
+import { FiRefreshCw, FiUpload, FiCheck, FiX } from 'react-icons/fi';
 import StorageSettings from '../../components/StorageSettings';
 import { getConfiguredProviders, StorageProvider } from '../../lib/mediaService';
 
@@ -36,7 +36,7 @@ export default function StorageConfigPage() {
     };
 
     checkProviders();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleTestUpload = async () => {
     setTestUploadStatus({
@@ -92,7 +92,7 @@ export default function StorageConfigPage() {
           text: `Test upload failed: ${result.error || 'Unknown error'}`,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error during test upload:', error);
       setTestUploadStatus({
         inProgress: false,

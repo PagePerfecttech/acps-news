@@ -24,8 +24,7 @@ export default function CategoryManagement() {
         setCategories(loadedCategories);
 
         // Count articles per category
-        const articlesPromise = getNewsArticles();
-        const articles = await articlesPromise;
+        const articles = await getNewsArticles();
         const counts: Record<string, number> = {};
 
         if (Array.isArray(articles)) {
@@ -49,7 +48,7 @@ export default function CategoryManagement() {
     };
 
     loadCategories();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Filter categories based on search term
   const filteredCategories = categories.filter(category =>

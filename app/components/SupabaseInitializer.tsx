@@ -81,8 +81,8 @@ export default function SupabaseInitializer() {
         }
       }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
-  // This component doesn't render anything
+  // This component doesn&apos;t render anything
   return null;
 }

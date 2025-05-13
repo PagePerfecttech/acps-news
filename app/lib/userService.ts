@@ -14,7 +14,7 @@ const defaultUsers: User[] = [
   },
 ];
 
-// Initialize users in localStorage if they don't exist
+// Initialize users in localStorage if they don&apos;t exist
 const initializeUsers = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
@@ -175,7 +175,7 @@ export const addUser = async (user: Omit<User, 'id' | 'created_at'>): Promise<Us
         }
 
         if (error.code === '42P01') {
-          // Table doesn't exist
+          // Table doesn&apos;t exist
           console.error('Users table does not exist. Please run the fix-users-table.js script');
           return null;
         }
@@ -198,7 +198,7 @@ export const addUser = async (user: Omit<User, 'id' | 'created_at'>): Promise<Us
 
 // Add a user to localStorage
 const addLocalUser = (user: Omit<User, 'id' | 'created_at'>): User | null => {
-  if (typeof window === 'undefined') return null; // Can't update on server-side
+  if (typeof window === 'undefined') return null; // Can&apos;t update on server-side
 
   try {
     initializeUsers();
@@ -266,7 +266,7 @@ export const updateUser = async (id: string, userData: Partial<User>): Promise<b
 
 // Update a user in localStorage
 const updateLocalUser = (id: string, userData: Partial<User>): boolean => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     initializeUsers();
@@ -328,7 +328,7 @@ export const deleteUser = async (id: string): Promise<boolean> => {
 
 // Delete a user from localStorage
 const deleteLocalUser = (id: string): boolean => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     initializeUsers();

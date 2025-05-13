@@ -77,7 +77,7 @@ export default function StorageSetupGuide({ onClose }: StorageSetupGuideProps) {
               <div className="mt-4 flex items-center">
                 <FiCheckCircle className="h-5 w-5 text-green-500" />
                 <span className="ml-2 text-sm text-gray-500">
-                  Once you've completed these steps, you'll be able to upload images and videos.
+                  Once you&apos;ve completed these steps, you&apos;ll be able to upload images and videos.
                 </span>
               </div>
             </div>

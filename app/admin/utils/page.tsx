@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { executeSql, executeSqlWithResult, tableExists, createTableIfNotExists } from '../../lib/dbUtils';
+import { executeSqlWithResult, tableExists, createTableIfNotExists } from '../../lib/dbUtils';
 
 export default function DatabaseUtilsPage() {
   const [query, setQuery] = useState('');
@@ -28,7 +28,7 @@ export default function DatabaseUtilsPage() {
       
       const data = await executeSqlWithResult(query);
       setResult(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -44,7 +44,7 @@ export default function DatabaseUtilsPage() {
     try {
       const exists = await tableExists(tableToCheck);
       setTableExists(exists);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -60,7 +60,7 @@ export default function DatabaseUtilsPage() {
     try {
       await createTableIfNotExists(newTableName, newTableColumns);
       setResult(`Table ${newTableName} created or already exists`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'An error occurred');
     } finally {
       setIsLoading(false);

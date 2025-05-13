@@ -7,12 +7,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 // For server-side routes, we can use a different approach
-// We'll implement our own signature generation without requiring the full cloudinary package
+// We&apos;ll implement our own signature generation without requiring the full cloudinary package
 
 // Simple function to generate a signature for Cloudinary uploads
 function generateSignature(params: Record<string, any>, apiSecret: string): string {
   // In a real implementation, we would use a crypto library to generate the signature
-  // For now, we'll use a simplified approach
+  // For now, we&apos;ll use a simplified approach
   const crypto = require('crypto');
 
   // Sort the parameters
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       api_key: cloudinaryConfig.api_key,
       cloud_name: cloudinaryConfig.cloud_name,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating Cloudinary signature:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to generate signature' },

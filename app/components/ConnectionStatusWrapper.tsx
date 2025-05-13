@@ -10,7 +10,7 @@ export default function ConnectionStatusWrapper() {
   const [showStatus, setShowStatus] = useState(false);
   const { connectionStatus } = useSettings();
 
-  // Only show in admin/setup pages or when there's a connection issue
+  // Only show in admin/setup pages or when there&apos;s a connection issue
   useEffect(() => {
     const isAdminPage = pathname?.startsWith('/admin');
     const isSetupPage = pathname?.startsWith('/setup');

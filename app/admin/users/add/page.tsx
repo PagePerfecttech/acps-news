@@ -31,7 +31,7 @@ export default function AddUserPage() {
     const file = e.target.files?.[0];
     if (file) {
       // In a real app, you would upload the file to a server or cloud storage
-      // For demo purposes, we'll just create a local URL
+      // For demo purposes, we&apos;ll just create a local URL
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
 

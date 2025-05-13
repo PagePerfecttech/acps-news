@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { isSupabaseConfigured } from './supabase';
 import { NewsArticle, User } from '../types';
-import { addNewsArticle } from './dataService';
+;
 import { getUserById } from './userService';
 import { Parser } from 'rss-parser';
 

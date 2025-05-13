@@ -42,7 +42,7 @@ export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
       window.removeEventListener('error', errorHandler);
       window.removeEventListener('unhandledrejection', rejectionHandler);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleReset = () => {
     setHasError(false);

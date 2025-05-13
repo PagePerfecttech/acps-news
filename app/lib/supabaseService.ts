@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { NewsArticle, Ad, Comment, Category } from '../types';
+import { NewsArticle, Ad, Category } from '../types';
 
 // News Article Functions
 export const fetchNewsArticles = async (): Promise<NewsArticle[]> => {
@@ -33,7 +33,7 @@ export const fetchNewsArticles = async (): Promise<NewsArticle[]> => {
       author: article.author || 'Unknown',
       likes: article.likes || 0,
       comments: article.comments || [],
-      tags: [], // We'll need to fetch tags separately
+      tags: [], // We&apos;ll need to fetch tags separately
       published: article.published
     }));
   } catch (error) {
@@ -75,7 +75,7 @@ export const getNewsArticleById = async (articleId: string): Promise<NewsArticle
       author: data.author || 'Unknown',
       likes: data.likes || 0,
       comments: data.comments || [],
-      tags: [], // We'll need to fetch tags separately
+      tags: [], // We&apos;ll need to fetch tags separately
       published: data.published
     };
   } catch (error) {
@@ -260,7 +260,7 @@ export const deleteComment = async (commentId: string): Promise<boolean> => {
 // Subscribe to real-time changes (legacy method - use realtimeManager instead)
 export const subscribeToChanges = (
   table: string,
-  callback: (payload: any) => void,
+  callback: (payload: unknown) => void,
   event: 'INSERT' | 'UPDATE' | 'DELETE' | '*' = '*',
   filter?: string,
   filterValue?: string
@@ -293,7 +293,7 @@ export const likeArticle = async (articleId: string, ipAddress: string): Promise
       return true;
     }
 
-    // Start a transaction to add the like and update the article's like count
+    // Start a transaction to add the like and update the article&apos;s like count
     const { error: likeError } = await supabase
       .from('likes')
       .insert({
@@ -307,7 +307,7 @@ export const likeArticle = async (articleId: string, ipAddress: string): Promise
       return false;
     }
 
-    // Increment the article's like count
+    // Increment the article&apos;s like count
     const { error: updateError } = await supabase
       .rpc('increment_likes', { article_id: articleId });
 
@@ -548,7 +548,7 @@ export const uploadImage = async (
     const bucketExists = buckets?.some(b => b.name === bucket);
 
     if (!bucketExists) {
-      console.warn(`⚠️ Bucket ${bucket} doesn't exist!`);
+      console.warn(`⚠️ Bucket ${bucket} doesn&apos;t exist!`);
       return { url: null, error: `Storage bucket "${bucket}" not found` };
     }
 
@@ -589,7 +589,7 @@ export const uploadImage = async (
     }
 
     return { url: publicUrl, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in uploadImage:', error);
     return { url: null, error: error.message || 'Unknown error' };
   }
@@ -613,7 +613,7 @@ export const uploadVideo = async (
     const bucketExists = buckets?.some(b => b.name === bucket);
 
     if (!bucketExists) {
-      console.warn(`⚠️ Bucket ${bucket} doesn't exist!`);
+      console.warn(`⚠️ Bucket ${bucket} doesn&apos;t exist!`);
       return { url: null, error: `Storage bucket "${bucket}" not found` };
     }
 
@@ -654,7 +654,7 @@ export const uploadVideo = async (
     }
 
     return { url: publicUrl, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in uploadVideo:', error);
     return { url: null, error: error.message || 'Unknown error' };
   }

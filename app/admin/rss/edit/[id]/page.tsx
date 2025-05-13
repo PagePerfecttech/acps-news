@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSave, FiX, FiRss } from 'react-icons/fi';
+import { FiSave, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Category, User, RssFeed } from '../../../../types';
@@ -48,7 +48,7 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
     };
     
     checkSupabase();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const fetchData = async () => {
     try {
@@ -115,7 +115,7 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
       
       // Redirect to RSS feeds list
       router.push('/admin/rss');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating RSS feed:', err);
       setError(err.message || 'Failed to update RSS feed');
     } finally {

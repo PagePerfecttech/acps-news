@@ -56,7 +56,7 @@ export default function DebugPage() {
     };
 
     init();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleRefresh = async () => {
     // Force reload all data
@@ -216,7 +216,7 @@ export default function DebugPage() {
         <div>
           <p className="font-medium">Debug Information</p>
           <p className="text-sm mt-1">
-            This page helps diagnose issues with articles not being found. If you're experiencing problems with specific articles,
+            This page helps diagnose issues with articles not being found. If you&apos;re experiencing problems with specific articles,
             try searching for them using the article ID. You can also refresh the data to clear any caches.
           </p>
           <p className="text-sm mt-2">

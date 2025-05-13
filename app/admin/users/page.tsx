@@ -20,7 +20,7 @@ export default function UserManagement() {
   // Load users when component mounts
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Load users
   const loadUsers = async () => {

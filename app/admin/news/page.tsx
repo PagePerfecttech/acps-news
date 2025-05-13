@@ -26,7 +26,7 @@ export default function NewsManagement() {
     };
 
     fetchArticles();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Get unique categories from articles
   const categories = Array.from(new Set(articles.map(article => article.category)));

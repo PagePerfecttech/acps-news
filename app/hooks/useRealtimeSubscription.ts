@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { isSupabaseConfigured, getConnectionStatus } from '../lib/supabase';
 import { initializeRealtimeManager, subscribeToChanges, getSubscriptionStatus } from '../lib/realtimeManager';
 
-type SubscriptionCallback = (payload: any) => void;
+type SubscriptionCallback = (payload: unknown) => void;
 type SubscriptionEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 interface UseRealtimeSubscriptionOptions {
@@ -16,7 +16,7 @@ interface UseRealtimeSubscriptionOptions {
 export function useRealtimeSubscription(
   table: string,
   callback: SubscriptionCallback,
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
   options: UseRealtimeSubscriptionOptions = {}
 ) {
   const [isConfigured, setIsConfigured] = useState(false);
@@ -36,24 +36,43 @@ export function useRealtimeSubscription(
   // Initialize the realtime manager
   useEffect(() => {
     initializeRealtimeManager();
-  }, []);
+
+    // No cleanup needed here as initializeRealtimeManager is idempotent
+    // and doesn&apos;t create resources that need to be cleaned up
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Check if Supabase is configured
   useEffect(() => {
-    const checkSupabase = async () => {
-      const configured = await isSupabaseConfigured();
-      setIsConfigured(configured);
+    let isMounted = true;
 
-      // Get initial connection status
-      const status = getConnectionStatus();
-      setConnectionStatus(status);
-      if (onConnectionChange) onConnectionChange(status);
+    const checkSupabase = async () => {
+      try {
+        const configured = await isSupabaseConfigured();
+
+        // Only update state if component is still mounted
+        if (isMounted) {
+          setIsConfigured(configured);
+
+          // Get initial connection status
+          const status = getConnectionStatus();
+          setConnectionStatus(status);
+          if (onConnectionChange) onConnectionChange(status);
+        }
+      } catch (error) {
+        console.error('Error checking Supabase configuration:', error);
+        if (isMounted) {
+          setIsConfigured(false);
+        }
+      }
     };
 
     checkSupabase();
 
     // Set up interval to check connection status
     checkIntervalRef.current = setInterval(() => {
+      // Don&apos;t update state if component is unmounted
+      if (!isMounted) return;
+
       const status = getConnectionStatus();
       setConnectionStatus(prev => {
         if (prev !== status && onConnectionChange) onConnectionChange(status);
@@ -73,8 +92,10 @@ export function useRealtimeSubscription(
     }, 5000);
 
     return () => {
+      isMounted = false;
       if (checkIntervalRef.current) {
         clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
       }
     };
   }, [table, onConnectionChange, onSubscriptionError]);

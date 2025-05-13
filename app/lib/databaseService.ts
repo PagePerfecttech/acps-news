@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured, getConnectionStatus } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 import { NewsArticle, Ad, Comment, Category, User, RssFeed } from '../types';
 
 // Error types
@@ -13,14 +13,14 @@ export enum DatabaseErrorType {
 // Database error class
 export class DatabaseError extends Error {
   type: DatabaseErrorType;
-  originalError: any;
+  originalError: unknown;
   table: string;
   operation: string;
 
   constructor(
     message: string,
     type: DatabaseErrorType = DatabaseErrorType.UNKNOWN,
-    originalError: any = null,
+    originalError: unknown = null,
     table: string = '',
     operation: string = ''
   ) {
@@ -60,7 +60,7 @@ const defaultOptions: DatabaseOptions = {
 };
 
 // Cache management
-const cache: Map<string, { data: any; timestamp: number }> = new Map();
+const cache: Map<string, { data: unknown; timestamp: number }> = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Clear expired cache entries
@@ -112,7 +112,7 @@ export const clearCache = (keyPattern?: string): void => {
 };
 
 // Parse Supabase error
-const parseSupabaseError = (error: any, table: string, operation: string): DatabaseError => {
+const parseSupabaseError = (error: unknown, table: string, operation: string): DatabaseError => {
   if (!error) {
     return new DatabaseError(
       'Unknown error',
@@ -214,7 +214,7 @@ const notifyDatabaseError = (error: DatabaseError): void => {
 
 // Generic database query function with retry and fallback
 export const executeQuery = async <T>(
-  queryFn: () => Promise<{ data: any; error: any }>,
+  queryFn: () => Promise<{ data: unknown; error: unknown }>,
   cacheKey: string,
   table: string,
   operation: string,
@@ -272,7 +272,7 @@ export const executeQuery = async <T>(
   }
 
   // Execute query with retry
-  let lastError: any = null;
+  let lastError: unknown = null;
   let retries = 0;
 
   while (retries <= (opts.retryCount || 0)) {
@@ -282,7 +282,7 @@ export const executeQuery = async <T>(
       if (error) {
         lastError = parseSupabaseError(error, table, operation);
 
-        // If it's a connection error and we have retries left, retry
+        // If it&apos;s a connection error and we have retries left, retry
         if (lastError.type === DatabaseErrorType.CONNECTION && retries < (opts.retryCount || 0)) {
           retries++;
           await new Promise(resolve => setTimeout(resolve, opts.retryDelay));

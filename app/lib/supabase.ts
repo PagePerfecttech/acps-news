@@ -1,13 +1,12 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-// Hardcoded values for Supabase URL and anon key
-// This is a workaround for environment variables not being properly passed to the application
-let supabaseUrl = 'https://tnaqvbrflguwpeafwclz.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuYXF2YnJmbGd1d3BlYWZ3Y2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE3NDIsImV4cCI6MjA2MjU0Nzc0Mn0.wosmLe8bA0LOJQttRD03c7tIa8woLbFNSVWuc0ntcME';
+// Get Supabase URL and anon key from environment variables
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Fallback to environment variables if available
-if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Log warning if environment variables are not set
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase environment variables are not set. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.');
 }
 
 // Fix malformed URL if it contains the PowerShell command
@@ -24,7 +23,7 @@ if (supabaseUrl && supabaseUrl.includes('PS C:')) {
 const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
-    return url.includes('supabase.co'); // Additional check to ensure it's a Supabase URL
+    return url.includes('supabase.co'); // Additional check to ensure it&apos;s a Supabase URL
   } catch (e) {
     console.error('Invalid Supabase URL:', url);
     return false;
@@ -103,7 +102,7 @@ export const isSupabaseConfigured = async (): Promise<boolean> => {
       const { error } = await supabase.from('news_articles').select('count', { count: 'exact', head: true });
 
       if (error) {
-        // If there's an error, try a different approach - just check if we can connect
+        // If there&apos;s an error, try a different approach - just check if we can connect
         const { data, error: rpcError } = await supabase.rpc('get_service_status');
 
         if (rpcError) {
@@ -122,7 +121,7 @@ export const isSupabaseConfigured = async (): Promise<boolean> => {
       lastConnectionCheck = Date.now();
       return true;
     } catch (error) {
-      // Even if there's an error, if we got this far, the connection might be working
+      // Even if there&apos;s an error, if we got this far, the connection might be working
       // The error might be due to missing tables, not connection issues
       console.warn('Error testing Supabase connection, but continuing:', error);
 
@@ -158,11 +157,11 @@ export const isSupabaseConfigured = async (): Promise<boolean> => {
 
 // Get current connection status
 export const getConnectionStatus = (): string => {
-  // If it's been more than 30 seconds since our last check and we think we're connected,
+  // If it&apos;s been more than 30 seconds since our last check and we think we&apos;re connected,
   // we should verify the connection again
   if (connectionStatus === 'connected' &&
       Date.now() - lastConnectionCheck > CONNECTION_CHECK_INTERVAL) {
-    // Don't await this, just trigger the check
+    // Don&apos;t await this, just trigger the check
     isSupabaseConfigured();
   }
   return connectionStatus;

@@ -34,7 +34,7 @@ export default function ArticleNotFound({ articleId, onRetry }: ArticleNotFoundP
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Article Not Found</h1>
         
         <p className="text-gray-600 mb-6">
-          The article with ID <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">{articleId}</span> doesn't exist or has been removed.
+          The article with ID <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">{articleId}</span> doesn&apos;t exist or has been removed.
         </p>
         
         <div className="flex flex-col space-y-3">

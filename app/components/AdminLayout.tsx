@@ -44,7 +44,7 @@ export default function AdminLayout({
     return null; // Will redirect in useEffect
   }
 
-  // Don't show admin layout on login page
+  // Don&apos;t show admin layout on login page
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }

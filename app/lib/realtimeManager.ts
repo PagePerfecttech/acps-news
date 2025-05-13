@@ -2,7 +2,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase, getConnectionStatus, isSupabaseConfigured } from './supabase';
 
 // Types
-type SubscriptionCallback = (payload: any) => void;
+type SubscriptionCallback = (payload: unknown) => void;
 type SubscriptionEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 interface Subscription {

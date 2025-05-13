@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getUserById } from '../lib/userService';
+;
 import { User } from '../types';
 
 interface UserProfileProps {
@@ -22,7 +22,7 @@ export default function UserProfile({ authorName = 'Unknown', size = 'small', sh
     const loadUsers = async () => {
       try {
         // In a real app, we would search for users by name
-        // For now, we'll create a mock user based on the author name
+        // For now, we&apos;ll create a mock user based on the author name
         const mockUser: User = {
           id: '1',
           email: `${safeAuthorName.toLowerCase().replace(/\s+/g, '.')}@example.com`,

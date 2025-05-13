@@ -35,7 +35,7 @@ export default function LoginPage() {
       } else {
         setError('Invalid email or password');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error.message || 'Login failed. Please try again.');
       console.error('Login error:', error);
     } finally {

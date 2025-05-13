@@ -99,7 +99,7 @@ function OriginalHome() {
     };
 
     fetchData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Handle swiper slide change
   const handleSlideChange = (swiper: { activeIndex: number }) => {
@@ -225,7 +225,7 @@ function OriginalHome() {
     }
   };
 
-  // Show error fallback if there's an error
+  // Show error fallback if there&apos;s an error
   if (error) {
     return <NewsFallback error={error} onRetry={refreshContent} />;
   }

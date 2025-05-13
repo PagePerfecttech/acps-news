@@ -62,7 +62,7 @@ export const uploadImage = async (
       url: result.data.url,
       error: null,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading image to ImgBB:', error);
     return {
       url: null,

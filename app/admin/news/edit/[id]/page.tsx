@@ -49,8 +49,18 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
   // Load article data and categories when component mounts
   useEffect(() => {
     // Load categories
-    const loadedCategories = getCategories();
-    setCategories(loadedCategories);
+    const loadCategories = async () => {
+      try {
+        const loadedCategories = await getCategories();
+        setCategories(loadedCategories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        // Set empty array to prevent map errors
+        setCategories([]);
+      }
+    };
+
+    loadCategories();
 
     if (article) {
       setFormData({
@@ -113,7 +123,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
             type: 'error',
             text: `Failed to upload image: ${result.error || 'Unknown error'}`
           });
-          // Keep the preview but don't update the form data
+          // Keep the preview but don&apos;t update the form data
         } else {
           // Update form with the actual storage URL
           setFormData(prev => ({

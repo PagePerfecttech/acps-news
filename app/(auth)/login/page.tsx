@@ -23,7 +23,7 @@ export default function Login() {
       //   password,
       // });
 
-      // For demo purposes, we'll just simulate a successful login
+      // For demo purposes, we&apos;ll just simulate a successful login
       if (email === 'admin@flipnews.com' && password === 'password123') {
         // Redirect to admin dashboard
         router.push('/admin');

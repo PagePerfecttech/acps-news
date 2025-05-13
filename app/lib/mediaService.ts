@@ -131,7 +131,7 @@ export const uploadVideo = async (
 ): Promise<UploadResult> => {
   const { preferredProvider, fileName } = options;
 
-  // Determine the order of providers to try (excluding ImgBB which doesn't support videos)
+  // Determine the order of providers to try (excluding ImgBB which doesn&apos;t support videos)
   const providers = determineProviderOrder(preferredProvider).filter(p => p !== 'imgbb');
 
   // Try each provider in order
@@ -214,7 +214,7 @@ const storeFileLocally = async (
 ): Promise<{ url: string | null; error: string | null }> => {
   try {
     // In a real implementation, this would store the file on the server
-    // For now, we'll just create an object URL for the browser
+    // For now, we&apos;ll just create an object URL for the browser
     const url = URL.createObjectURL(file);
 
     // Store the URL in localStorage for persistence across page refreshes
@@ -227,7 +227,7 @@ const storeFileLocally = async (
       url,
       error: null,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error storing file locally:', error);
     return {
       url: null,

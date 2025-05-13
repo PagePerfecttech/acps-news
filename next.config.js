@@ -16,13 +16,11 @@ const nextConfig = {
     unoptimized: true,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
+    // Temporarily disable ESLint checking during builds
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has type errors.
+    // Temporarily disable TypeScript checking during builds
     ignoreBuildErrors: true,
   },
 }

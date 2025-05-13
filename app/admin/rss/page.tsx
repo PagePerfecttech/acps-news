@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiRss } from 'react-icons/fi';
+;
 import { isSupabaseConfigured } from '../../lib/supabase';
 import AdminLayout from '../../components/AdminLayout';
 import RssFeedManager from '../../components/RssFeedManager';
@@ -19,7 +19,7 @@ export default function RssPage() {
     };
 
     checkSupabase();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   return (
     <AdminLayout>

@@ -24,7 +24,7 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     // Create a clone of the element to avoid modifying the original
     const clone = element.cloneNode(true) as HTMLElement;
 
-    // Get the original element's dimensions and styles
+    // Get the original element&apos;s dimensions and styles
     const originalRect = element.getBoundingClientRect();
     const originalStyles = window.getComputedStyle(element);
 
@@ -189,7 +189,7 @@ export const shareContent = async (
   platform?: 'whatsapp' | 'facebook' | 'twitter' | 'default'
 ): Promise<void> => {
   try {
-    // Check if it's a mobile device
+    // Check if it&apos;s a mobile device
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     // If platform is specified, use platform-specific sharing
@@ -229,7 +229,7 @@ export const shareContent = async (
             link.rel = 'noopener noreferrer';
             link.click();
 
-            // Fallback in case the app link doesn't work (after a short delay)
+            // Fallback in case the app link doesn&apos;t work (after a short delay)
             setTimeout(() => {
               // Try the web API version as a fallback
               window.open(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`, '_blank');
@@ -265,7 +265,7 @@ export const shareContent = async (
       return;
     }
 
-    // Fallback for browsers that don't support Web Share API
+    // Fallback for browsers that don&apos;t support Web Share API
     console.log('Web Share API not supported, showing share options');
 
     // Create a temporary input to copy the URL
@@ -295,7 +295,7 @@ export const shareContent = async (
       link.rel = 'noopener noreferrer';
       link.click();
 
-      // Fallback for mobile if the app link doesn't work
+      // Fallback for mobile if the app link doesn&apos;t work
       if (isMobile) {
         setTimeout(() => {
           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${title}\n\n${text} ${url}`)}`, '_blank');

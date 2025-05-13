@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { fetchRssFeeds, addRssFeed, updateRssFeed, deleteRssFeed } from '../../lib/databaseService';
-import { RssFeed } from '../../types';
+;
 
 // GET /api/rss - Get all RSS feeds
 export async function GET() {

@@ -26,7 +26,7 @@ export const initializeSupabaseData = async (): Promise<boolean> => {
       return false;
     }
     
-    // If there are already articles in the database, we don't need to initialize
+    // If there are already articles in the database, we don&apos;t need to initialize
     if (articleCount && articleCount > 0) {
       console.log(`Database already has ${articleCount} articles, no need to initialize`);
       return true;
@@ -150,7 +150,7 @@ export const checkSupabaseTables = async (): Promise<{
         .from(table)
         .select('*', { count: 'exact', head: true });
       
-      if (error && error.code === '42P01') { // Table doesn't exist
+      if (error && error.code === '42P01') { // Table doesn&apos;t exist
         missingTables.push(table);
       }
     }

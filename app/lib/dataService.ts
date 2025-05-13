@@ -1,4 +1,4 @@
-import { NewsArticle, Ad, Comment, Category } from '../types';
+import { NewsArticle, Ad, Category } from '../types';
 import { longNewsPosts } from '../data/longNewsPosts';
 
 // Default categories data
@@ -53,7 +53,7 @@ const defaultAds: Ad[] = [
   }
 ];
 
-// Initialize data in localStorage if it doesn't exist
+// Initialize data in localStorage if it doesn&apos;t exist
 const initializeData = () => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
@@ -142,7 +142,7 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
   // Parse the articles
   const parsedArticles = JSON.parse(articles);
 
-  // If we have cached articles, check if they're still fresh
+  // If we have cached articles, check if they&apos;re still fresh
   if (cachedArticles && lastUpdated) {
     const cachedTimestamp = localStorage.getItem('flipnews_articles_cache_timestamp');
 
@@ -153,7 +153,7 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
     }
   }
 
-  // If we get here, either there's no cache or it's stale
+  // If we get here, either there&apos;s no cache or it&apos;s stale
   // Update the cache with the fresh data
   localStorage.setItem('flipnews_articles_cache', JSON.stringify(parsedArticles));
   localStorage.setItem('flipnews_articles_cache_timestamp', Date.now().toString());
@@ -247,7 +247,7 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | unde
               }
             }
           } catch (e) {
-            // Skip this key if it's not valid JSON
+            // Skip this key if it&apos;s not valid JSON
           }
         }
       }
@@ -262,7 +262,7 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | unde
 
 // Update a news article
 export const updateNewsArticle = async (updatedArticle: NewsArticle): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to update in Supabase first
@@ -345,7 +345,7 @@ export const updateNewsArticle = async (updatedArticle: NewsArticle): Promise<bo
 
 // Add a new news article
 export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to add to Supabase first
@@ -465,7 +465,7 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
 
 // Delete a news article
 export const deleteNewsArticle = async (id: string): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to delete from Supabase first
@@ -576,7 +576,7 @@ export const getAdById = async (id: string): Promise<Ad | undefined> => {
 
 // Update an ad
 export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to update in Supabase first
@@ -647,7 +647,7 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
 
 // Add a new ad
 export const addAd = async (newAd: Ad): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to add to Supabase first
@@ -730,7 +730,7 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
 
 // Delete an ad
 export const deleteAd = async (id: string): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to delete from Supabase first
@@ -849,7 +849,7 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | undefi
 
 // Update a category
 export const updateCategory = async (updatedCategory: Category): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to update in Supabase first
@@ -907,7 +907,7 @@ export const updateCategory = async (updatedCategory: Category): Promise<boolean
 
 // Add a new category
 export const addCategory = async (newCategory: Category): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to add to Supabase first
@@ -974,7 +974,7 @@ export const addCategory = async (newCategory: Category): Promise<boolean> => {
 
 // Delete a category
 export const deleteCategory = async (id: string): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
     // Try to delete from Supabase first

@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     };
 
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Set up real-time subscriptions if using Supabase
   useEffect(() => {

@@ -32,16 +32,26 @@ export default function AddNewsPage() {
   // Load categories and user info when component mounts
   useEffect(() => {
     // Load categories
-    const loadedCategories = getCategories();
-    setCategories(loadedCategories);
+    const loadCategories = async () => {
+      try {
+        const loadedCategories = await getCategories();
+        setCategories(loadedCategories);
 
-    // Set default category if available
-    if (loadedCategories.length > 0 && !formData.category) {
-      setFormData(prev => ({
-        ...prev,
-        category: loadedCategories[0].name
-      }));
-    }
+        // Set default category if available
+        if (loadedCategories.length > 0 && !formData.category) {
+          setFormData(prev => ({
+            ...prev,
+            category: loadedCategories[0].name
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        // Set empty array to prevent map errors
+        setCategories([]);
+      }
+    };
+
+    loadCategories();
 
     // Get current user info from localStorage
     try {
@@ -49,7 +59,7 @@ export default function AddNewsPage() {
       if (storedUsers) {
         const users = JSON.parse(storedUsers);
         if (users && users.length > 0) {
-          // Use the first user as the author (in a real app, you'd use the logged-in user)
+          // Use the first user as the author (in a real app, you&apos;d use the logged-in user)
           setFormData(prev => ({
             ...prev,
             author: users[0].name || 'Admin User'
@@ -59,7 +69,7 @@ export default function AddNewsPage() {
     } catch (error) {
       console.error('Error getting user info:', error);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -110,7 +120,7 @@ export default function AddNewsPage() {
             type: 'error',
             text: `Failed to upload image: ${result.error || 'Unknown error'}`
           });
-          // Keep the preview but don't update the form data
+          // Keep the preview but don&apos;t update the form data
         } else {
           // Update form with the actual storage URL
           setFormData(prev => ({

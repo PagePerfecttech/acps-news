@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiDatabase, FiCheck, FiX, FiRefreshCw, FiUpload, FiServer } from 'react-icons/fi';
+import { FiDatabase, FiCheck, FiRefreshCw, FiUpload, FiServer } from 'react-icons/fi';
 import { checkSupabaseTables, initializeSupabaseData, getSupabaseProjectInfo } from '../lib/setupSupabase';
 import { isSupabaseConfigured, checkConnection } from '../lib/supabase';
 import Link from 'next/link';
@@ -30,7 +30,7 @@ export default function SetupPage() {
       ...prev,
       timestamp: Date.now()
     }));
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   useEffect(() => {
     const checkSetup = async () => {
@@ -59,7 +59,7 @@ export default function SetupPage() {
     };
 
     checkSetup();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleInitializeData = async () => {
     setInitializingData(true);
@@ -227,7 +227,7 @@ export default function SetupPage() {
           <div className="border rounded-md p-4">
             <p className="text-sm text-gray-600 mb-4">
               You can initialize your Supabase database with data from your local storage.
-              This is useful if you've been working with the app offline and want to move your data to Supabase.
+              This is useful if you&apos;ve been working with the app offline and want to move your data to Supabase.
             </p>
 
             <button

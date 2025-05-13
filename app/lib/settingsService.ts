@@ -21,7 +21,7 @@ const defaultSettings: SiteSettings = {
   logo_url: '',
 };
 
-// Initialize settings in localStorage if they don't exist
+// Initialize settings in localStorage if they don&apos;t exist
 const initializeSettings = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
@@ -53,7 +53,7 @@ export const getSettings = async (): Promise<SiteSettings> => {
           try {
             // Convert key-value pairs to settings object
             const settingsObj: Record<string, string> = {};
-            keyValueSettings.forEach((item: { key: string; value: any }) => {
+            keyValueSettings.forEach((item: { key: string; value: unknown }) => {
               if (item && item.key) {
                 // Handle different value formats (string, JSON, etc.)
                 let parsedValue = item.value;
@@ -196,10 +196,10 @@ export const saveSettings = async (settings: SiteSettings): Promise<boolean> => 
 
 // Save settings to localStorage
 const saveLocalSettings = (settings: SiteSettings): boolean => {
-  if (typeof window === 'undefined') return false; // Can't update on server-side
+  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
-    // Make sure we're saving a complete settings object
+    // Make sure we&apos;re saving a complete settings object
     const currentSettings = getLocalSettings();
     const updatedSettings = { ...currentSettings, ...settings };
 

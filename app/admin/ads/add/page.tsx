@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
+import { FiSave, FiX, FiUpload } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { addAd } from '../../../lib/dataService';

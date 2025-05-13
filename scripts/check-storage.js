@@ -2,9 +2,16 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase credentials
-const supabaseUrl = 'https://tnaqvbrflguwpeafwclz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuYXF2YnJmbGd1d3BlYWZ3Y2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE3NDIsImV4cCI6MjA2MjU0Nzc0Mn0.wosmLe8bA0LOJQttRD03c7tIa8woLbFNSVWuc0ntcME';
+// Supabase credentials from environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Check if credentials are available
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Error: Supabase credentials not found in environment variables.');
+  console.error('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.');
+  process.exit(1);
+}
 
 // Create Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -20,11 +27,11 @@ const BUCKETS = [
 // Check buckets
 async function checkBuckets() {
   console.log('Checking storage buckets...');
-  
+
   try {
     // List existing buckets
     const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
-    
+
     if (listError) {
       console.error('Error listing buckets:', listError);
       console.log('\n===== MANUAL BUCKET CREATION INSTRUCTIONS =====');
@@ -35,19 +42,19 @@ async function checkBuckets() {
       console.log('===============================================\n');
       return;
     }
-    
+
     console.log('Existing buckets:', existingBuckets?.map(b => b.name) || 'None');
-    
+
     // Check which buckets need to be created
-    const missingBuckets = BUCKETS.filter(bucket => 
+    const missingBuckets = BUCKETS.filter(bucket =>
       !existingBuckets?.some(existing => existing.name === bucket)
     );
-    
+
     if (missingBuckets.length > 0) {
       console.log('\n===== MISSING BUCKETS =====');
       console.log('The following buckets need to be created manually:');
       missingBuckets.forEach(bucket => console.log(`- ${bucket}`));
-      
+
       console.log('\n===== MANUAL BUCKET CREATION INSTRUCTIONS =====');
       console.log('1. Go to https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
       console.log('2. Click "Create bucket" for each missing bucket');
@@ -56,7 +63,7 @@ async function checkBuckets() {
     } else {
       console.log('\n✅ All required buckets exist!');
     }
-    
+
     // Check bucket policies
     console.log('\nChecking bucket policies...');
     for (const bucketName of existingBuckets?.map(b => b.name) || []) {
@@ -73,7 +80,7 @@ async function checkBuckets() {
         }
       }
     }
-    
+
   } catch (error) {
     console.error('Error checking storage buckets:', error);
   }

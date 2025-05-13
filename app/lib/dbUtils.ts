@@ -111,7 +111,7 @@ export const columnExists = async (
 };
 
 /**
- * Create a table if it doesn't exist
+ * Create a table if it doesn&apos;t exist
  * @param tableName Table name
  * @param columns Column definitions
  * @returns Promise that resolves when the operation is complete
@@ -142,7 +142,7 @@ export const createTableIfNotExists = async (
 };
 
 /**
- * Add a column to a table if it doesn't exist
+ * Add a column to a table if it doesn&apos;t exist
  * @param tableName Table name
  * @param columnName Column name
  * @param columnDefinition Column definition (e.g., "TEXT NOT NULL")

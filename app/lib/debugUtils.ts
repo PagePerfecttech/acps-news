@@ -17,12 +17,12 @@ export const logAllArticles = (): void => {
     console.log(`Found ${articles.length} articles in localStorage:`);
     
     // Log a summary of each article
-    articles.forEach((article: any, index: number) => {
+    articles.forEach((article: unknown, index: number) => {
       console.log(`${index + 1}. ID: ${article.id}, Title: ${article.title.substring(0, 30)}...`);
     });
     
     // Return the article IDs for easy reference
-    return articles.map((article: any) => article.id);
+    return articles.map((article: unknown) => article.id);
   } catch (error) {
     console.error('Error logging articles:', error);
   }
@@ -39,7 +39,7 @@ export const checkArticleExists = (id: string): boolean => {
     if (!articlesJson) return false;
     
     const articles = JSON.parse(articlesJson);
-    const article = articles.find((a: any) => a.id === id);
+    const article = articles.find((a: unknown) => a.id === id);
     
     if (article) {
       console.log(`Article found with ID ${id}:`, article);
@@ -67,7 +67,7 @@ export const getAllArticleIds = (): string[] => {
     const articlesJson = localStorage.getItem('flipnews_articles');
     if (articlesJson) {
       const articles = JSON.parse(articlesJson);
-      articles.forEach((article: any) => {
+      articles.forEach((article: unknown) => {
         if (article.id && !ids.includes(article.id)) {
           ids.push(article.id);
         }
@@ -78,7 +78,7 @@ export const getAllArticleIds = (): string[] => {
     const cacheJson = localStorage.getItem('flipnews_articles_cache');
     if (cacheJson) {
       const articles = JSON.parse(cacheJson);
-      articles.forEach((article: any) => {
+      articles.forEach((article: unknown) => {
         if (article.id && !ids.includes(article.id)) {
           ids.push(article.id);
         }

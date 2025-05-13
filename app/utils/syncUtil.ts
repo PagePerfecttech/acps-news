@@ -34,7 +34,7 @@ export const updateLastSyncTime = (): void => {
   localStorage.setItem('flipnews_last_sync', now.toString());
 };
 
-// Check if we need to sync data (e.g., if it's been more than 5 minutes)
+// Check if we need to sync data (e.g., if it&apos;s been more than 5 minutes)
 export const shouldSyncData = (): boolean => {
   if (typeof window === 'undefined') return false;
   

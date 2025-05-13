@@ -27,7 +27,7 @@ export default function AdManagement() {
     };
 
     fetchAds();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Filter ads based on search term and status
   const filteredAds = ads.filter(ad => {

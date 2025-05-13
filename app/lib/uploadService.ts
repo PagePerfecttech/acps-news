@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { v4 as uuidv4 } from 'uuid';
+;
 
 // Define bucket names
 const BUCKETS = {
@@ -8,10 +8,10 @@ const BUCKETS = {
   SITE_ASSETS: 'site-assets',
 };
 
-// Initialize buckets if they don't exist
+// Initialize buckets if they don&apos;t exist
 export const initializeBuckets = async (): Promise<boolean> => {
   try {
-    // Check if buckets exist and create them if they don't
+    // Check if buckets exist and create them if they don&apos;t
     for (const bucketName of Object.values(BUCKETS)) {
       const { data: buckets } = await supabase.storage.listBuckets();
       const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
@@ -47,13 +47,13 @@ export const uploadImage = async (
 
     if (bucketError) {
       console.error('Error listing buckets:', bucketError);
-      // If we can't list buckets, we'll try to upload anyway
+      // If we can&apos;t list buckets, we&apos;ll try to upload anyway
       console.log('Continuing with upload despite bucket listing error...');
     } else {
       const bucketExists = buckets?.some(b => b.name === bucket);
 
       if (!bucketExists) {
-        console.warn(`⚠️ Bucket ${bucket} doesn't exist! Please create it manually in the Supabase dashboard.`);
+        console.warn(`⚠️ Bucket ${bucket} doesn&apos;t exist! Please create it manually in the Supabase dashboard.`);
         console.warn('Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
         console.warn('Attempting to upload anyway, but this will likely fail...');
       }
@@ -88,7 +88,7 @@ export const uploadImage = async (
       .getPublicUrl(filePath);
 
     return { url: data.publicUrl, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in uploadImage:', error);
     return { url: null, error: error.message || 'Unknown error' };
   }
@@ -106,13 +106,13 @@ export const uploadVideo = async (
 
     if (bucketError) {
       console.error('Error listing buckets:', bucketError);
-      // If we can't list buckets, we'll try to upload anyway
+      // If we can&apos;t list buckets, we&apos;ll try to upload anyway
       console.log('Continuing with upload despite bucket listing error...');
     } else {
       const bucketExists = buckets?.some(b => b.name === bucket);
 
       if (!bucketExists) {
-        console.warn(`⚠️ Bucket ${bucket} doesn't exist! Please create it manually in the Supabase dashboard.`);
+        console.warn(`⚠️ Bucket ${bucket} doesn&apos;t exist! Please create it manually in the Supabase dashboard.`);
         console.warn('Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
         console.warn('Attempting to upload anyway, but this will likely fail...');
       }
@@ -147,7 +147,7 @@ export const uploadVideo = async (
       .getPublicUrl(filePath);
 
     return { url: data.publicUrl, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in uploadVideo:', error);
     return { url: null, error: error.message || 'Unknown error' };
   }
@@ -175,7 +175,7 @@ export const deleteFile = async (
     }
 
     return { success: true, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in deleteFile:', error);
     return { success: false, error: error.message || 'Unknown error' };
   }

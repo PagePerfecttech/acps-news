@@ -9,7 +9,7 @@ export default function StaticPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Welcome to FlipNEWS</h2>
           <p className="text-gray-700 mb-4">
-            This is a completely static version of the FlipNEWS home page. It doesn't rely on any dynamic data
+            This is a completely static version of the FlipNEWS home page. It doesn&apos;t rely on any dynamic data
             or complex components, making it a reliable fallback when there are issues with the main application.
           </p>
           

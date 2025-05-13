@@ -29,7 +29,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [usingSupabase, setUsingSupabase] = useState(false);
-  // Removed showShareModal state as we're using ShareButton component
+  // Removed showShareModal state as we&apos;re using ShareButton component
   const { settings } = useSettings();
 
   // Check if Supabase is configured
@@ -60,7 +60,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [/* recordView is defined inside the component, so no need to add it as a dependency */]);
 
   // Set up real-time subscriptions
   useEffect(() => {
@@ -258,7 +258,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
     }
   };
 
-  // Removed handleShare function as we're using ShareButton component
+  // Removed handleShare function as we&apos;re using ShareButton component
 
   // Check if content exceeds 400 characters to show Read More button
   const showReadMore = article.content && article.content.length > 400;

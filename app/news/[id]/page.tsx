@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiClock, FiTag, FiUser, FiShare2, FiArrowLeft, FiThumbsUp, FiMessageSquare, FiEye } from 'react-icons/fi';
+import { FiClock, FiTag, FiUser, FiShare2, FiArrowLeft } from 'react-icons/fi';
 import { NewsArticle, Comment } from '../../types';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getNewsArticleById, getArticleStats, subscribeToChanges } from '../../lib/supabaseService';
@@ -17,7 +17,7 @@ const mockArticles: Record<string, NewsArticle> = {
     title: 'Global Tech Summit Announces Breakthrough in AI Research',
     content: `The annual Global Tech Summit has revealed a significant breakthrough in artificial intelligence research. Scientists have developed a new algorithm that can process natural language with unprecedented accuracy, potentially revolutionizing how machines understand human communication.
 
-This development could have far-reaching implications for industries ranging from customer service to healthcare. The research team, led by Dr. Emily Chen, demonstrated the algorithm's capabilities by having it analyze complex medical texts and provide accurate summaries and insights that matched those of experienced medical professionals.
+This development could have far-reaching implications for industries ranging from customer service to healthcare. The research team, led by Dr. Emily Chen, demonstrated the algorithm&apos;s capabilities by having it analyze complex medical texts and provide accurate summaries and insights that matched those of experienced medical professionals.
 
 "What makes this breakthrough particularly exciting is that the algorithm requires significantly less training data than previous models," explained Dr. Chen. "This means it can be implemented more widely and at lower cost, making advanced AI capabilities accessible to smaller organizations and developing regions."
 
@@ -38,7 +38,7 @@ The research has been published in a peer-reviewed journal and the team plans to
 
 Environmental groups have praised the move as a significant step forward in addressing climate change. The bill includes provisions for supporting communities that currently depend on fossil fuel industries, ensuring a just transition to a greener economy.
 
-"This represents a turning point in how we approach climate policy," said Senator Maria Rodriguez, one of the bill's sponsors. "By bringing together diverse stakeholders and addressing both environmental and economic concerns, we've created a framework that can make meaningful progress while supporting American workers and businesses."
+"This represents a turning point in how we approach climate policy," said Senator Maria Rodriguez, one of the bill&apos;s sponsors. "By bringing together diverse stakeholders and addressing both environmental and economic concerns, we&apos;ve created a framework that can make meaningful progress while supporting American workers and businesses."
 
 Key elements of the legislation include tax credits for renewable energy projects, funding for research into carbon capture technologies, and grants for communities to improve climate resilience. The bill also establishes a carbon pricing mechanism that will gradually increase over time, providing market incentives for businesses to reduce emissions.
 
@@ -135,7 +135,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
               articleStats = await getArticleStats(params.id);
             } catch (statsError) {
               console.error('Error fetching article stats:', statsError);
-              // Provide default stats if there's an error
+              // Provide default stats if there&apos;s an error
               articleStats = {
                 likes: fetchedArticle.likes || 0,
                 comments: fetchedArticle.comments?.length || 0,

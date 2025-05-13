@@ -9,7 +9,7 @@
 // We need to use a browser-compatible approach for Cloudinary
 // This is a mock implementation that will be replaced with API calls
 const cloudinary = {
-  config: (config?: any) => {
+  config: (config?: unknown) => {
     console.log('Cloudinary config called with:', config);
     return {};
   },
@@ -17,7 +17,7 @@ const cloudinary = {
     upload: async () => ({ secure_url: null }),
   },
   utils: {
-    api_sign_request: (params: any, secret: string) => {
+    api_sign_request: (params: unknown, secret: string) => {
       // This is just a mock - the actual signing will happen server-side
       console.log('Cloudinary signature requested for:', params);
       return 'mock-signature';
@@ -56,7 +56,7 @@ const uploadToCloudinary = async (
     resource_type: 'image' | 'video' | 'auto';
     public_id?: string;
     tags?: string[];
-    transformation?: any;
+    transformation?: unknown;
   }
 ): Promise<any> => {
   try {
@@ -154,7 +154,7 @@ export const uploadImage = async (
       url: result.secure_url,
       error: null,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading image to Cloudinary:', error);
     return {
       url: null,
@@ -189,7 +189,7 @@ export const uploadVideo = async (
       url: result.secure_url,
       error: null,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading video to Cloudinary:', error);
     return {
       url: null,

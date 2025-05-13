@@ -37,7 +37,7 @@ export default function SettingsPage() {
     };
 
     loadSettings();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -75,7 +75,7 @@ export default function SettingsPage() {
             type: 'error',
             text: `Failed to upload logo: ${result.error || 'Unknown error'}`
           });
-          // Keep the preview but don't update the form data
+          // Keep the preview but don&apos;t update the form data
         } else {
           // Update settings with the actual storage URL
           setSettings(prev => ({

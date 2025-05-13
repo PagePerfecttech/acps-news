@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSave, FiX, FiRss } from 'react-icons/fi';
+import { FiSave, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Category, User } from '../../../types';
@@ -39,7 +39,7 @@ export default function AddRssFeedPage() {
     };
 
     checkSupabase();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const fetchData = async () => {
     try {
@@ -61,7 +61,7 @@ export default function AddRssFeedPage() {
         fetchedUsers = [];
       }
 
-      // Ensure we're setting arrays even if the API returns null or undefined
+      // Ensure we&apos;re setting arrays even if the API returns null or undefined
       setCategories(Array.isArray(fetchedCategories) ? fetchedCategories : []);
       setUsers(Array.isArray(fetchedUsers) ? fetchedUsers : []);
 
@@ -123,7 +123,7 @@ export default function AddRssFeedPage() {
 
       // Redirect to RSS feeds list
       router.push('/admin/rss');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error adding RSS feed:', err);
       setError(err.message || 'Failed to add RSS feed');
     } finally {

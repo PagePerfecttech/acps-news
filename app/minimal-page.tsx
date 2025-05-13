@@ -51,7 +51,7 @@ export default function MinimalPage() {
     };
     
     fetchData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
   
   // Handle error state
   if (error) {

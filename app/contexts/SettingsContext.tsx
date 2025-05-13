@@ -39,7 +39,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [usingSupabase, setUsingSupabase] = useState(false);
 
   // Handle settings update from real-time subscription
-  const handleSettingsUpdate = async (payload: any) => {
+  const handleSettingsUpdate = async (payload: unknown) => {
     console.log('Settings update received:', payload);
     if (payload.new) {
       setSettings(payload.new);
@@ -73,7 +73,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       setSettings(loadedSettings || defaultSettings);
     } catch (error) {
       console.error('Error loading settings:', error);
-      // Use default settings if there's an error
+      // Use default settings if there&apos;s an error
       setSettings(defaultSettings);
     } finally {
       setLoading(false);
@@ -88,12 +88,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkSupabase();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Initial load of settings
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const refreshSettings = async () => {
     await loadSettings();

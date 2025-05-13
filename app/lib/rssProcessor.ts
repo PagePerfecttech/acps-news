@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+;
 import { NewsArticle, RssFeed } from '../types';
 import { createNewsArticle, DatabaseResult } from './databaseService';
 import { showErrorNotification, showSuccessNotification } from '../components/Notification';
@@ -21,7 +21,7 @@ interface RssItem {
     length?: string;
     type?: string;
   };
-  [key: string]: any; // For any other properties
+  [key: string]: unknown; // For any other properties
 }
 
 // Interface for RSS feed
@@ -33,7 +33,7 @@ interface RssFeedData {
   lastBuildDate?: string;
   pubDate?: string;
   language?: string;
-  [key: string]: any; // For any other properties
+  [key: string]: unknown; // For any other properties
 }
 
 // Parse RSS feed

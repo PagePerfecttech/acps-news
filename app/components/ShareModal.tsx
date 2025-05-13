@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FiX, FiShare2, FiDownload, FiCopy, FiFacebook, FiTwitter, FiInstagram, FiLink } from 'react-icons/fi';
+import { FiX, FiShare2, FiDownload, FiCopy, FiFacebook, FiTwitter } from 'react-icons/fi';
 import { captureScreenshot, shareContent, dataUrlToFile, downloadDataUrl } from '../utils/screenshotUtil';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -49,7 +49,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       timeoutIds.current.forEach(id => clearTimeout(id));
       timeoutIds.current = [];
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   // Capture the element as a screenshot with timeout
   const captureElement = async () => {
@@ -58,7 +58,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     // Reference to store the timeout ID
     let timeoutId: NodeJS.Timeout;
 
-    // Set a timeout to ensure we don't wait too long
+    // Set a timeout to ensure we don&apos;t wait too long
     const timeoutPromise = new Promise<string>((resolve) => {
       timeoutId = setTimeout(() => {
         // Use a fallback image if it takes too long
@@ -261,7 +261,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             fallbackCopyTextToClipboard(shareMessage);
           });
       } else {
-        // Fallback for browsers that don't support clipboard API
+        // Fallback for browsers that don&apos;t support clipboard API
         fallbackCopyTextToClipboard(shareMessage);
       }
     } catch (error) {

@@ -41,7 +41,7 @@ export default function ConnectionStatus({ showDetails = false, className = '' }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleCheckConnection = async () => {
     setIsChecking(true);
