@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiShare2, FiDownload, FiCopy, FiFacebook, FiTwitter, FiInstagram, FiLink } from 'react-icons/fi';
 import { captureScreenshot, shareContent, dataUrlToFile, downloadDataUrl } from '../utils/screenshotUtil';
 import { useSettings } from '../contexts/SettingsContext';
@@ -34,7 +34,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
   }, [isOpen]);
 
   // Store all timeout IDs for cleanup
-  const timeoutIds = React.useRef<NodeJS.Timeout[]>([]);
+  const timeoutIds = useRef<NodeJS.Timeout[]>([]);
 
   // Safe setTimeout that automatically registers for cleanup
   const safeSetTimeout = (callback: () => void, delay: number): NodeJS.Timeout => {
@@ -252,13 +252,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
               setCopySuccess(false);
             }, 2000);
 
-            // Store the timeout ID for cleanup in component unmount
-            const timeoutRef = { current: copyTimeoutId };
-            useEffect(() => {
-              return () => {
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-              };
-            }, []);
+            // Store the timeout ID for cleanup
+            timeoutIds.current.push(copyTimeoutId);
           })
           .catch(err => {
             console.error('Failed to copy text: ', err);
@@ -298,13 +293,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
           setCopySuccess(false);
         }, 2000);
 
-        // Store the timeout ID for cleanup in component unmount
-        const timeoutRef = { current: copyTimeoutId };
-        useEffect(() => {
-          return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          };
-        }, []);
+        // Store the timeout ID for cleanup
+        timeoutIds.current.push(copyTimeoutId);
       } else {
         console.warn('Fallback clipboard copy failed');
       }
