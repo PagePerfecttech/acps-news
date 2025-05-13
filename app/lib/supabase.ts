@@ -1,8 +1,14 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Default to placeholder values if environment variables are not set
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+// Hardcoded values for Supabase URL and anon key
+// This is a workaround for environment variables not being properly passed to the application
+let supabaseUrl = 'https://tnaqvbrflguwpeafwclz.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuYXF2YnJmbGd1d3BlYWZ3Y2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE3NDIsImV4cCI6MjA2MjU0Nzc0Mn0.wosmLe8bA0LOJQttRD03c7tIa8woLbFNSVWuc0ntcME';
+
+// Fallback to environment variables if available
+if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
 
 // Fix malformed URL if it contains the PowerShell command
 if (supabaseUrl && supabaseUrl.includes('PS C:')) {
