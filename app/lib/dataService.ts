@@ -96,15 +96,22 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
       if (!error && data && data.length > 0) {
         console.log(`Retrieved ${data.length} articles from Supabase`);
 
+        // Ensure each article has the required properties
+        const formattedData = data.map(article => ({
+          ...article,
+          comments: article.comments || [],
+          tags: article.tags || []
+        }));
+
         // Update localStorage with the latest data
         if (typeof window !== 'undefined') {
-          localStorage.setItem('flipnews_articles', JSON.stringify(data));
-          localStorage.setItem('flipnews_articles_cache', JSON.stringify(data));
+          localStorage.setItem('flipnews_articles', JSON.stringify(formattedData));
+          localStorage.setItem('flipnews_articles_cache', JSON.stringify(formattedData));
           localStorage.setItem('flipnews_articles_cache_timestamp', Date.now().toString());
           localStorage.setItem('flipnews_articles_updated', Date.now().toString());
         }
 
-        return data;
+        return formattedData;
       } else {
         console.warn('Failed to fetch articles from Supabase:', error);
       }
@@ -184,7 +191,8 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | unde
         const article: NewsArticle = {
           ...data,
           category: data.categories ? data.categories.name : data.category_id,
-          comments: []
+          comments: data.comments || [],
+          tags: data.tags || []
         };
 
         return article;

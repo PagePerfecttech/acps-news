@@ -22,8 +22,8 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
   const [showFullContent, setShowFullContent] = useState(false);
   // Show 200+ likes for a more realistic appearance
   const [stats, setStats] = useState({
-    likes: Math.max(article.likes, 200 + Math.floor(Math.random() * 50)),
-    comments: article.comments.length,
+    likes: Math.max(article.likes || 0, 200 + Math.floor(Math.random() * 50)),
+    comments: article.comments?.length || 0,
     views: Math.floor(Math.random() * 1000) + 500
   });
   const [commentText, setCommentText] = useState('');
@@ -395,15 +395,15 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
               )}
 
               {/* Comments section */}
-              {article.comments && article.comments.length > 0 && (
+              {article.comments && Array.isArray(article.comments) && article.comments.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <h4 className="text-base font-medium mb-3">Comments ({article.comments.length})</h4>
                   <div className="space-y-3">
                     {article.comments.map(comment => (
-                      <div key={comment.id} className="bg-gray-50 p-3 rounded-md">
+                      <div key={comment.id || `comment-${Math.random()}`} className="bg-gray-50 p-3 rounded-md">
                         <p className="text-gray-800 text-sm">{comment.content}</p>
                         <p className="text-gray-500 text-xs mt-2">
-                          {new Date(comment.created_at).toLocaleDateString()}
+                          {comment.created_at ? new Date(comment.created_at).toLocaleDateString() : 'Recently'}
                         </p>
                       </div>
                     ))}
