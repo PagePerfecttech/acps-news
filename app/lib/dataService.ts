@@ -417,12 +417,15 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
           views: 0,
           published: newArticle.published !== false,
           created_at: newArticle.created_at || new Date().toISOString(),
-          updated_at: newArticle.updated_at || new Date().toISOString()
+          updated_at: newArticle.updated_at || new Date().toISOString(),
+          tags: newArticle.tags || []
         };
 
         console.log('Inserting article with data:', articleData);
 
         try {
+          console.log('Attempting to insert article into Supabase...');
+
           // Insert the article into Supabase
           const { data, error } = await supabase
             .from('news_articles')
@@ -432,14 +435,21 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
 
           if (error) {
             console.error('Error adding article to Supabase:', error);
+            console.log('Error code:', error.code);
+            console.log('Error message:', error.message);
+            console.log('Error details:', error.details);
 
             // Try a simpler insert without select
+            console.log('Trying simpler insert without select...');
             const { error: simpleError } = await supabase
               .from('news_articles')
               .insert(articleData);
 
             if (simpleError) {
               console.error('Error with simple insert:', simpleError);
+              console.log('Simple error code:', simpleError.code);
+              console.log('Simple error message:', simpleError.message);
+              console.log('Simple error details:', simpleError.details);
               throw simpleError;
             } else {
               console.log('Article added to Supabase with simple insert (ID unknown)');

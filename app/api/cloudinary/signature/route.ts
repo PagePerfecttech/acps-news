@@ -35,11 +35,11 @@ function generateSignature(params: Record<string, any>, apiSecret: string): stri
     .digest('hex');
 }
 
-// Cloudinary configuration values
+// Cloudinary configuration values - hardcoded for now to ensure they work
 const cloudinaryConfig = {
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dejesejon',
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '137179496379745',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '2iwEKWNqCHLtSWKu9KvFv06zpDw',
+  cloud_name: 'dejesejon',
+  api_key: '137179496379745',
+  api_secret: '2iwEKWNqCHLtSWKu9KvFv06zpDw',
 };
 
 export async function POST(request: NextRequest) {

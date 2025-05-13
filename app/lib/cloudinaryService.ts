@@ -25,21 +25,15 @@ const cloudinary = {
   },
 };
 
-// Cloudinary configuration
-// Use hardcoded values as fallback for build process
+// Cloudinary configuration - hardcoded for now to ensure they work
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dejesejon',
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '137179496379745',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '2iwEKWNqCHLtSWKu9KvFv06zpDw',
+  cloud_name: 'dejesejon',
+  api_key: '137179496379745',
+  api_secret: '2iwEKWNqCHLtSWKu9KvFv06zpDw',
   secure: true,
 });
 
-// Log warning if environment variables are not set
-if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-    !process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY ||
-    !process.env.CLOUDINARY_API_SECRET) {
-  console.warn('Cloudinary environment variables are not set in the environment. Using fallback values for build process.');
-}
+console.log('Cloudinary configured with cloud_name:', 'dejesejon');
 
 // Define folder names for different types of media
 const FOLDERS = {
@@ -273,12 +267,8 @@ const fileToBase64 = (file: File): Promise<string> => {
  * @returns Boolean indicating if Cloudinary is configured
  */
 export const isCloudinaryConfigured = (): boolean => {
-  // Always return true during build process by using fallback values
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dejesejon';
-  const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '137179496379745';
-  const apiSecret = process.env.CLOUDINARY_API_SECRET || '2iwEKWNqCHLtSWKu9KvFv06zpDw';
-
-  return !!(cloudName && apiKey && apiSecret);
+  // Always return true since we're using hardcoded values
+  return true;
 };
 
 export default {
