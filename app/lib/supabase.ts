@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get Supabase URL and anon key from environment variables
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Use hardcoded values as fallback for build process
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tnaqvbrflguwpeafwclz.supabase.co';
+let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuYXF2YnJmbGd1d3BlYWZ3Y2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE3NDIsImV4cCI6MjA2MjU0Nzc0Mn0.wosmLe8bA0LOJQttRD03c7tIa8woLbFNSVWuc0ntcME';
 
 // Log warning if environment variables are not set
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables are not set. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.');
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  console.warn('Supabase environment variables are not set in the environment. Using fallback values for build process.');
 }
 
 // Fix malformed URL if it contains the PowerShell command

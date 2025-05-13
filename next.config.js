@@ -2,7 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['images.unsplash.com', 'localhost', 'flipnews.vercel.app', 'tnaqvbrflguwpeafwclz.supabase.co'],
+    domains: [
+      'images.unsplash.com',
+      'localhost',
+      'flipnews.vercel.app',
+      'tnaqvbrflguwpeafwclz.supabase.co',
+      'res.cloudinary.com',
+      'dejesejon.cloudinary.com'
+    ],
     remotePatterns: [
       {
         protocol: 'https',
