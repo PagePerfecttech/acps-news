@@ -11,9 +11,12 @@ interface UserProfileProps {
   showName?: boolean;
 }
 
-export default function UserProfile({ authorName, size = 'small', showName = true }: UserProfileProps) {
+export default function UserProfile({ authorName = 'Unknown', size = 'small', showName = true }: UserProfileProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Ensure authorName is a string
+  const safeAuthorName = authorName || 'Unknown';
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -22,8 +25,8 @@ export default function UserProfile({ authorName, size = 'small', showName = tru
         // For now, we'll create a mock user based on the author name
         const mockUser: User = {
           id: '1',
-          email: `${authorName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          name: authorName,
+          email: `${safeAuthorName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+          name: safeAuthorName,
           role: 'contributor',
           created_at: new Date().toISOString(),
           profile_pic: '' // No profile pic for mock user
@@ -37,7 +40,7 @@ export default function UserProfile({ authorName, size = 'small', showName = tru
     };
 
     loadUsers();
-  }, [authorName]);
+  }, [safeAuthorName]);
 
   // Size classes
   const sizeClasses = {
@@ -60,10 +63,10 @@ export default function UserProfile({ authorName, size = 'small', showName = tru
     return (
       <div className="flex items-center">
         <div className={`${sizeClasses[size].container} rounded-full bg-gray-200 flex items-center justify-center text-gray-500`}>
-          {authorName.charAt(0).toUpperCase()}
+          {safeAuthorName.charAt(0).toUpperCase()}
         </div>
         {showName && (
-          <span className={`ml-2 ${sizeClasses[size].text} text-gray-700`}>{authorName}</span>
+          <span className={`ml-2 ${sizeClasses[size].text} text-gray-700`}>{safeAuthorName}</span>
         )}
       </div>
     );

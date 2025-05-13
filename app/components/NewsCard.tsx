@@ -261,7 +261,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
   // Removed handleShare function as we're using ShareButton component
 
   // Check if content exceeds 400 characters to show Read More button
-  const showReadMore = article.content.length > 400;
+  const showReadMore = article.content && article.content.length > 400;
 
   return (
     <>
@@ -280,7 +280,7 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
             {/* Category on left */}
             <div>
               <span className="text-xs font-medium text-black px-2 py-1 bg-yellow-400 rounded-sm">
-                {article.category}
+                {article.category || 'General'}
               </span>
             </div>
 
