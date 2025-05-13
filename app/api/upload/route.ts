@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-;
+import { v4 as uuidv4 } from 'uuid';
 import * as mediaService from '../../lib/mediaService';
 
 // Define allowed file types

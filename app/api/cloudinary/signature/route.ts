@@ -37,27 +37,38 @@ function generateSignature(params: Record<string, any>, apiSecret: string): stri
 
 // Cloudinary configuration values
 const cloudinaryConfig = {
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo',
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dejesejon',
+  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '137179496379745',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '2iwEKWNqCHLtSWKu9KvFv06zpDw',
 };
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Cloudinary signature request received');
+
     // Check if Cloudinary is configured
     if (!cloudinaryConfig.api_secret) {
+      console.error('Cloudinary API secret is not configured');
       return NextResponse.json(
         { error: 'Cloudinary API secret is not configured' },
         { status: 500 }
       );
     }
 
+    console.log('Cloudinary config:', {
+      cloud_name: cloudinaryConfig.cloud_name,
+      api_key: cloudinaryConfig.api_key ? cloudinaryConfig.api_key.substring(0, 5) + '...' : 'not set',
+      api_secret: cloudinaryConfig.api_secret ? 'set (hidden)' : 'not set'
+    });
+
     // Parse request body
     const body = await request.json();
     const { folder, resource_type = 'image', public_id, tags } = body;
+    console.log('Request body:', { folder, resource_type, public_id, tags });
 
     // Generate timestamp
     const timestamp = Math.round(new Date().getTime() / 1000);
+    console.log('Generated timestamp:', timestamp);
 
     // Create signature parameters
     const params: Record<string, any> = {
@@ -74,16 +85,26 @@ export async function POST(request: NextRequest) {
       params.tags = tags.join(',');
     }
 
+    console.log('Signature parameters:', params);
+
     // Generate signature using our custom function
     const signature = generateSignature(params, cloudinaryConfig.api_secret);
+    console.log('Generated signature:', signature.substring(0, 10) + '...');
 
     // Return signature and other required parameters
-    return NextResponse.json({
+    const response = {
       signature,
       timestamp,
       api_key: cloudinaryConfig.api_key,
       cloud_name: cloudinaryConfig.cloud_name,
+    };
+    console.log('Returning response:', {
+      ...response,
+      signature: response.signature.substring(0, 10) + '...',
+      api_key: response.api_key.substring(0, 5) + '...'
     });
+
+    return NextResponse.json(response);
   } catch (error: unknown) {
     console.error('Error generating Cloudinary signature:', error);
     return NextResponse.json(
