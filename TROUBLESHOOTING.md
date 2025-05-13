@@ -2,6 +2,120 @@
 
 This guide addresses common issues with the FlipNews application and provides solutions.
 
+## Database Issues
+
+### News Articles Not Storing in Supabase
+
+If news articles are not being stored in Supabase, follow these steps:
+
+1. **Check Database Tables**
+
+   Make sure the required tables exist in your Supabase database:
+
+   ```bash
+   node scripts/check-tables.js
+   ```
+
+   If the tables don't exist, create them:
+
+   ```bash
+   node scripts/create-tables.js
+   ```
+
+2. **Check Category IDs**
+
+   News articles require a valid category_id. Make sure categories exist:
+
+   ```javascript
+   // Run this in Node.js
+   require('dotenv').config();
+   const { createClient } = require('@supabase/supabase-js');
+   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+   supabase.from('categories').select('*').then(({ data, error }) => {
+     if (error) console.error(error);
+     else console.log(data);
+   });
+   ```
+
+   If no categories exist, create them:
+
+   ```javascript
+   // Run this in Node.js
+   require('dotenv').config();
+   const { createClient } = require('@supabase/supabase-js');
+   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+   supabase.from('categories').insert([
+     { name: 'Default Category', slug: 'default-category' }
+   ]).then(({ data, error }) => {
+     if (error) console.error(error);
+     else console.log('Category created:', data);
+   });
+   ```
+
+3. **Update Existing Articles**
+
+   If articles exist but don't have a category_id, update them:
+
+   ```javascript
+   // Run this in Node.js
+   require('dotenv').config();
+   const { createClient } = require('@supabase/supabase-js');
+   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+   // First get a category ID
+   supabase.from('categories').select('id').limit(1).then(({ data, error }) => {
+     if (error) {
+       console.error(error);
+       return;
+     }
+
+     if (!data || data.length === 0) {
+       console.error('No categories found');
+       return;
+     }
+
+     const categoryId = data[0].id;
+     console.log('Using category ID:', categoryId);
+
+     // Update all articles with null category_id
+     supabase.from('news_articles')
+       .update({ category_id: categoryId })
+       .is('category_id', null)
+       .then(({ data, error }) => {
+         if (error) console.error(error);
+         else console.log('Updated news articles');
+       });
+   });
+   ```
+
+4. **Check RLS Policies**
+
+   Make sure your Row Level Security (RLS) policies allow inserting data:
+
+   ```sql
+   -- Run this in Supabase SQL Editor
+   CREATE POLICY "Allow full access to all users" ON news_articles FOR ALL USING (true);
+   ```
+
+5. **Fix Data Service**
+
+   Update the `dataService.ts` file to properly handle category mapping:
+
+   ```typescript
+   // In app/lib/dataService.ts, update the formattedData mapping
+   const formattedData = data.map(article => {
+     // Extract category name from the categories relation
+     const categoryName = article.categories?.name || 'Uncategorized';
+
+     return {
+       ...article,
+       category: categoryName, // Set the category field to the category name
+       comments: article.comments || [],
+       tags: article.tags || []
+     };
+   });
+   ```
+
 ## RSS Feed Issues
 
 ### "Add Feed" Button Not Working

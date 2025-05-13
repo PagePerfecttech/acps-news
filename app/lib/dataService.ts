@@ -88,20 +88,32 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
 
     if (configured) {
       console.log('Fetching articles from Supabase...');
+      console.log('Fetching articles from Supabase with detailed query...');
       const { data, error } = await supabase
         .from('news_articles')
-        .select('*')
+        .select(`
+          *,
+          categories:category_id(name)
+        `)
         .order('created_at', { ascending: false });
+
+      console.log('Supabase query result:', { data, error });
 
       if (!error && data && data.length > 0) {
         console.log(`Retrieved ${data.length} articles from Supabase`);
 
         // Ensure each article has the required properties
-        const formattedData = data.map(article => ({
-          ...article,
-          comments: article.comments || [],
-          tags: article.tags || []
-        }));
+        const formattedData = data.map(article => {
+          // Extract category name from the categories relation
+          const categoryName = article.categories?.name || 'Uncategorized';
+
+          return {
+            ...article,
+            category: categoryName, // Set the category field to the category name
+            comments: article.comments || [],
+            tags: article.tags || []
+          };
+        });
 
         // Update localStorage with the latest data
         if (typeof window !== 'undefined') {
@@ -190,10 +202,12 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | unde
         // Format the article to match our expected structure
         const article: NewsArticle = {
           ...data,
-          category: data.categories ? data.categories.name : data.category_id,
+          category: data.categories ? data.categories.name : (data.category_id || 'Uncategorized'),
           comments: data.comments || [],
           tags: data.tags || []
         };
+
+        console.log('Formatted article from Supabase:', article);
 
         return article;
       } else {
