@@ -42,20 +42,20 @@ export const uploadImage = async (
   bucket: 'news-images' | 'user-avatars' | 'site-assets' = 'news-images'
 ): Promise<{ url: string | null; error: string | null }> => {
   try {
-    // Check if bucket exists and create it if it doesn't
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === bucket);
+    // Check if bucket exists
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
 
-    if (!bucketExists) {
-      console.log(`Bucket ${bucket} doesn't exist, creating it...`);
-      const { error } = await supabase.storage.createBucket(bucket, {
-        public: true,
-        fileSizeLimit: 10485760, // 10MB
-      });
+    if (bucketError) {
+      console.error('Error listing buckets:', bucketError);
+      // If we can't list buckets, we'll try to upload anyway
+      console.log('Continuing with upload despite bucket listing error...');
+    } else {
+      const bucketExists = buckets?.some(b => b.name === bucket);
 
-      if (error) {
-        console.error(`Error creating bucket ${bucket}:`, error);
-        return { url: null, error: `Failed to create storage bucket: ${error.message}` };
+      if (!bucketExists) {
+        console.warn(`⚠️ Bucket ${bucket} doesn't exist! Please create it manually in the Supabase dashboard.`);
+        console.warn('Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
+        console.warn('Attempting to upload anyway, but this will likely fail...');
       }
     }
 
@@ -101,20 +101,20 @@ export const uploadVideo = async (
   try {
     const bucket = 'news-videos';
 
-    // Check if bucket exists and create it if it doesn't
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === bucket);
+    // Check if bucket exists
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
 
-    if (!bucketExists) {
-      console.log(`Bucket ${bucket} doesn't exist, creating it...`);
-      const { error } = await supabase.storage.createBucket(bucket, {
-        public: true,
-        fileSizeLimit: 50 * 1024 * 1024, // 50MB
-      });
+    if (bucketError) {
+      console.error('Error listing buckets:', bucketError);
+      // If we can't list buckets, we'll try to upload anyway
+      console.log('Continuing with upload despite bucket listing error...');
+    } else {
+      const bucketExists = buckets?.some(b => b.name === bucket);
 
-      if (error) {
-        console.error(`Error creating bucket ${bucket}:`, error);
-        return { url: null, error: `Failed to create storage bucket: ${error.message}` };
+      if (!bucketExists) {
+        console.warn(`⚠️ Bucket ${bucket} doesn't exist! Please create it manually in the Supabase dashboard.`);
+        console.warn('Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
+        console.warn('Attempting to upload anyway, but this will likely fail...');
       }
     }
 

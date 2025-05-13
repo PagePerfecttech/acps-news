@@ -82,40 +82,18 @@ export async function POST(request: NextRequest) {
     const bucketExists = buckets?.some(b => b.name === bucket);
 
     if (!bucketExists) {
-      // Create bucket if it doesn't exist
-      const { error: createError } = await supabase.storage.createBucket(bucket, {
-        public: true,
-        fileSizeLimit: type === 'video' ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE,
-      });
+      console.warn(`⚠️ Bucket ${bucket} doesn't exist! Please create it manually in the Supabase dashboard.`);
+      console.warn('Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets');
 
-      if (createError) {
-        console.error('Failed to create bucket:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create storage bucket', details: createError.message },
-          { status: 500 }
-        );
-      }
-
-      // Set bucket to public
-      const { error: policyError } = await supabase.storage.from(bucket).createSignedUrl('dummy.txt', 1);
-      if (policyError && !policyError.message.includes('not found')) {
-        console.error('Error checking bucket policy:', policyError);
-      }
-
-      // Try to update bucket policy to public
-      try {
-        // This is a workaround to make the bucket public
-        const { error: updateError } = await supabase.rpc('update_bucket_policy', {
-          bucket_name: bucket,
-          policy: 'public'
-        });
-
-        if (updateError) {
-          console.warn('Could not update bucket policy via RPC, trying alternative method:', updateError);
-        }
-      } catch (policyError) {
-        console.warn('Error setting bucket policy:', policyError);
-      }
+      // Return a more helpful error message
+      return NextResponse.json(
+        {
+          error: 'Storage bucket not found',
+          details: `The bucket "${bucket}" does not exist. Please create it manually in the Supabase dashboard.`,
+          instructions: 'Go to: https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets and create the bucket.'
+        },
+        { status: 400 }
+      );
     }
 
     // Generate a unique file name

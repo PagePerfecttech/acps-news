@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { addNewsArticle, getCategories } from '../../../lib/dataService';
 import { Category } from '../../../types';
+import StorageSetupGuide from '../../../components/StorageSetupGuide';
 
 export default function AddNewsPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function AddNewsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showStorageGuide, setShowStorageGuide] = useState(false);
 
   // Load categories and user info when component mounts
   useEffect(() => {
@@ -96,6 +98,14 @@ export default function AddNewsPage() {
 
         if (!response.ok || !result.success) {
           console.error('Error uploading image:', result.error);
+
+          // Check if the error is related to storage bucket not found
+          if (result.error === 'Storage bucket not found' ||
+              (result.error && result.error.includes('bucket')) ||
+              (result.details && result.details.includes('bucket'))) {
+            setShowStorageGuide(true);
+          }
+
           setMessage({
             type: 'error',
             text: `Failed to upload image: ${result.error || 'Unknown error'}`
@@ -144,6 +154,14 @@ export default function AddNewsPage() {
 
         if (!response.ok || !result.success) {
           console.error('Error uploading video:', result.error);
+
+          // Check if the error is related to storage bucket not found
+          if (result.error === 'Storage bucket not found' ||
+              (result.error && result.error.includes('bucket')) ||
+              (result.details && result.details.includes('bucket'))) {
+            setShowStorageGuide(true);
+          }
+
           setMessage({
             type: 'error',
             text: `Failed to upload video: ${result.error || 'Unknown error'}`
@@ -259,6 +277,10 @@ export default function AddNewsPage() {
         >
           {message.text}
         </div>
+      )}
+
+      {showStorageGuide && (
+        <StorageSetupGuide onClose={() => setShowStorageGuide(false)} />
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">

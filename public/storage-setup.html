@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlipNEWS Storage Setup</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #2563eb;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #4b5563;
+      margin-top: 30px;
+    }
+    .step {
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2563eb;
+    }
+    .step h3 {
+      margin-top: 0;
+      color: #1f2937;
+    }
+    code {
+      background-color: #e5e7eb;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .bucket-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .bucket-list li {
+      background-color: #e5e7eb;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .warning {
+      background-color: #fef2f2;
+      border-left: 4px solid #ef4444;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #2563eb;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .button:hover {
+      background-color: #1d4ed8;
+    }
+    .policy-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    .policy-table th, .policy-table td {
+      border: 1px solid #e5e7eb;
+      padding: 10px;
+      text-align: left;
+    }
+    .policy-table th {
+      background-color: #f3f4f6;
+    }
+    img {
+      max-width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>FlipNEWS Storage Setup Guide</h1>
+  
+  <div class="warning">
+    <strong>Important:</strong> You need to set up storage buckets in Supabase before you can upload images and videos to your FlipNEWS application.
+  </div>
+  
+  <div class="step">
+    <h3>Step 1: Go to Supabase Dashboard</h3>
+    <p>Open the Supabase dashboard for your project:</p>
+    <a href="https://supabase.com/dashboard/project/tnaqvbrflguwpeafwclz/storage/buckets" target="_blank" class="button">Open Supabase Dashboard</a>
+  </div>
+  
+  <div class="step">
+    <h3>Step 2: Create Required Buckets</h3>
+    <p>You need to create the following buckets:</p>
+    <ul class="bucket-list">
+      <li>news-images</li>
+      <li>news-videos</li>
+      <li>user-avatars</li>
+      <li>site-assets</li>
+    </ul>
+    
+    <p>For each bucket:</p>
+    <ol>
+      <li>Click the "Create bucket" button</li>
+      <li>Enter the bucket name exactly as shown above</li>
+      <li>Make sure "Public bucket" is checked</li>
+      <li>Click "Create bucket"</li>
+    </ol>
+  </div>
+  
+  <div class="step">
+    <h3>Step 3: Set Up Bucket Policies</h3>
+    <p>For each bucket, you need to set up policies to allow public access:</p>
+    <ol>
+      <li>Click on the bucket name</li>
+      <li>Click on the "Policies" tab</li>
+      <li>Click "Add policy"</li>
+      <li>Select "Create a policy from scratch"</li>
+      <li>Use the following settings:</li>
+    </ol>
+    
+    <table class="policy-table">
+      <tr>
+        <th>Setting</th>
+        <th>Value</th>
+      </tr>
+      <tr>
+        <td>Policy name</td>
+        <td>Public Access</td>
+      </tr>
+      <tr>
+        <td>Allowed operations</td>
+        <td>SELECT, INSERT, UPDATE, DELETE</td>
+      </tr>
+      <tr>
+        <td>Target roles</td>
+        <td>anon, authenticated</td>
+      </tr>
+      <tr>
+        <td>Policy definition (USING expression)</td>
+        <td>true</td>
+      </tr>
+    </table>
+    
+    <p>Click "Save policy" to create the policy.</p>
+  </div>
+  
+  <div class="step">
+    <h3>Step 4: Test Your Setup</h3>
+    <p>After creating all buckets and policies, return to your FlipNEWS application and try uploading an image or video.</p>
+    <a href="/" class="button">Return to FlipNEWS</a>
+  </div>
+  
+  <div class="warning">
+    <p><strong>Troubleshooting:</strong> If you still encounter issues with uploads, check the browser console for error messages. Make sure the bucket names are exactly as specified and that the policies are correctly set up.</p>
+  </div>
+</body>
+</html>
