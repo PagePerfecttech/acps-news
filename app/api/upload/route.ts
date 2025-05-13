@@ -123,10 +123,18 @@ export async function POST(request: NextRequest) {
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${fileName}`;
 
+    // Convert File to ArrayBuffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+    const fileData = new Uint8Array(arrayBuffer);
+
     // Upload the file
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file);
+      .upload(filePath, fileData, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: true
+      });
 
     if (uploadError) {
       return NextResponse.json(

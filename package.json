@@ -9,12 +9,13 @@
     "lint": "next lint",
     "init-db": "node scripts/init-database.js",
     "setup-rss": "node scripts/setup-rss.js",
-    "setup": "npm run init-db && npm run setup-rss && npm run init-categories",
+    "setup": "npm run init-db && npm run setup-rss && npm run init-categories && npm run init-storage",
     "install-deps": "node scripts/install-dependencies.js",
     "add-telugu-feeds": "node scripts/add-telugu-feeds.js",
     "fix-users": "node scripts/fix-users-table.js",
     "test-rss": "node scripts/test-rss-feeds.js",
-    "init-categories": "node scripts/init-categories.js"
+    "init-categories": "node scripts/init-categories.js",
+    "init-storage": "node scripts/init-storage.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
