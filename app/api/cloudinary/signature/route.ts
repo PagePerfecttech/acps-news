@@ -1,12 +1,26 @@
 /**
  * API Route for generating Cloudinary upload signatures
- * 
+ *
  * This route generates a signature for client-side Cloudinary uploads,
  * which is more secure than exposing the API secret in the browser.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
+// Try to import cloudinary, but provide a fallback if it fails
+let cloudinary: any;
+try {
+  const cloudinaryModule = require('cloudinary');
+  cloudinary = cloudinaryModule.v2;
+} catch (error) {
+  console.error('Failed to import cloudinary in API route:', error);
+  // Create a mock cloudinary object with the same interface
+  cloudinary = {
+    config: () => ({}),
+    utils: {
+      api_sign_request: () => '',
+    },
+  };
+}
 
 // Configure Cloudinary
 cloudinary.config({

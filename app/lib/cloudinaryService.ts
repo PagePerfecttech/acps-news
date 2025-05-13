@@ -1,11 +1,28 @@
 /**
  * Cloudinary Service
- * 
+ *
  * This service provides functions for uploading images and videos to Cloudinary.
  * It serves as an alternative to Supabase Storage.
  */
 
-import { v2 as cloudinary } from 'cloudinary';
+// Try to import cloudinary, but provide a fallback if it fails
+let cloudinary: any;
+try {
+  const cloudinaryModule = require('cloudinary');
+  cloudinary = cloudinaryModule.v2;
+} catch (error) {
+  console.error('Failed to import cloudinary:', error);
+  // Create a mock cloudinary object with the same interface
+  cloudinary = {
+    config: () => ({}),
+    uploader: {
+      upload: async () => ({ secure_url: null }),
+    },
+    utils: {
+      api_sign_request: () => '',
+    },
+  };
+}
 
 // Cloudinary configuration
 // Note: These values should be set in your environment variables
@@ -26,7 +43,7 @@ const FOLDERS = {
 
 /**
  * Uploads a file to Cloudinary
- * 
+ *
  * @param file The file to upload (as a base64 string or URL)
  * @param options Upload options
  * @returns Promise with upload result
@@ -46,7 +63,7 @@ const uploadToCloudinary = async (
     if (typeof window === 'undefined') {
       return await cloudinary.uploader.upload(file, options);
     }
-    
+
     // For client-side uploads, we need to use the upload widget or a signed upload
     // This is a simplified version that uses a pre-signed URL approach
     const response = await fetch('/api/cloudinary/signature', {
@@ -76,11 +93,11 @@ const uploadToCloudinary = async (
     formData.append('signature', signature);
     formData.append('folder', options.folder);
     formData.append('resource_type', options.resource_type);
-    
+
     if (options.public_id) {
       formData.append('public_id', options.public_id);
     }
-    
+
     if (options.tags) {
       formData.append('tags', options.tags.join(','));
     }
@@ -107,7 +124,7 @@ const uploadToCloudinary = async (
 
 /**
  * Uploads an image to Cloudinary
- * 
+ *
  * @param file The image file (as a base64 string or URL)
  * @param folder The folder to upload to (defaults to news-images)
  * @returns Promise with the upload result
@@ -144,7 +161,7 @@ export const uploadImage = async (
 
 /**
  * Uploads a video to Cloudinary
- * 
+ *
  * @param file The video file (as a base64 string or URL)
  * @returns Promise with the upload result
  */
@@ -179,7 +196,7 @@ export const uploadVideo = async (
 
 /**
  * Converts a File object to a base64 string
- * 
+ *
  * @param file The file to convert
  * @returns Promise with the base64 string
  */
@@ -194,7 +211,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 /**
  * Checks if Cloudinary is properly configured
- * 
+ *
  * @returns Boolean indicating if Cloudinary is configured
  */
 export const isCloudinaryConfigured = (): boolean => {
