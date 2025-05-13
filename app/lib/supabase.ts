@@ -85,7 +85,21 @@ export const isSupabaseConfigured = async (): Promise<boolean> => {
     try {
       connectionStatus = 'connecting';
 
-      // Try to query a table that should always exist (auth.users)
+      // Try to query the pg_catalog tables first (should always exist)
+      const { data: pgData, error: pgError } = await supabase
+        .from('pg_catalog.pg_tables')
+        .select('tablename')
+        .eq('schemaname', 'public')
+        .limit(1);
+
+      if (!pgError) {
+        // Successfully connected to Supabase
+        connectionStatus = 'connected';
+        lastConnectionCheck = Date.now();
+        return true;
+      }
+
+      // If that fails, try news_articles table
       const { error } = await supabase.from('news_articles').select('count', { count: 'exact', head: true });
 
       if (error) {
@@ -111,9 +125,29 @@ export const isSupabaseConfigured = async (): Promise<boolean> => {
       // Even if there's an error, if we got this far, the connection might be working
       // The error might be due to missing tables, not connection issues
       console.warn('Error testing Supabase connection, but continuing:', error);
-      connectionStatus = 'connected'; // Assume connected but with issues
-      lastConnectionCheck = Date.now();
-      return true;
+
+      // Try one more approach - direct REST API call
+      try {
+        const response = await fetch(`${validSupabaseUrl}/rest/v1/`, {
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`
+          }
+        });
+
+        if (response.ok) {
+          connectionStatus = 'connected'; // Assume connected but with issues
+          lastConnectionCheck = Date.now();
+          return true;
+        } else {
+          connectionStatus = 'error';
+          return false;
+        }
+      } catch (fetchError) {
+        console.error('Final connection test failed:', fetchError);
+        connectionStatus = 'error';
+        return false;
+      }
     }
   } catch (error) {
     console.error('Error in isSupabaseConfigured:', error);
