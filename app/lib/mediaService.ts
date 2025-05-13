@@ -9,32 +9,27 @@
  * 4. Local storage fallback (for development/testing)
  */
 
-import * as supabaseService from './supabaseService';
-// Import cloudinaryService with error handling
-let cloudinaryService: any;
-try {
-  cloudinaryService = require('./cloudinaryService');
-} catch (error) {
-  console.error('Failed to import cloudinaryService:', error);
-  // Create a mock cloudinaryService
-  cloudinaryService = {
-    uploadImage: async () => ({ url: null, error: 'Cloudinary service not available' }),
-    uploadVideo: async () => ({ url: null, error: 'Cloudinary service not available' }),
-    isCloudinaryConfigured: () => false,
-  };
-}
-// Import imgbbService with error handling
-let imgbbService: any;
-try {
-  imgbbService = require('./imgbbService');
-} catch (error) {
-  console.error('Failed to import imgbbService:', error);
-  // Create a mock imgbbService
-  imgbbService = {
-    uploadImage: async () => ({ url: null, error: 'ImgBB service not available' }),
-    isImgBBConfigured: () => false,
-  };
-}
+// Import supabase service functions directly to avoid naming conflicts
+import {
+  uploadImage as uploadImageToSupabase,
+  uploadVideo as uploadVideoToSupabase,
+  isSupabaseConfigured
+} from './supabaseService';
+
+// Import cloudinary service with fallbacks
+import * as cloudinaryServiceImport from './cloudinaryService';
+const cloudinaryService = {
+  uploadImage: cloudinaryServiceImport.uploadImage || (async () => ({ url: null, error: 'Cloudinary service not available' })),
+  uploadVideo: cloudinaryServiceImport.uploadVideo || (async () => ({ url: null, error: 'Cloudinary service not available' })),
+  isCloudinaryConfigured: cloudinaryServiceImport.isCloudinaryConfigured || (() => false),
+};
+
+// Import imgbb service with fallbacks
+import * as imgbbServiceImport from './imgbbService';
+const imgbbService = {
+  uploadImage: imgbbServiceImport.uploadImage || (async () => ({ url: null, error: 'ImgBB service not available' })),
+  isImgBBConfigured: imgbbServiceImport.isImgBBConfigured || (() => false),
+};
 
 // Storage provider types
 export type StorageProvider = 'supabase' | 'cloudinary' | 'imgbb' | 'local';
@@ -75,8 +70,8 @@ export const uploadImage = async (
 
       switch (provider) {
         case 'supabase':
-          if (await supabaseService.isSupabaseConfigured()) {
-            const uploadResult = await supabaseService.uploadImage(file, folder);
+          if (await isSupabaseConfigured()) {
+            const uploadResult = await uploadImageToSupabase(file, folder);
             result = { ...uploadResult, provider };
           }
           break;
@@ -148,8 +143,8 @@ export const uploadVideo = async (
 
       switch (provider) {
         case 'supabase':
-          if (await supabaseService.isSupabaseConfigured()) {
-            const uploadResult = await supabaseService.uploadVideo(file);
+          if (await isSupabaseConfigured()) {
+            const uploadResult = await uploadVideoToSupabase(file);
             result = { ...uploadResult, provider };
           }
           break;
@@ -248,7 +243,7 @@ const storeFileLocally = async (
  */
 export const getConfiguredProviders = async (): Promise<Record<StorageProvider, boolean>> => {
   return {
-    supabase: await supabaseService.isSupabaseConfigured(),
+    supabase: await isSupabaseConfigured(),
     cloudinary: cloudinaryService.isCloudinaryConfigured(),
     imgbb: imgbbService.isImgBBConfigured(),
     local: true, // Local storage is always available

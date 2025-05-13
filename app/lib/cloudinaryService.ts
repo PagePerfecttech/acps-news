@@ -5,24 +5,24 @@
  * It serves as an alternative to Supabase Storage.
  */
 
-// Try to import cloudinary, but provide a fallback if it fails
-let cloudinary: any;
-try {
-  const cloudinaryModule = require('cloudinary');
-  cloudinary = cloudinaryModule.v2;
-} catch (error) {
-  console.error('Failed to import cloudinary:', error);
-  // Create a mock cloudinary object with the same interface
-  cloudinary = {
-    config: () => ({}),
-    uploader: {
-      upload: async () => ({ secure_url: null }),
+// We need to use a browser-compatible approach for Cloudinary
+// This is a mock implementation that will be replaced with API calls
+const cloudinary = {
+  config: (config?: any) => {
+    console.log('Cloudinary config called with:', config);
+    return {};
+  },
+  uploader: {
+    upload: async () => ({ secure_url: null }),
+  },
+  utils: {
+    api_sign_request: (params: any, secret: string) => {
+      // This is just a mock - the actual signing will happen server-side
+      console.log('Cloudinary signature requested for:', params);
+      return 'mock-signature';
     },
-    utils: {
-      api_sign_request: () => '',
-    },
-  };
-}
+  },
+};
 
 // Cloudinary configuration
 // Note: These values should be set in your environment variables

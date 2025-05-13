@@ -6,34 +6,46 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// Try to import cloudinary, but provide a fallback if it fails
-let cloudinary: any;
-try {
-  const cloudinaryModule = require('cloudinary');
-  cloudinary = cloudinaryModule.v2;
-} catch (error) {
-  console.error('Failed to import cloudinary in API route:', error);
-  // Create a mock cloudinary object with the same interface
-  cloudinary = {
-    config: () => ({}),
-    utils: {
-      api_sign_request: () => '',
-    },
-  };
+// For server-side routes, we can use a different approach
+// We'll implement our own signature generation without requiring the full cloudinary package
+
+// Simple function to generate a signature for Cloudinary uploads
+function generateSignature(params: Record<string, any>, apiSecret: string): string {
+  // In a real implementation, we would use a crypto library to generate the signature
+  // For now, we'll use a simplified approach
+  const crypto = require('crypto');
+
+  // Sort the parameters
+  const sortedParams = Object.keys(params)
+    .sort()
+    .reduce((acc: Record<string, any>, key) => {
+      acc[key] = params[key];
+      return acc;
+    }, {});
+
+  // Create a string with key=value pairs
+  const paramString = Object.entries(sortedParams)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  // Generate the signature using HMAC SHA-1
+  return crypto
+    .createHmac('sha1', apiSecret)
+    .update(paramString)
+    .digest('hex');
 }
 
-// Configure Cloudinary
-cloudinary.config({
+// Cloudinary configuration values
+const cloudinaryConfig = {
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo',
   api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '',
   api_secret: process.env.CLOUDINARY_API_SECRET || '',
-  secure: true,
-});
+};
 
 export async function POST(request: NextRequest) {
   try {
     // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_API_SECRET) {
+    if (!cloudinaryConfig.api_secret) {
       return NextResponse.json(
         { error: 'Cloudinary API secret is not configured' },
         { status: 500 }
@@ -62,18 +74,15 @@ export async function POST(request: NextRequest) {
       params.tags = tags.join(',');
     }
 
-    // Generate signature
-    const signature = cloudinary.utils.api_sign_request(
-      params,
-      process.env.CLOUDINARY_API_SECRET
-    );
+    // Generate signature using our custom function
+    const signature = generateSignature(params, cloudinaryConfig.api_secret);
 
     // Return signature and other required parameters
     return NextResponse.json({
       signature,
       timestamp,
-      api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      api_key: cloudinaryConfig.api_key,
+      cloud_name: cloudinaryConfig.cloud_name,
     });
   } catch (error: any) {
     console.error('Error generating Cloudinary signature:', error);

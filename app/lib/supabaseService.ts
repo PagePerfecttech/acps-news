@@ -513,3 +513,150 @@ export const deleteCategoryFromSupabase = async (id: string): Promise<boolean> =
   }
 };
 
+// Check if Supabase is configured
+export const isSupabaseConfigured = async (): Promise<boolean> => {
+  try {
+    // Try to make a simple query to check if Supabase is working
+    const { data, error } = await supabase.from('news_articles').select('id').limit(1);
+
+    if (error) {
+      console.error('Supabase connection error:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking Supabase configuration:', error);
+    return false;
+  }
+};
+
+// Upload an image file to Supabase Storage
+export const uploadImage = async (
+  file: File,
+  bucket: 'news-images' | 'user-avatars' | 'site-assets' = 'news-images'
+): Promise<{ url: string | null; error: string | null }> => {
+  try {
+    // Check if bucket exists
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+
+    if (bucketError) {
+      console.error('Error listing buckets:', bucketError);
+      return { url: null, error: 'Failed to list storage buckets' };
+    }
+
+    const bucketExists = buckets?.some(b => b.name === bucket);
+
+    if (!bucketExists) {
+      console.warn(`⚠️ Bucket ${bucket} doesn't exist!`);
+      return { url: null, error: `Storage bucket "${bucket}" not found` };
+    }
+
+    // Generate a unique file name
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Convert File to ArrayBuffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+    const fileData = new Uint8Array(arrayBuffer);
+
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, fileData, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading file to Supabase:', uploadError);
+      return { url: null, error: uploadError.message };
+    }
+
+    // Get the public URL
+    const { data } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    // Make sure the URL is properly formatted
+    let publicUrl = data.publicUrl;
+
+    // Ensure the URL has the correct protocol
+    if (!publicUrl.startsWith('http')) {
+      publicUrl = `https://${publicUrl.replace(/^\/\//, '')}`;
+    }
+
+    return { url: publicUrl, error: null };
+  } catch (error: any) {
+    console.error('Error in uploadImage:', error);
+    return { url: null, error: error.message || 'Unknown error' };
+  }
+};
+
+// Upload a video file to Supabase Storage
+export const uploadVideo = async (
+  file: File
+): Promise<{ url: string | null; error: string | null }> => {
+  try {
+    const bucket = 'news-videos';
+
+    // Check if bucket exists
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+
+    if (bucketError) {
+      console.error('Error listing buckets:', bucketError);
+      return { url: null, error: 'Failed to list storage buckets' };
+    }
+
+    const bucketExists = buckets?.some(b => b.name === bucket);
+
+    if (!bucketExists) {
+      console.warn(`⚠️ Bucket ${bucket} doesn't exist!`);
+      return { url: null, error: `Storage bucket "${bucket}" not found` };
+    }
+
+    // Generate a unique file name
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Convert File to ArrayBuffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+    const fileData = new Uint8Array(arrayBuffer);
+
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, fileData, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading video to Supabase:', uploadError);
+      return { url: null, error: uploadError.message };
+    }
+
+    // Get the public URL
+    const { data } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    // Make sure the URL is properly formatted
+    let publicUrl = data.publicUrl;
+
+    // Ensure the URL has the correct protocol
+    if (!publicUrl.startsWith('http')) {
+      publicUrl = `https://${publicUrl.replace(/^\/\//, '')}`;
+    }
+
+    return { url: publicUrl, error: null };
+  } catch (error: any) {
+    console.error('Error in uploadVideo:', error);
+    return { url: null, error: error.message || 'Unknown error' };
+  }
+};
+
