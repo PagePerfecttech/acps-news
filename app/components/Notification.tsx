@@ -14,6 +14,7 @@ export interface Notification {
   message: string;
   duration?: number;
   title?: string;
+  timeoutId?: NodeJS.Timeout;
 }
 
 // Notification context interface
@@ -47,26 +48,58 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       id,
       duration: notification.duration || 5000, // Default duration: 5 seconds
     };
-    
+
     setNotifications(prev => [...prev, newNotification]);
-    
+
     // Auto-remove notification after duration
     if (newNotification.duration > 0) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         removeNotification(id);
       }, newNotification.duration);
+
+      // Store the timeout ID with the notification for cleanup
+      newNotification.timeoutId = timeoutId;
     }
   };
 
   // Remove a notification by ID
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications(prev => {
+      // Find the notification to remove
+      const notificationToRemove = prev.find(notification => notification.id === id);
+
+      // Clear the timeout if it exists
+      if (notificationToRemove?.timeoutId) {
+        clearTimeout(notificationToRemove.timeoutId);
+      }
+
+      // Filter out the notification
+      return prev.filter(notification => notification.id !== id);
+    });
   };
 
   // Clear all notifications
   const clearNotifications = () => {
+    // Clear all timeouts
+    notifications.forEach(notification => {
+      if (notification.timeoutId) {
+        clearTimeout(notification.timeoutId);
+      }
+    });
+
     setNotifications([]);
   };
+
+  // Cleanup timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      notifications.forEach(notification => {
+        if (notification.timeoutId) {
+          clearTimeout(notification.timeoutId);
+        }
+      });
+    };
+  }, [notifications]);
 
   return (
     <NotificationContext.Provider
@@ -89,7 +122,7 @@ const NotificationItem = ({ notification, onClose }: { notification: Notificatio
   let icon;
   let bgColor;
   let borderColor;
-  
+
   switch (notification.type) {
     case 'success':
       icon = <FiCheckCircle className="text-green-500" size={20} />;

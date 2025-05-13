@@ -34,17 +34,32 @@ export default function NewsCard({ article, onPopupStateChange }: NewsCardProps)
 
   // Check if Supabase is configured
   useEffect(() => {
-    const checkSupabase = async () => {
-      const configured = await isSupabaseConfigured();
-      setUsingSupabase(configured);
+    let isMounted = true;
 
-      // Record view when component mounts
-      if (configured) {
-        recordView();
+    const checkSupabase = async () => {
+      try {
+        const configured = await isSupabaseConfigured();
+
+        // Only update state if component is still mounted
+        if (isMounted) {
+          setUsingSupabase(configured);
+
+          // Record view when component mounts
+          if (configured) {
+            recordView();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking Supabase configuration:', error);
       }
     };
 
     checkSupabase();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Set up real-time subscriptions

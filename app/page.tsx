@@ -36,6 +36,9 @@ export default function Home() {
     setLoading(true);
     setError(null);
 
+    // Flag to track if component is mounted
+    let isMounted = true;
+
     // Get articles and ads from data service
     const fetchData = async () => {
       try {
@@ -43,6 +46,9 @@ export default function Home() {
           getNewsArticles(),
           getAds()
         ]);
+
+        // Only update state if component is still mounted
+        if (!isMounted) return;
 
         // Check if we got valid data
         if (!newsArticles || newsArticles.length === 0) {
@@ -84,13 +90,22 @@ export default function Home() {
         setError(null);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError(error instanceof Error ? error : new Error('Failed to load news articles'));
+        if (isMounted) {
+          setError(error instanceof Error ? error : new Error('Failed to load news articles'));
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Handle swiper slide change

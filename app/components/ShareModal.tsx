@@ -33,17 +33,43 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     }
   }, [isOpen]);
 
+  // Store all timeout IDs for cleanup
+  const timeoutIds = React.useRef<NodeJS.Timeout[]>([]);
+
+  // Safe setTimeout that automatically registers for cleanup
+  const safeSetTimeout = (callback: () => void, delay: number): NodeJS.Timeout => {
+    const id = setTimeout(callback, delay);
+    timeoutIds.current.push(id);
+    return id;
+  };
+
+  // Cleanup all timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      timeoutIds.current.forEach(id => clearTimeout(id));
+      timeoutIds.current = [];
+    };
+  }, []);
+
   // Capture the element as a screenshot with timeout
   const captureElement = async () => {
     setIsCapturing(true);
 
+    // Reference to store the timeout ID
+    let timeoutId: NodeJS.Timeout;
+
     // Set a timeout to ensure we don't wait too long
     const timeoutPromise = new Promise<string>((resolve) => {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         // Use a fallback image if it takes too long
         resolve('/images/fallback-share-image.svg');
       }, 6000); // 6 seconds timeout (increased for better reliability)
     });
+
+    // Cleanup function to clear the timeout if component unmounts
+    const cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
 
     try {
       // First, make sure the element is fully visible and rendered
@@ -75,15 +101,35 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             return new Promise<void>((resolve) => {
               img.onload = () => resolve();
               img.onerror = () => resolve(); // Continue even if image fails
+
               // Set a timeout in case the image never loads
-              setTimeout(resolve, 2000);
+              const imgTimeoutId = setTimeout(resolve, 2000);
+
+              // Store the timeout ID for cleanup
+              const originalOnload = img.onload;
+              img.onload = () => {
+                clearTimeout(imgTimeoutId);
+                if (originalOnload && typeof originalOnload === 'function') {
+                  originalOnload.call(img);
+                }
+                resolve();
+              };
             });
           })
         );
       }
 
       // Wait a moment for any animations or transitions to complete
-      await new Promise(resolve => setTimeout(resolve, 200)); // Increased from 100ms
+      await new Promise(resolve => {
+        const animTimeoutId = setTimeout(resolve, 200); // Increased from 100ms
+
+        // Add to cleanup list
+        const originalCleanup = cleanup;
+        cleanup = () => {
+          clearTimeout(animTimeoutId);
+          originalCleanup();
+        };
+      });
 
       // Race between screenshot capture and timeout
       const dataUrl = await Promise.race([
@@ -103,6 +149,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       setScreenshotUrl('/images/fallback-share-image.svg');
     } finally {
       setIsCapturing(false);
+      // Call cleanup function to clear any remaining timeouts
+      cleanup();
     }
   };
 
@@ -200,9 +248,17 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
           .then(() => {
             setCopySuccess(true);
             // Reset copy success message after 2 seconds
-            setTimeout(() => {
+            const copyTimeoutId = setTimeout(() => {
               setCopySuccess(false);
             }, 2000);
+
+            // Store the timeout ID for cleanup in component unmount
+            const timeoutRef = { current: copyTimeoutId };
+            useEffect(() => {
+              return () => {
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+              };
+            }, []);
           })
           .catch(err => {
             console.error('Failed to copy text: ', err);
@@ -238,9 +294,17 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       if (successful) {
         setCopySuccess(true);
         // Reset copy success message after 2 seconds
-        setTimeout(() => {
+        const copyTimeoutId = setTimeout(() => {
           setCopySuccess(false);
         }, 2000);
+
+        // Store the timeout ID for cleanup in component unmount
+        const timeoutRef = { current: copyTimeoutId };
+        useEffect(() => {
+          return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          };
+        }, []);
       } else {
         console.warn('Fallback clipboard copy failed');
       }
