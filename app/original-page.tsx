@@ -1,3 +1,11 @@
+// Temporarily using a static page to avoid client-side exceptions
+import TempIndex from './temp-index';
+
+export default function Home() {
+  return <TempIndex />;
+}
+
+/* Original code commented out to debug client-side exception
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,7 +22,7 @@ import 'swiper/css/effect-cards';
 // Import data service
 import { getNewsArticles, getAds } from './lib/dataService';
 
-export default function Home() {
+function OriginalHome() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -50,7 +58,7 @@ export default function Home() {
         }
 
         setArticles(newsArticles);
-        setAds(adsList || []);
+        setAds(adsList);
 
         // Create a combined array of content (news articles and ads)
         const adFrequency = 3; // Show ad after every 3 news articles
@@ -177,7 +185,7 @@ export default function Home() {
       }
 
       setArticles(newsArticles);
-      setAds(adsList || []);
+      setAds(adsList);
 
       // Recreate the combined content
       const adFrequency = 3; // Show ad after every 3 news articles
@@ -316,3 +324,5 @@ export default function Home() {
       </div>
     </div>
   );
+}
+*/
