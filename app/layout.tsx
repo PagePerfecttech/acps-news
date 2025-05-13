@@ -6,6 +6,7 @@ import ConnectionStatusWrapper from "./components/ConnectionStatusWrapper";
 import { NotificationProvider } from "./components/Notification";
 import SupabaseInitializer from "./components/SupabaseInitializer";
 import ErrorBoundary from "./components/ErrorBoundary";
+import DynamicTitle from "./components/DynamicTitle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FlipNews - తెలుగు న్యూస్ అప్లికేషన్",
-  description: "FlipNews is your source for the latest Telugu news with an interactive flip experience",
+  title: "News Portal",
+  description: "Your source for the latest news with an interactive flip experience",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
@@ -36,6 +37,7 @@ export default function RootLayout({
         <SettingsProvider>
           <NotificationProvider>
             <SupabaseInitializer />
+            <DynamicTitle />
             <ErrorBoundary>
               <main className="flex-grow">
                 {children}
