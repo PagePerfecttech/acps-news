@@ -29,19 +29,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [usingSupabase, setUsingSupabase] = useState(false);
-  const [showSwipeHint, setShowSwipeHint] = useState(index === 0);
   const { settings } = useSettings();
-
-  // Hide swipe hint after 3 seconds
-  useEffect(() => {
-    if (showSwipeHint) {
-      const timer = setTimeout(() => {
-        setShowSwipeHint(false);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showSwipeHint]);
 
   // Check if Supabase is configured
   useEffect(() => {
@@ -356,12 +344,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
               </div>
             </div>
 
-            {/* Swipe to navigate hint - only on first card */}
-            {showSwipeHint && (
-              <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-full text-sm animate-pulse z-30">
-                Swipe up to navigate
-              </div>
-            )}
+            {/* Removed swipe to navigate hint */}
 
             {/* Read More button in the middle */}
             {showReadMore && (
