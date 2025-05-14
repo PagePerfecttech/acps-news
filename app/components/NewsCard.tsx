@@ -322,8 +322,10 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
             <div className="font-bold text-sm">
               {settings?.black_strip_text || 'No.1 తెలుగు న్యూస్ డైలీ'}
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
               <span className="text-xs">{settings?.site_name || 'FlipNEWS'}</span>
+              {/* Author profile picture */}
+              <UserProfile authorName={article.author} size="small" showName={false} />
             </div>
           </div>
 

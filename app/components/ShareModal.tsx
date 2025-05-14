@@ -165,27 +165,57 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
 
       // Use the share link from settings, or fallback to a default
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
-      const siteName = settings?.site_name || 'FlipNews';
+      const siteName = settings?.site_name || 'FlipNEWS';
 
-      const authorName = title.split(' - ')[0] || '';
-      const shareText = `${title}\n\nRead More News like this at ${shareLink}`;
-      const shareUrl = shareLink;
+      // Get the article element to extract content
+      const articleElement = document.getElementById(elementId);
+      let description = '';
 
-      // Add "Read More" text to the share message
-      const enhancedShareText = `${title}\n\nRead More: ${shareUrl}`;
+      if (articleElement) {
+        // Try to find the content paragraph
+        const contentParagraph = articleElement.querySelector('p');
+        if (contentParagraph) {
+          // Extract first 40 words for description
+          const words = contentParagraph.textContent?.split(/\s+/) || [];
+          description = words.slice(0, 40).join(' ');
+          if (words.length > 40) {
+            description += '...';
+          }
+        }
+      }
 
+      // Create enhanced share text with title, description and read more link
+      const enhancedShareText = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
 
       try {
-        // Create a file from the screenshot
-        const file = dataUrlToFile(screenshotUrl, `${siteName}-news.png`);
+        // Get the media element (image or video)
+        const mediaElement = articleElement?.querySelector('img, video');
+        let mediaFile: File | null = null;
 
-        // Use the Web Share API with the screenshot and enhanced text
-        await shareContent(title, enhancedShareText, shareUrl, [file]);
+        if (mediaElement instanceof HTMLImageElement && mediaElement.src) {
+          try {
+            // Try to fetch the image and convert to file
+            const response = await fetch(mediaElement.src);
+            const blob = await response.blob();
+            mediaFile = new File([blob], `${siteName}-media.${blob.type.split('/')[1] || 'png'}`, { type: blob.type });
+          } catch (e) {
+            console.error('Error fetching media file:', e);
+          }
+        }
+
+        // If we have a media file, share it along with the text
+        if (mediaFile) {
+          await shareContent(title, enhancedShareText, shareLink, [mediaFile]);
+        } else {
+          // Fallback to screenshot if media file couldn't be fetched
+          const file = dataUrlToFile(screenshotUrl, `${siteName}-news.png`);
+          await shareContent(title, enhancedShareText, shareLink, [file]);
+        }
       } catch (fileError) {
-        console.error('Error creating file from screenshot:', fileError);
+        console.error('Error creating file for sharing:', fileError);
 
-        // Fallback to sharing without the screenshot
-        await shareContent(title, enhancedShareText, shareUrl);
+        // Fallback to sharing without any media
+        await shareContent(title, enhancedShareText, shareLink);
       }
     } catch (error) {
       console.error('Error sharing content:', error);
@@ -204,14 +234,44 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
 
       // Use the share link from settings, or fallback to a default
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
-      const siteName = settings?.site_name || 'FlipNews';
+      const siteName = settings?.site_name || 'FlipNEWS';
+
+      // Get the article element to extract content
+      const articleElement = document.getElementById(elementId);
+      let description = '';
+
+      if (articleElement) {
+        // Try to find the content paragraph
+        const contentParagraph = articleElement.querySelector('p');
+        if (contentParagraph) {
+          // Extract first 40 words for description
+          const words = contentParagraph.textContent?.split(/\s+/) || [];
+          description = words.slice(0, 40).join(' ');
+          if (words.length > 40) {
+            description += '...';
+          }
+        }
+      }
 
       // Customize share text based on platform with enhanced "Read More" text
-      let shareText = `${title}\n\nRead More: ${shareLink}`;
+      let shareText = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
 
       // Twitter has character limits, so make it more concise
       if (platform === 'twitter') {
-        shareText = `${title} | Read More: ${shareLink}`;
+        // Limit to 280 characters for Twitter
+        const maxLength = 280;
+        const urlLength = shareLink.length + 5; // 5 for "Read More: "
+        const titleLength = title.length;
+        const availableLength = maxLength - urlLength - titleLength - 5; // 5 for spacing and separators
+
+        if (availableLength > 20 && description) {
+          // Include a shortened description if there's room
+          const shortDesc = description.substring(0, availableLength) + '...';
+          shareText = `${title}\n\n${shortDesc}\n\nRead More: ${shareLink}`;
+        } else {
+          // Just title and link if description won't fit
+          shareText = `${title} | Read More: ${shareLink}`;
+        }
       }
 
       const shareUrl = shareLink;
@@ -240,11 +300,34 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     }
   };
 
+  // Helper function to get description for sharing
+  const getDescriptionForShare = (): string => {
+    // Get the article element to extract content
+    const articleElement = document.getElementById(elementId);
+    let description = '';
+
+    if (articleElement) {
+      // Try to find the content paragraph
+      const contentParagraph = articleElement.querySelector('p');
+      if (contentParagraph) {
+        // Extract first 40 words for description
+        const words = contentParagraph.textContent?.split(/\s+/) || [];
+        description = words.slice(0, 40).join(' ');
+        if (words.length > 40) {
+          description += '...';
+        }
+      }
+    }
+
+    return description;
+  };
+
   // Handle copy link button click
   const handleCopyLink = () => {
     try {
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
-      const shareMessage = `${title}\n\nRead More News like this at ${shareLink}`;
+      const description = getDescriptionForShare();
+      const shareMessage = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
 
       // Modern clipboard API with fallback
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -379,8 +462,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             </label>
             <div className="flex items-center">
               <textarea
-                rows={3}
-                value={`${title}\n\nRead More: ${settings?.share_link || 'https://flipnews.vercel.app'}`}
+                rows={4}
+                value={`${title}\n\n${getDescriptionForShare()}\n\nRead More: ${settings?.share_link || 'https://flipnews.vercel.app'}`}
                 readOnly
                 className="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black text-sm"
               />

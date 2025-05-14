@@ -25,10 +25,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // For demo purposes, use hardcoded credentials
-      if (formData.email === 'admin@flipnews.com' && formData.password === 'admin123') {
+      // Get settings to check admin credentials
+      const settings = await import('../../lib/settingsService').then(module => module.getSettings());
+
+      // Check if credentials match the ones in settings
+      if (formData.email === settings.admin_email && formData.password === settings.admin_password) {
         // Set auth token in localStorage
         localStorage.setItem('flipnews_auth', 'true');
+        localStorage.setItem('flipnews_admin_name', settings.admin_name || 'Admin');
 
         // Redirect to admin dashboard
         router.push('/admin');
@@ -36,7 +40,7 @@ export default function LoginPage() {
         setError('Invalid email or password');
       }
     } catch (error: unknown) {
-      setError(error.message || 'Login failed. Please try again.');
+      setError((error as Error)?.message || 'Login failed. Please try again.');
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
@@ -109,9 +113,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Demo credentials: admin@flipnews.com / admin123
-              </p>
+              {/* Removed demo credentials */}
             </div>
 
             <div className="flex items-center justify-between">

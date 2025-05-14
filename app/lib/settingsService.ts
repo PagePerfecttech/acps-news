@@ -9,6 +9,9 @@ export interface SiteSettings {
   share_link: string;
   logo_url?: string;
   black_strip_text?: string;
+  admin_email?: string;
+  admin_password?: string;
+  admin_name?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -21,6 +24,9 @@ const defaultSettings: SiteSettings = {
   share_link: 'https://flipnews.vercel.app',
   logo_url: '',
   black_strip_text: 'No.1 తెలుగు న్యూస్ డైలీ',
+  admin_email: 'admin@flipnews.com',
+  admin_password: 'admin123',
+  admin_name: 'Admin',
 };
 
 // Initialize settings in localStorage if they don&apos;t exist
@@ -66,7 +72,7 @@ export const getSettings = async (): Promise<SiteSettings> => {
                     // Keep as string if parsing fails
                   }
                 }
-                settingsObj[item.key] = parsedValue;
+                settingsObj[item.key] = parsedValue as string;
               }
             });
 
@@ -80,6 +86,9 @@ export const getSettings = async (): Promise<SiteSettings> => {
               share_link: settingsObj.share_link || defaultSettings.share_link,
               logo_url: settingsObj.logo_url || defaultSettings.logo_url,
               black_strip_text: settingsObj.black_strip_text || defaultSettings.black_strip_text,
+              admin_email: settingsObj.admin_email || defaultSettings.admin_email,
+              admin_password: settingsObj.admin_password || defaultSettings.admin_password,
+              admin_name: settingsObj.admin_name || defaultSettings.admin_name,
             };
 
             return mappedSettings;

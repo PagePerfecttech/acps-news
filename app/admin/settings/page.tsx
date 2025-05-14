@@ -13,6 +13,9 @@ export default function SettingsPage() {
     share_link: '',
     logo_url: '',
     black_strip_text: '',
+    admin_email: '',
+    admin_password: '',
+    admin_name: '',
   });
 
   const [previewLogo, setPreviewLogo] = useState<string>('');
@@ -301,6 +304,62 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Admin Credentials Section */}
+        <div className="mt-8 mb-6 border-t pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Admin Credentials</h3>
+
+          {/* Admin Name */}
+          <div className="mb-4">
+            <label htmlFor="admin_name" className="block text-sm font-medium text-gray-700 mb-1">
+              Admin Name
+            </label>
+            <input
+              type="text"
+              id="admin_name"
+              name="admin_name"
+              value={settings.admin_name || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
+              placeholder="Admin Name"
+            />
+          </div>
+
+          {/* Admin Email */}
+          <div className="mb-4">
+            <label htmlFor="admin_email" className="block text-sm font-medium text-gray-700 mb-1">
+              Admin Email
+            </label>
+            <input
+              type="email"
+              id="admin_email"
+              name="admin_email"
+              value={settings.admin_email || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
+              placeholder="admin@example.com"
+            />
+          </div>
+
+          {/* Admin Password */}
+          <div className="mb-4">
+            <label htmlFor="admin_password" className="block text-sm font-medium text-gray-700 mb-1">
+              Admin Password
+            </label>
+            <input
+              type="password"
+              id="admin_password"
+              name="admin_password"
+              value={settings.admin_password || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
+              placeholder="••••••••"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Leave blank to keep the current password.
+            </p>
           </div>
         </div>
 
