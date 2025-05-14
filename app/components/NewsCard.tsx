@@ -299,11 +299,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
 
   return (
     <>
-      {/* WhatsApp Share Button - sticky on right side */}
-      <WhatsAppShareButton
-        title={article.title}
-        elementId={`news-card-${article.id}`}
-      />
+      {/* WhatsApp Share Button disabled */}
 
       <div className="w-full h-[100vh] perspective-1000">
         {/* Full screen card optimized for mobile */}
