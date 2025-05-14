@@ -16,22 +16,10 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { settings } = useSettings();
 
-  // Show button after scrolling a bit
+  // Always show the button
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      if (scrollPosition > 200) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    // Initial check
-    handleScroll();
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Set visible immediately
+    setIsVisible(true);
   }, []);
 
   // Animation effect
@@ -164,7 +152,8 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
     <div
       className="fixed z-50 right-0 top-1/2 -translate-y-1/2 flex flex-col items-center whatsapp-share-container"
       style={{
-        transform: isVisible ? 'translateY(-50%)' : 'translate(100px, -50%)'
+        transform: 'translateY(-50%)',
+        transition: 'all 0.3s ease'
       }}
     >
       {/* Button with label */}
@@ -181,6 +170,9 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
           className={`flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${
             isAnimating ? 'whatsapp-pulse' : ''
           }`}
+          style={{
+            boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+          }}
           aria-label="Share on WhatsApp"
         >
           <FaWhatsapp size={28} />

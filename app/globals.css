@@ -151,6 +151,12 @@ html, body {
 }
 
 /* WhatsApp button hover effects */
+.whatsapp-share-container {
+  /* Make sure it's always visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 @media (min-width: 768px) {
   .whatsapp-share-container:hover .whatsapp-label {
     opacity: 1;

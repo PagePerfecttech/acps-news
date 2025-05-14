@@ -10,6 +10,7 @@ import { subscribeToChanges } from '../lib/supabaseService';
 import UserProfile from './UserProfile';
 import { useSettings } from '../contexts/SettingsContext';
 import ShareButton from './ShareButton';
+// Make sure WhatsAppShareButton is properly imported
 import WhatsAppShareButton from './WhatsAppShareButton';
 
 interface NewsCardProps {
