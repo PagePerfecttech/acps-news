@@ -10,6 +10,7 @@ import { subscribeToChanges } from '../lib/supabaseService';
 import UserProfile from './UserProfile';
 import { useSettings } from '../contexts/SettingsContext';
 import ShareButton from './ShareButton';
+import WhatsAppShareButton from './WhatsAppShareButton';
 
 interface NewsCardProps {
   article: NewsArticle;
@@ -297,6 +298,12 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
 
   return (
     <>
+      {/* WhatsApp Share Button - sticky on right side */}
+      <WhatsAppShareButton
+        title={article.title}
+        elementId={`news-card-${article.id}`}
+      />
+
       <div className="w-full h-[100vh] perspective-1000">
         {/* Full screen card optimized for mobile */}
         <div id={`news-card-${article.id}`} className="w-full h-full overflow-hidden bg-white flex flex-col relative">
