@@ -29,9 +29,19 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [usingSupabase, setUsingSupabase] = useState(false);
-  // Removed showStats state and timer as vertical stats are no longer needed
-  // Removed showShareModal state as we&apos;re using ShareButton component
+  const [showSwipeHint, setShowSwipeHint] = useState(index === 0);
   const { settings } = useSettings();
+
+  // Hide swipe hint after 3 seconds
+  useEffect(() => {
+    if (showSwipeHint) {
+      const timer = setTimeout(() => {
+        setShowSwipeHint(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showSwipeHint]);
 
   // Check if Supabase is configured
   useEffect(() => {
@@ -310,7 +320,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
           {/* Source Label & Tagline - Black strip with white text */}
           <div className="h-[5vh] bg-secondary text-white flex justify-between items-center px-3">
             <div className="font-bold text-sm">
-              No.1 తెలుగు న్యూస్ డైలీ
+              {settings?.black_strip_text || 'No.1 తెలుగు న్యూస్ డైలీ'}
             </div>
             <div className="flex items-center">
               <span className="text-xs">{settings?.site_name || 'FlipNEWS'}</span>
@@ -323,7 +333,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
             <div className="flex flex-col">
               {/* Headline */}
               <div className="px-3 py-2">
-                <h3 className="text-[16px] font-bold leading-tight">
+                <h3 className="text-[18px] font-bold leading-tight">
                   {article.title}
                 </h3>
               </div>
@@ -332,7 +342,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
               <div className="px-3 py-1 h-[40vh] overflow-hidden">
                 {/* Description with fade out effect */}
                 <div className="relative h-full overflow-hidden">
-                  <p className="text-[14px] text-gray-800 leading-snug">
+                  <p className="text-[16px] text-gray-800 leading-relaxed">
                     {article.content}
                   </p>
 
@@ -344,6 +354,13 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
               </div>
             </div>
 
+            {/* Swipe to navigate hint - only on first card */}
+            {showSwipeHint && (
+              <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-full text-sm animate-pulse z-30">
+                Swipe up to navigate
+              </div>
+            )}
+
             {/* Read More button in the middle */}
             {showReadMore && (
               <div className="absolute left-1/2 top-[80%] transform -translate-x-1/2 -translate-y-1/2 z-10">
@@ -352,7 +369,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
                     e.stopPropagation();
                     toggleFullContent(true);
                   }}
-                  className="bg-primary text-black font-medium text-xs px-4 py-2 rounded-full
+                  className="bg-primary text-black font-medium text-sm px-5 py-2 rounded-full
                            hover:bg-primary-80 transition-colors shadow-lg
                            flex items-center justify-center"
                   aria-label="Read full article"
@@ -362,52 +379,41 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
               </div>
             )}
 
-            {/* Footer with timestamp */}
+            {/* Footer with stats and timestamp */}
             <div className="px-3 py-2 h-[8vh] border-t border-gray-200">
-              <div className="flex justify-center items-center">
-                {/* Timestamp */}
+              {/* Timestamp */}
+              <div className="flex justify-center items-center mb-2">
                 <div className="text-xs text-gray-500">
                   0 secs ago / {index !== undefined ? index + 1 : 1} of {totalArticles || 149} Pages
                 </div>
               </div>
+
+              {/* Stats bar at bottom */}
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={handleLike}
+                  className="flex items-center space-x-1 hover:text-red-500 transition-colors"
+                >
+                  <FiThumbsUp className="h-5 w-5" />
+                  <span className="text-sm">{stats.likes}</span>
+                </button>
+
+                <div className="flex items-center space-x-1 text-gray-600">
+                  <FiEye className="h-5 w-5" />
+                  <span className="text-sm">{stats.views}</span>
+                </div>
+
+                <ShareButton
+                  title={article.title}
+                  elementId={`news-card-${article.id}`}
+                  className="text-blue-500 hover:text-blue-700 transition-colors"
+                  iconSize={20}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Floating vertical stats on the right side */}
-          <div
-            className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 bg-white bg-opacity-90 p-3 rounded-full shadow-lg z-20"
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLike();
-              }}
-              className="flex flex-col items-center hover:text-red-500 transition-transform hover:scale-110"
-            >
-              <FiThumbsUp className="h-5 w-5" />
-              <span className="text-xs mt-1">{stats.likes}</span>
-            </button>
-
-            <div className="flex flex-col items-center text-blue-500">
-              <FiMessageSquare className="h-5 w-5" />
-              <span className="text-xs mt-1">{stats.comments}</span>
-            </div>
-
-            <div className="flex flex-col items-center text-gray-500">
-              <FiEye className="h-5 w-5" />
-              <span className="text-xs mt-1">{stats.views}</span>
-            </div>
-
-            <div className="flex flex-col items-center text-blue-500">
-              <ShareButton
-                title={article.title}
-                elementId={`news-card-${article.id}`}
-                className="flex flex-col items-center hover:text-blue-700 transition-transform hover:scale-110"
-                iconSize={20}
-              />
-              <span className="text-xs mt-1">Share</span>
-            </div>
-          </div>
+          {/* Removed floating vertical stats as they are now at the bottom */}
         </div>
       </div>
 

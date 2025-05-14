@@ -8,6 +8,7 @@ export interface SiteSettings {
   secondary_color: string;
   share_link: string;
   logo_url?: string;
+  black_strip_text?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -19,6 +20,7 @@ const defaultSettings: SiteSettings = {
   secondary_color: '#000000',
   share_link: 'https://flipnews.vercel.app',
   logo_url: '',
+  black_strip_text: 'No.1 తెలుగు న్యూస్ డైలీ',
 };
 
 // Initialize settings in localStorage if they don&apos;t exist
@@ -77,6 +79,7 @@ export const getSettings = async (): Promise<SiteSettings> => {
               secondary_color: settingsObj.secondary_color || settingsObj.theme_secondary_color || defaultSettings.secondary_color,
               share_link: settingsObj.share_link || defaultSettings.share_link,
               logo_url: settingsObj.logo_url || defaultSettings.logo_url,
+              black_strip_text: settingsObj.black_strip_text || defaultSettings.black_strip_text,
             };
 
             return mappedSettings;

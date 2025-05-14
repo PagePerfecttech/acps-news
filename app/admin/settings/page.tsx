@@ -12,6 +12,7 @@ export default function SettingsPage() {
     secondary_color: '',
     share_link: '',
     logo_url: '',
+    black_strip_text: '',
   });
 
   const [previewLogo, setPreviewLogo] = useState<string>('');
@@ -235,6 +236,25 @@ export default function SettingsPage() {
             placeholder="https://flipnews.vercel.app"
             required
           />
+        </div>
+
+        {/* Black Strip Text */}
+        <div className="mb-4">
+          <label htmlFor="black_strip_text" className="block text-sm font-medium text-gray-700 mb-1">
+            Black Strip Text
+          </label>
+          <input
+            type="text"
+            id="black_strip_text"
+            name="black_strip_text"
+            value={settings.black_strip_text || ''}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
+            placeholder="No.1 తెలుగు న్యూస్ డైలీ"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            This text appears in the black strip below the image in news cards.
+          </p>
         </div>
 
         {/* Logo Upload */}

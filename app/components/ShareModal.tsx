@@ -171,17 +171,21 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       const shareText = `${title}\n\nRead More News like this at ${shareLink}`;
       const shareUrl = shareLink;
 
+      // Add "Read More" text to the share message
+      const enhancedShareText = `${title}\n\nRead More: ${shareUrl}`;
+
+
       try {
         // Create a file from the screenshot
         const file = dataUrlToFile(screenshotUrl, `${siteName}-news.png`);
 
-        // Use the Web Share API with the screenshot
-        await shareContent(title, shareText, shareUrl, [file]);
+        // Use the Web Share API with the screenshot and enhanced text
+        await shareContent(title, enhancedShareText, shareUrl, [file]);
       } catch (fileError) {
         console.error('Error creating file from screenshot:', fileError);
 
         // Fallback to sharing without the screenshot
-        await shareContent(title, shareText, shareUrl);
+        await shareContent(title, enhancedShareText, shareUrl);
       }
     } catch (error) {
       console.error('Error sharing content:', error);
@@ -202,12 +206,12 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
       const siteName = settings?.site_name || 'FlipNews';
 
-      // Customize share text based on platform
-      let shareText = `${title}\n\nRead More News like this at ${shareLink}`;
+      // Customize share text based on platform with enhanced "Read More" text
+      let shareText = `${title}\n\nRead More: ${shareLink}`;
 
       // Twitter has character limits, so make it more concise
       if (platform === 'twitter') {
-        shareText = `${title} | Read More at ${shareLink}`;
+        shareText = `${title} | Read More: ${shareLink}`;
       }
 
       const shareUrl = shareLink;
@@ -376,7 +380,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             <div className="flex items-center">
               <textarea
                 rows={3}
-                value={`${title}\n\nRead More News like this at ${settings?.share_link || 'https://flipnews.vercel.app'}`}
+                value={`${title}\n\nRead More: ${settings?.share_link || 'https://flipnews.vercel.app'}`}
                 readOnly
                 className="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black text-sm"
               />

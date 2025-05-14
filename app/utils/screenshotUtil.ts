@@ -109,6 +109,8 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
       imageTimeout: 5000, // 5 second timeout for images
       foreignObjectRendering: false, // More compatible rendering
       removeContainer: true, // Clean up after capture
+      width: originalRect.width, // Ensure correct width
+      height: originalRect.height, // Ensure correct height
       ignoreElements: (el) => {
         // Ignore elements that are not visible or not important for the screenshot
         return el.classList.contains('ignore-screenshot') ||
@@ -124,12 +126,49 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
               el.style.visibility = 'visible';
               el.style.opacity = '1';
 
+              // Ensure text is visible with good contrast
+              if (el.tagName === 'P' || el.tagName === 'H1' || el.tagName === 'H2' ||
+                  el.tagName === 'H3' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
+                // Only set color if it's not already dark
+                const computedStyle = window.getComputedStyle(el);
+                const color = computedStyle.color;
+                // Simple check for light colors (this is not perfect but helps)
+                if (color.includes('rgba(') && color.split(',')[3]?.includes('0.')) {
+                  el.style.color = '#000000';
+                }
+              }
+
               // Fix any elements with relative positioning
               if (window.getComputedStyle(el).position === 'relative') {
                 el.style.position = 'static';
               }
+
+              // Make sure images are loaded
+              if (el.tagName === 'IMG') {
+                const img = el as HTMLImageElement;
+                img.crossOrigin = 'anonymous';
+                // Force reload if needed
+                if (!img.complete) {
+                  const originalSrc = img.src;
+                  img.src = '';
+                  img.src = originalSrc;
+                }
+              }
             }
           });
+
+          // Add a watermark with the site name
+          const watermark = document.createElement('div');
+          watermark.style.position = 'absolute';
+          watermark.style.bottom = '10px';
+          watermark.style.right = '10px';
+          watermark.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+          watermark.style.padding = '5px 10px';
+          watermark.style.borderRadius = '4px';
+          watermark.style.fontSize = '12px';
+          watermark.style.fontWeight = 'bold';
+          watermark.textContent = 'FlipNEWS';
+          clonedElement.appendChild(watermark);
         } catch (e) {
           console.warn('Error in onclone handler:', e);
         }
