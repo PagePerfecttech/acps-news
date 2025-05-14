@@ -50,15 +50,30 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
       // Get share link from settings
       const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
 
-      // Get description from the article element
-      const articleElement = document.getElementById(elementId);
-      const description = getDescriptionFromElement(articleElement, 40);
+      // Get description from the article element - with error handling
+      let description = '';
+      try {
+        const articleElement = document.getElementById(elementId);
+        if (articleElement) {
+          description = getDescriptionFromElement(articleElement, 40);
+        }
+      } catch (descError) {
+        console.warn('Error getting description:', descError);
+        // Continue with empty description if there's an error
+      }
 
-      // Create share text
-      const shareText = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
+      // Create share text (with fallback if description fails)
+      const shareText = `${title}\n\n${description || 'Check out this interesting news article!'}\n\nRead More: ${shareLink}`;
 
-      // Encode for URL
-      const encodedText = encodeURIComponent(shareText);
+      // Encode for URL - with error handling
+      let encodedText;
+      try {
+        encodedText = encodeURIComponent(shareText);
+      } catch (encodeError) {
+        console.warn('Error encoding text:', encodeError);
+        // Fallback to a simpler message if encoding fails
+        encodedText = encodeURIComponent(`${title}\n\nRead More: ${shareLink}`);
+      }
 
       // Check if mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -68,37 +83,114 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
         ? `whatsapp://send?text=${encodedText}`
         : `https://web.whatsapp.com/send?text=${encodedText}`;
 
-      // Try to open WhatsApp
-      window.open(whatsappUrl, '_blank');
+      // Try multiple sharing methods with fallbacks
+      try {
+        // First try: Use window.open
+        const newWindow = window.open(whatsappUrl, '_blank');
 
-      // Fallback for mobile if the app link doesn't work
-      if (isMobile) {
-        setTimeout(() => {
-          window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
-        }, 800);
+        // Check if window was blocked
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          throw new Error('Window was blocked');
+        }
+      } catch (windowError) {
+        console.warn('Primary sharing method failed:', windowError);
+
+        // Second try: Create and click a link
+        try {
+          const link = document.createElement('a');
+          link.href = whatsappUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Fallback for mobile if the app link doesn't work
+          if (isMobile) {
+            setTimeout(() => {
+              try {
+                const apiUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+                const fallbackLink = document.createElement('a');
+                fallbackLink.href = apiUrl;
+                fallbackLink.target = '_blank';
+                fallbackLink.rel = 'noopener noreferrer';
+                document.body.appendChild(fallbackLink);
+                fallbackLink.click();
+                document.body.removeChild(fallbackLink);
+              } catch (fallbackError) {
+                console.warn('Mobile fallback failed:', fallbackError);
+                // Last resort: Show manual instructions
+                showManualSharingInstructions(shareText);
+              }
+            }, 800);
+          }
+        } catch (linkError) {
+          console.warn('Secondary sharing method failed:', linkError);
+          // Last resort: Show manual instructions
+          showManualSharingInstructions(shareText);
+        }
       }
     } catch (error) {
       console.error('Error sharing to WhatsApp:', error);
-      alert('Could not open WhatsApp. Please try sharing manually.');
+      // Show user-friendly error with manual sharing instructions
+      showManualSharingInstructions(title);
+    }
+  };
+
+  // Helper function to show manual sharing instructions
+  const showManualSharingInstructions = (textToCopy: string) => {
+    try {
+      // Try to copy the text to clipboard
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          alert('We couldn\'t open WhatsApp automatically.\n\n' +
+                'The share text has been copied to your clipboard.\n\n' +
+                'Please open WhatsApp manually and paste the text.');
+        })
+        .catch(() => {
+          // If clipboard fails, just show instructions
+          alert('We couldn\'t open WhatsApp automatically.\n\n' +
+                'Please open WhatsApp manually and share the article link.');
+        });
+    } catch (clipboardError) {
+      // If all else fails, just show a simple message
+      alert('Please open WhatsApp manually to share this article.');
     }
   };
 
   if (!isVisible) return null;
 
   return (
-    <button
-      ref={buttonRef}
-      onClick={handleWhatsAppShare}
-      className={`fixed right-4 z-50 flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${
-        isAnimating ? 'whatsapp-pulse' : ''
-      }`}
+    <div
+      className="fixed z-50 right-0 top-1/2 -translate-y-1/2 flex flex-col items-center whatsapp-share-container"
       style={{
-        bottom: '80px',
-        transform: isVisible ? 'translateX(0)' : 'translateX(100px)'
+        transform: isVisible ? 'translateY(-50%)' : 'translate(100px, -50%)'
       }}
-      aria-label="Share on WhatsApp"
     >
-      <FaWhatsapp size={28} />
-    </button>
+      {/* Button with label */}
+      <div className="flex items-center">
+        {/* Label that appears on hover */}
+        <div className="bg-green-600 text-white py-2 px-3 rounded-l-md shadow-lg mr-1 text-sm font-medium whatsapp-label">
+          Share on WhatsApp
+        </div>
+
+        {/* Button */}
+        <button
+          ref={buttonRef}
+          onClick={handleWhatsAppShare}
+          className={`flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${
+            isAnimating ? 'whatsapp-pulse' : ''
+          }`}
+          aria-label="Share on WhatsApp"
+        >
+          <FaWhatsapp size={28} />
+        </button>
+      </div>
+
+      {/* Mobile-only label below button */}
+      <div className="text-xs bg-black bg-opacity-70 text-white px-2 py-1 mt-1 rounded md:hidden">
+        Share
+      </div>
+    </div>
   );
 }

@@ -150,6 +150,22 @@ html, body {
   animation: pulse-whatsapp 2s infinite;
 }
 
+/* WhatsApp button hover effects */
+@media (min-width: 768px) {
+  .whatsapp-share-container:hover .whatsapp-label {
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .whatsapp-label {
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    visibility: hidden;
+  }
+}
+
 /* Fix admin panel scrolling */
 .admin-content {
   max-height: calc(100vh - 80px);

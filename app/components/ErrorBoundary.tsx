@@ -16,6 +16,25 @@ export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
     // Add global error handler
     const errorHandler = (event: ErrorEvent) => {
       console.error('Global error caught:', event.error);
+
+      // Ignore certain errors that shouldn't crash the app
+      if (
+        // WhatsApp sharing related errors
+        event.message.includes('whatsapp') ||
+        event.message.includes('share') ||
+        event.message.includes('window.open') ||
+        // Common browser API errors
+        event.message.includes('ResizeObserver') ||
+        event.message.includes('Script error') ||
+        event.message.includes('network error') ||
+        // CORS related errors
+        event.message.includes('cross-origin')
+      ) {
+        console.warn('Ignoring non-critical error:', event.message);
+        event.preventDefault();
+        return;
+      }
+
       setHasError(true);
       setError(event.error);
       setErrorInfo(event.message);
@@ -26,6 +45,26 @@ export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
     // Add unhandled promise rejection handler
     const rejectionHandler = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason);
+
+      // Ignore certain promise rejections that shouldn't crash the app
+      const reasonStr = String(event.reason);
+      if (
+        // WhatsApp sharing related errors
+        reasonStr.includes('whatsapp') ||
+        reasonStr.includes('share') ||
+        reasonStr.includes('window.open') ||
+        // Common browser API errors
+        reasonStr.includes('ResizeObserver') ||
+        reasonStr.includes('Failed to fetch') ||
+        reasonStr.includes('network error') ||
+        // CORS related errors
+        reasonStr.includes('cross-origin')
+      ) {
+        console.warn('Ignoring non-critical promise rejection:', reasonStr);
+        event.preventDefault();
+        return;
+      }
+
       setHasError(true);
       setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
       setErrorInfo(String(event.reason));
@@ -64,20 +103,20 @@ export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
           <div className="flex items-center justify-center text-red-500 mb-4">
             <FiAlertTriangle size={48} />
           </div>
-          
+
           <h1 className="text-2xl font-bold text-center mb-4">Something went wrong</h1>
-          
+
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <p className="text-red-800 font-medium">Error details:</p>
             <p className="text-red-700 mt-1 text-sm font-mono break-all">
               {error?.name}: {errorInfo || error?.message || 'Unknown error'}
             </p>
           </div>
-          
+
           <p className="text-gray-600 mb-6 text-center">
             We apologize for the inconvenience. Please try refreshing the page or return to the home page.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleReset}
@@ -85,7 +124,7 @@ export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
             >
               <FiRefreshCw className="mr-2" /> Refresh Page
             </button>
-            
+
             <a
               href="/"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center justify-center"
