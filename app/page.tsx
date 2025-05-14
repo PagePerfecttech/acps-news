@@ -16,7 +16,6 @@ import { getNewsArticles, getAds } from './lib/dataService';
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showInstructions, setShowInstructions] = useState(true);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [combinedContent, setCombinedContent] = useState<Array<{ type: 'news' | 'ad', content: NewsArticle | Ad, index: number }>>([]);
@@ -111,11 +110,6 @@ export default function Home() {
   // Handle swiper slide change
   const handleSlideChange = (swiper: { activeIndex: number }) => {
     setCurrentIndex(swiper.activeIndex);
-
-    // Hide instructions after first slide change
-    if (showInstructions) {
-      setShowInstructions(false);
-    }
   };
 
   // Handle popup state change
@@ -319,15 +313,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Swipe instruction overlay - only shown initially */}
-        {showInstructions && (
-          <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-30">
-            <div className="text-center text-white bg-black bg-opacity-70 px-6 py-3 rounded-xl">
-              <p className="mb-2 font-bold">Swipe to Navigate</p>
-              <p>Swipe Up ↑ for Next • Swipe Down ↓ for Previous</p>
-            </div>
-          </div>
-        )}
+        {/* Removed swipe instruction overlay */}
       </div>
     </div>
   );

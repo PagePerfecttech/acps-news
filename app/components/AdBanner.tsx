@@ -111,10 +111,7 @@ export default function AdBanner({ ad, fullScreen = false }: AdBannerProps) {
             </div>
           </div>
 
-          {/* Swipe instruction */}
-          <div className="text-center text-xs text-gray-400 pb-4">
-            Swipe Up ↑ for Next • Swipe Down ↓ for Previous
-          </div>
+          {/* Removed swipe instruction */}
         </a>
       </div>
     );
