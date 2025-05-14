@@ -156,33 +156,20 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
         transition: 'all 0.3s ease'
       }}
     >
-      {/* Button with label */}
-      <div className="flex items-center">
-        {/* Label that appears on hover */}
-        <div className="bg-green-600 text-white py-2 px-3 rounded-l-md shadow-lg mr-1 text-sm font-medium whatsapp-label">
-          Share on WhatsApp
-        </div>
-
-        {/* Button */}
-        <button
-          ref={buttonRef}
-          onClick={handleWhatsAppShare}
-          className={`flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${
-            isAnimating ? 'whatsapp-pulse' : ''
-          }`}
-          style={{
-            boxShadow: '0 0 10px rgba(0,0,0,0.3)'
-          }}
-          aria-label="Share on WhatsApp"
-        >
-          <FaWhatsapp size={28} />
-        </button>
-      </div>
-
-      {/* Mobile-only label below button */}
-      <div className="text-xs bg-black bg-opacity-70 text-white px-2 py-1 mt-1 rounded md:hidden">
-        Share
-      </div>
+      {/* Button only - no labels */}
+      <button
+        ref={buttonRef}
+        onClick={handleWhatsAppShare}
+        className={`flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${
+          isAnimating ? 'whatsapp-pulse' : ''
+        }`}
+        style={{
+          boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+        }}
+        aria-label="Share on WhatsApp"
+      >
+        <FaWhatsapp size={28} />
+      </button>
     </div>
   );
 }
