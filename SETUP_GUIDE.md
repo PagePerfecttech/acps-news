@@ -8,7 +8,9 @@ This comprehensive guide will walk you through the process of cloning, setting u
 2. [Cloning the Repository](#cloning-the-repository)
 3. [Environment Setup](#environment-setup)
 4. [Database Configuration](#database-configuration)
-5. [Cloudinary Setup](#cloudinary-setup)
+5. [Storage Setup](#storage-setup)
+   - [Cloudinary Setup](#cloudinary-setup)
+   - [Cloudflare R2 Setup](#cloudflare-r2-setup)
 6. [Local Development](#local-development)
 7. [Customization](#customization)
 8. [Deployment](#deployment)
@@ -22,7 +24,10 @@ Before you begin, ensure you have the following installed:
 - **npm** (v9.x or later)
 - **Git**
 - A **Supabase** account (for database and authentication)
-- A **Cloudinary** account (for media storage)
+- One or more of the following for media storage:
+  - A **Cloudinary** account
+  - A **Cloudflare** account with R2 access
+  - **Supabase Storage** (included with Supabase)
 - A **Vercel** account (for deployment)
 
 ## Cloning the Repository
@@ -51,11 +56,18 @@ Before you begin, ensure you have the following installed:
    # Supabase Configuration
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   
+
    # Cloudinary Configuration
    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
    NEXT_PUBLIC_CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+   # Cloudflare R2 Configuration
+   NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+   CLOUDFLARE_R2_ACCESS_KEY_ID=your_r2_access_key_id
+   CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+   CLOUDFLARE_R2_BUCKET_NAME=your_r2_bucket_name
+   NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL=your_r2_public_url
    ```
 
 ## Database Configuration
@@ -173,16 +185,16 @@ BEGIN
   BEGIN
     INSERT INTO public.likes (news_id, user_id)
     VALUES (news_id, user_id);
-    
+
     UPDATE public.news
     SET likes = likes + 1
     WHERE id = news_id;
-    
+
     success := true;
   EXCEPTION WHEN unique_violation THEN
     success := false;
   END;
-  
+
   RETURN success;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -209,18 +221,40 @@ CREATE POLICY "Public read access" ON public.settings FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON public.ads FOR SELECT USING (true);
 
 -- Create policies for authenticated users
-CREATE POLICY "Authenticated users can insert" ON public.comments 
+CREATE POLICY "Authenticated users can insert" ON public.comments
 FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can insert" ON public.likes 
+CREATE POLICY "Authenticated users can insert" ON public.likes
 FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 ```
 
-## Cloudinary Setup
+## Storage Setup
+
+You can choose one or more storage providers for your media files. The application will automatically use the configured providers in order of preference.
+
+### Cloudinary Setup
 
 1. Create an account on [Cloudinary](https://cloudinary.com/)
 2. Navigate to Dashboard to get your Cloud Name, API Key, and API Secret
 3. Add these credentials to your `.env.local` file as shown in the Environment Setup section
+
+### Cloudflare R2 Setup
+
+1. Create a Cloudflare account if you don't have one already
+2. Navigate to R2 in the Cloudflare dashboard
+3. Create a new R2 bucket for your media files
+4. Create API tokens with appropriate permissions:
+   - Go to "R2" > "Manage R2 API Tokens"
+   - Create a new API token with read and write permissions for your bucket
+5. Set up public access for your bucket:
+   - Go to your bucket settings
+   - Enable "Public Access" and create a public bucket URL
+6. Add the following credentials to your `.env.local` file:
+   - `NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
+   - `CLOUDFLARE_R2_ACCESS_KEY_ID`: Your R2 Access Key ID
+   - `CLOUDFLARE_R2_SECRET_ACCESS_KEY`: Your R2 Secret Access Key
+   - `CLOUDFLARE_R2_BUCKET_NAME`: Your R2 bucket name
+   - `NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL`: Your R2 public bucket URL
 
 ## Local Development
 
@@ -275,8 +309,9 @@ Make sure to add all the environment variables from your `.env.local` file to yo
 
 #### Image Upload Problems
 
-- Ensure Cloudinary credentials are correct
-- Check file size limits (default is 10MB)
+- Ensure storage provider credentials are correct (Cloudinary, R2, or Supabase)
+- Check file size limits (default is 5MB for images, 50MB for videos)
+- If using Cloudflare R2, ensure public access is enabled for your bucket
 
 #### Build Errors
 

@@ -18,6 +18,7 @@
     "init-storage": "node scripts/init-storage.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.540.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.9.0",

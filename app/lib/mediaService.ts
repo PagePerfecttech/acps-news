@@ -3,10 +3,11 @@
  *
  * This service provides a unified interface for uploading media files.
  * It tries different storage providers in order of preference:
- * 1. Supabase Storage (if configured)
- * 2. Cloudinary (if configured)
- * 3. ImgBB (if configured, images only)
- * 4. Local storage fallback (for development/testing)
+ * 1. Cloudflare R2 (if configured)
+ * 2. Supabase Storage (if configured)
+ * 3. Cloudinary (if configured)
+ * 4. ImgBB (if configured, images only)
+ * 5. Local storage fallback (for development/testing)
  */
 
 // Import supabase service functions directly to avoid naming conflicts
@@ -31,8 +32,16 @@ const imgbbService = {
   isImgBBConfigured: imgbbServiceImport.isImgBBConfigured || (() => false),
 };
 
+// Import r2 service with fallbacks
+import * as r2ServiceImport from './r2Service';
+const r2Service = {
+  uploadImage: r2ServiceImport.uploadImage || (async () => ({ url: null, error: 'Cloudflare R2 service not available' })),
+  uploadVideo: r2ServiceImport.uploadVideo || (async () => ({ url: null, error: 'Cloudflare R2 service not available' })),
+  isR2Configured: r2ServiceImport.isR2Configured || (() => false),
+};
+
 // Storage provider types
-export type StorageProvider = 'supabase' | 'cloudinary' | 'imgbb' | 'local';
+export type StorageProvider = 'r2' | 'supabase' | 'cloudinary' | 'imgbb' | 'local';
 
 // Upload result interface
 export interface UploadResult {
@@ -78,6 +87,17 @@ export const uploadImage = async (
       let result: UploadResult | null = null;
 
       switch (provider) {
+        case 'r2':
+          if (r2Service.isR2Configured()) {
+            console.log('Cloudflare R2 is configured, attempting upload...');
+            const uploadResult = await r2Service.uploadImage(file, folder);
+            console.log('R2 upload result:', uploadResult);
+            result = { ...uploadResult, provider };
+          } else {
+            console.log('Cloudflare R2 is not configured, skipping');
+          }
+          break;
+
         case 'supabase':
           if (await isSupabaseConfigured()) {
             console.log('Supabase is configured, attempting upload...');
@@ -167,16 +187,29 @@ export const uploadVideo = async (
       let result: UploadResult | null = null;
 
       switch (provider) {
+        case 'r2':
+          if (r2Service.isR2Configured()) {
+            console.log('Cloudflare R2 is configured, attempting video upload...');
+            const uploadResult = await r2Service.uploadVideo(file);
+            console.log('R2 video upload result:', uploadResult);
+            result = { ...uploadResult, provider };
+          }
+          break;
+
         case 'supabase':
           if (await isSupabaseConfigured()) {
+            console.log('Supabase is configured, attempting video upload...');
             const uploadResult = await uploadVideoToSupabase(file);
+            console.log('Supabase video upload result:', uploadResult);
             result = { ...uploadResult, provider };
           }
           break;
 
         case 'cloudinary':
           if (cloudinaryService.isCloudinaryConfigured()) {
+            console.log('Cloudinary is configured, attempting video upload...');
             const uploadResult = await cloudinaryService.uploadVideo(file);
+            console.log('Cloudinary video upload result:', uploadResult);
             result = { ...uploadResult, provider };
           }
           break;
@@ -213,8 +246,8 @@ export const uploadVideo = async (
  * @returns Array of providers in order of preference
  */
 const determineProviderOrder = (preferredProvider?: StorageProvider): StorageProvider[] => {
-  // Prioritize Cloudinary over Supabase
-  const defaultOrder: StorageProvider[] = ['cloudinary', 'supabase', 'imgbb', 'local'];
+  // Prioritize R2 over other providers
+  const defaultOrder: StorageProvider[] = ['r2', 'cloudinary', 'supabase', 'imgbb', 'local'];
 
   if (!preferredProvider) {
     return defaultOrder;
@@ -269,6 +302,7 @@ const storeFileLocally = async (
  */
 export const getConfiguredProviders = async (): Promise<Record<StorageProvider, boolean>> => {
   return {
+    r2: r2Service.isR2Configured(),
     supabase: await isSupabaseConfigured(),
     cloudinary: cloudinaryService.isCloudinaryConfigured(),
     imgbb: imgbbService.isImgBBConfigured(),
