@@ -5,9 +5,10 @@
  * It tries different storage providers in order of preference:
  * 1. Cloudflare R2 (if configured)
  * 2. Supabase Storage (if configured)
- * 3. Cloudinary (if configured)
- * 4. ImgBB (if configured, images only)
- * 5. Local storage fallback (for development/testing)
+ * 3. ImgBB (if configured, images only)
+ * 4. Local storage fallback (for development/testing)
+ *
+ * Note: Cloudinary has been removed as a storage provider
  */
 
 // Import supabase service functions directly to avoid naming conflicts
@@ -17,13 +18,7 @@ import {
   isSupabaseConfigured
 } from './supabaseService';
 
-// Import cloudinary service with fallbacks
-import * as cloudinaryServiceImport from './cloudinaryService';
-const cloudinaryService = {
-  uploadImage: cloudinaryServiceImport.uploadImage || (async () => ({ url: null, error: 'Cloudinary service not available' })),
-  uploadVideo: cloudinaryServiceImport.uploadVideo || (async () => ({ url: null, error: 'Cloudinary service not available' })),
-  isCloudinaryConfigured: cloudinaryServiceImport.isCloudinaryConfigured || (() => false),
-};
+// Cloudinary service has been removed
 
 // Import imgbb service with fallbacks
 import * as imgbbServiceImport from './imgbbService';
@@ -41,7 +36,7 @@ const r2Service = {
 };
 
 // Storage provider types
-export type StorageProvider = 'r2' | 'supabase' | 'cloudinary' | 'imgbb' | 'local';
+export type StorageProvider = 'r2' | 'supabase' | 'imgbb' | 'local';
 
 // Upload result interface
 export interface UploadResult {
@@ -109,16 +104,7 @@ export const uploadImage = async (
           }
           break;
 
-        case 'cloudinary':
-          if (cloudinaryService.isCloudinaryConfigured()) {
-            console.log('Cloudinary is configured, attempting upload...');
-            const uploadResult = await cloudinaryService.uploadImage(file, folder);
-            console.log('Cloudinary upload result:', uploadResult);
-            result = { ...uploadResult, provider };
-          } else {
-            console.log('Cloudinary is not configured, skipping');
-          }
-          break;
+        // Cloudinary case removed
 
         case 'imgbb':
           if (imgbbService.isImgBBConfigured()) {
@@ -205,14 +191,7 @@ export const uploadVideo = async (
           }
           break;
 
-        case 'cloudinary':
-          if (cloudinaryService.isCloudinaryConfigured()) {
-            console.log('Cloudinary is configured, attempting video upload...');
-            const uploadResult = await cloudinaryService.uploadVideo(file);
-            console.log('Cloudinary video upload result:', uploadResult);
-            result = { ...uploadResult, provider };
-          }
-          break;
+        // Cloudinary case removed
 
         case 'local':
           // Local storage fallback (for development/testing)
@@ -247,7 +226,7 @@ export const uploadVideo = async (
  */
 const determineProviderOrder = (preferredProvider?: StorageProvider): StorageProvider[] => {
   // Prioritize R2 over other providers
-  const defaultOrder: StorageProvider[] = ['r2', 'cloudinary', 'supabase', 'imgbb', 'local'];
+  const defaultOrder: StorageProvider[] = ['r2', 'supabase', 'imgbb', 'local'];
 
   if (!preferredProvider) {
     return defaultOrder;
@@ -304,7 +283,6 @@ export const getConfiguredProviders = async (): Promise<Record<StorageProvider, 
   return {
     r2: r2Service.isR2Configured(),
     supabase: await isSupabaseConfigured(),
-    cloudinary: cloudinaryService.isCloudinaryConfigured(),
     imgbb: imgbbService.isImgBBConfigured(),
     local: true, // Local storage is always available
   };

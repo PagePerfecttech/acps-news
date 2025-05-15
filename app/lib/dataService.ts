@@ -578,32 +578,29 @@ export const resetToDefaultData = (): void => {
 
 // Get all ads
 export const getAds = async (): Promise<Ad[]> => {
-  // Try to get data from Supabase first
+  // Try to get data from Supabase first using the admin API
   try {
     // Import dynamically to avoid circular dependencies
-    const { supabase, isSupabaseConfigured } = await import('./supabase');
+    const { fetchAds, isSupabaseConfigured } = await import('./supabaseService');
 
     // Check if Supabase is configured
     const configured = await isSupabaseConfigured();
 
     if (configured) {
-      console.log('Fetching ads from Supabase...');
-      const { data, error } = await supabase
-        .from('ads')
-        .select('*')
-        .eq('active', true);
+      console.log('Fetching ads from Supabase using admin API...');
+      const ads = await fetchAds();
 
-      if (!error && data && data.length > 0) {
-        console.log(`Retrieved ${data.length} ads from Supabase`);
+      if (ads && ads.length > 0) {
+        console.log(`Retrieved ${ads.length} ads from Supabase`);
 
         // Update localStorage with the latest data
         if (typeof window !== 'undefined') {
-          localStorage.setItem('flipnews_ads', JSON.stringify(data));
+          localStorage.setItem('flipnews_ads', JSON.stringify(ads));
         }
 
-        return data;
+        return ads;
       } else {
-        console.warn('Failed to fetch ads from Supabase:', error);
+        console.warn('No ads found in Supabase');
       }
     }
   } catch (error) {
@@ -632,16 +629,16 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
-    // Try to update in Supabase first
+    // Try to update in Supabase first using the admin API
     try {
       // Import dynamically to avoid circular dependencies
-      const { supabase, isSupabaseConfigured } = await import('./supabase');
+      const { updateAdInSupabase, isSupabaseConfigured } = await import('./supabaseService');
 
       // Check if Supabase is configured
       const configured = await isSupabaseConfigured();
 
       if (configured) {
-        console.log('Updating ad in Supabase:', updatedAd.title);
+        console.log('Updating ad in Supabase using admin API:', updatedAd.title);
 
         // Prepare the ad data
         const adData = {
@@ -653,28 +650,30 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
           video_type: updatedAd.video_type,
           link_url: updatedAd.link_url,
           frequency: updatedAd.frequency || 5,
-          active: updatedAd.active !== false,
-          updated_at: new Date().toISOString()
+          active: updatedAd.active !== false
         };
 
         console.log('Updating ad with data:', adData);
 
-        try {
-          // Update the ad in Supabase
-          const { error } = await supabase
-            .from('ads')
-            .update(adData)
-            .eq('id', updatedAd.id);
+        // Use the admin API to bypass RLS
+        const result = await updateAdInSupabase(updatedAd.id, adData);
 
-          if (error) {
-            console.error('Error updating ad in Supabase:', error);
-            throw error;
-          } else {
-            console.log('Ad updated in Supabase successfully');
+        if (result) {
+          console.log('Ad updated in Supabase successfully');
+
+          // Also update in localStorage
+          const adsPromise = getAds();
+          const ads = await adsPromise;
+          const index = ads.findIndex(ad => ad.id === updatedAd.id);
+
+          if (index !== -1) {
+            ads[index] = updatedAd;
+            localStorage.setItem('flipnews_ads', JSON.stringify(ads));
           }
-        } catch (updateError) {
-          console.error('Exception during Supabase update:', updateError);
-          // Continue to localStorage as fallback
+
+          return true;
+        } else {
+          console.error('Failed to update ad in Supabase');
         }
       }
     } catch (supabaseError) {
@@ -682,7 +681,7 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
       // Continue to update localStorage even if Supabase fails
     }
 
-    // Also update in localStorage as a fallback
+    // Fall back to localStorage
     const adsPromise = getAds();
     const ads = await adsPromise;
     const index = ads.findIndex(ad => ad.id === updatedAd.id);
@@ -703,16 +702,16 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
-    // Try to add to Supabase first
+    // Try to add to Supabase first using the admin API
     try {
       // Import dynamically to avoid circular dependencies
-      const { supabase, isSupabaseConfigured } = await import('./supabase');
+      const { addAdToSupabase, isSupabaseConfigured } = await import('./supabaseService');
 
       // Check if Supabase is configured
       const configured = await isSupabaseConfigured();
 
       if (configured) {
-        console.log('Adding ad to Supabase:', newAd.title);
+        console.log('Adding ad to Supabase using admin API:', newAd.title);
 
         // Prepare the ad data
         const adData = {
@@ -724,44 +723,29 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
           video_type: newAd.video_type,
           link_url: newAd.link_url,
           frequency: newAd.frequency || 5,
-          active: newAd.active !== false,
-          created_at: newAd.created_at || new Date().toISOString(),
-          updated_at: newAd.updated_at || new Date().toISOString()
+          active: newAd.active !== false
         };
 
         console.log('Inserting ad with data:', adData);
 
-        try {
-          // Insert the ad into Supabase
-          const { data, error } = await supabase
-            .from('ads')
-            .insert(adData)
-            .select()
-            .single();
+        // Use the admin API to bypass RLS
+        const result = await addAdToSupabase(adData);
 
-          if (error) {
-            console.error('Error adding ad to Supabase:', error);
+        if (result) {
+          console.log('Ad added to Supabase successfully:', result.id);
 
-            // Try a simpler insert without select
-            const { error: simpleError } = await supabase
-              .from('ads')
-              .insert(adData);
+          // Update the ad ID with the one from Supabase
+          newAd.id = result.id;
 
-            if (simpleError) {
-              console.error('Error with simple insert:', simpleError);
-              throw simpleError;
-            } else {
-              console.log('Ad added to Supabase with simple insert (ID unknown)');
-            }
-          } else {
-            console.log('Ad added to Supabase successfully:', data.id);
+          // Also update in localStorage
+          const adsPromise = getAds();
+          const ads = await adsPromise;
+          ads.unshift(newAd); // Add to the beginning of the array
+          localStorage.setItem('flipnews_ads', JSON.stringify(ads));
 
-            // Update the ad ID with the one from Supabase
-            newAd.id = data.id;
-          }
-        } catch (insertError) {
-          console.error('Exception during Supabase insert:', insertError);
-          // Continue to localStorage as fallback
+          return true;
+        } else {
+          console.error('Failed to add ad to Supabase');
         }
       }
     } catch (supabaseError) {
@@ -769,7 +753,7 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
       // Continue to add to localStorage even if Supabase fails
     }
 
-    // Also add to localStorage as a fallback
+    // Fall back to localStorage
     const adsPromise = getAds();
     const ads = await adsPromise;
     ads.unshift(newAd); // Add to the beginning of the array
@@ -786,27 +770,32 @@ export const deleteAd = async (id: string): Promise<boolean> => {
   if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
 
   try {
-    // Try to delete from Supabase first
+    // Try to delete from Supabase first using the admin API
     try {
       // Import dynamically to avoid circular dependencies
-      const { supabase, isSupabaseConfigured } = await import('./supabase');
+      const { deleteAdFromSupabase, isSupabaseConfigured } = await import('./supabaseService');
 
       // Check if Supabase is configured
       const configured = await isSupabaseConfigured();
 
       if (configured) {
-        console.log('Deleting ad from Supabase:', id);
+        console.log('Deleting ad from Supabase using admin API:', id);
 
-        // Delete the ad from Supabase
-        const { error } = await supabase
-          .from('ads')
-          .delete()
-          .eq('id', id);
+        // Use the admin API to bypass RLS
+        const success = await deleteAdFromSupabase(id);
 
-        if (error) {
-          console.error('Error deleting ad from Supabase:', error);
-        } else {
+        if (success) {
           console.log('Ad deleted from Supabase successfully');
+
+          // Also delete from localStorage
+          const adsPromise = getAds();
+          const ads = await adsPromise;
+          const filteredAds = ads.filter(ad => ad.id !== id);
+          localStorage.setItem('flipnews_ads', JSON.stringify(filteredAds));
+
+          return true;
+        } else {
+          console.error('Failed to delete ad from Supabase');
         }
       }
     } catch (supabaseError) {
@@ -814,7 +803,7 @@ export const deleteAd = async (id: string): Promise<boolean> => {
       // Continue to delete from localStorage even if Supabase fails
     }
 
-    // Also delete from localStorage as a fallback
+    // Fall back to localStorage
     const adsPromise = getAds();
     const ads = await adsPromise;
     const filteredAds = ads.filter(ad => ad.id !== id);

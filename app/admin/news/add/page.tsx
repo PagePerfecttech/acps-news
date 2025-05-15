@@ -259,15 +259,34 @@ export default function AddNewsPage() {
 
       console.log('Adding new article with full details:', JSON.stringify(newArticle, null, 2));
 
-      // Add the article using the server-side API
-      console.log('Calling server-side API to add news article...');
+      // Add the article using the admin API endpoint to bypass RLS
+      console.log('Calling admin API to add news article...');
 
-      const response = await fetch('/api/news/add', {
+      // Find the category ID from the category name
+      const categoryObj = categories.find(c => c.name === formData.category);
+      if (!categoryObj) {
+        throw new Error('Selected category not found');
+      }
+
+      // Prepare the article data for the admin API
+      const articleData = {
+        title: formData.title,
+        content: formData.content,
+        summary: formData.summary,
+        category_id: categoryObj.id, // Use the actual category ID
+        author: formData.author,
+        image_url: formData.image_url || undefined,
+        video_url: formData.video_url || undefined,
+        video_type: formData.video_type,
+        published: formData.published
+      };
+
+      const response = await fetch('/api/admin/news', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newArticle),
+        body: JSON.stringify(articleData),
       });
 
       const result = await response.json();

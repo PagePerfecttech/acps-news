@@ -8,7 +8,8 @@ const nextConfig = {
       'flipnews.vercel.app',
       'tnaqvbrflguwpeafwclz.supabase.co',
       'res.cloudinary.com',
-      'dejesejon.cloudinary.com'
+      'dejesejon.cloudinary.com',
+      'pub-e7ff7485d109499f9164e5959b53f7dc.r2.dev'
     ],
     remotePatterns: [
       {
@@ -18,6 +19,10 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
       },
     ],
     unoptimized: true,

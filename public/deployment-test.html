@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlipNEWS Deployment Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #0055b3;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .success {
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .error {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    button {
+      background-color: #0055b3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #003b7a;
+    }
+    #result {
+      margin-top: 20px;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>FlipNEWS Deployment Test</h1>
+  
+  <div class="card">
+    <h2>Supabase Connection Test</h2>
+    <p>Click the button below to test the connection to Supabase:</p>
+    <button id="test-supabase-btn">Test Supabase Connection</button>
+    <div id="supabase-result">No test run yet.</div>
+  </div>
+  
+  <div class="card">
+    <h2>Cloudflare R2 Test</h2>
+    <p>Click the button below to test the connection to Cloudflare R2:</p>
+    <button id="test-cloudflare-btn">Test Cloudflare R2 Connection</button>
+    <div id="cloudflare-result">No test run yet.</div>
+  </div>
+  
+  <div class="card">
+    <h2>Environment Variables</h2>
+    <p>Click the button below to check the environment variables:</p>
+    <button id="check-env-btn">Check Environment Variables</button>
+    <div id="env-result">No check run yet.</div>
+  </div>
+  
+  <script>
+    // Test Supabase connection
+    async function testSupabaseConnection() {
+      const resultDiv = document.getElementById('supabase-result');
+      resultDiv.innerHTML = 'Testing Supabase connection...';
+      
+      try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `<span class="success">✅ Successfully connected to Supabase!</span>`;
+          resultDiv.innerHTML += `<p>Connection status: ${data.data.connection.status}</p>`;
+          resultDiv.innerHTML += `<p>Message: ${data.data.connection.message}</p>`;
+          resultDiv.innerHTML += `<p>Timestamp: ${new Date(data.data.timestamp).toLocaleString()}</p>`;
+        } else {
+          resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error || 'Unknown error'}</span>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+      }
+    }
+    
+    // Test Cloudflare R2 connection
+    async function testCloudflareConnection() {
+      const resultDiv = document.getElementById('cloudflare-result');
+      resultDiv.innerHTML = 'Testing Cloudflare R2 connection...';
+      
+      try {
+        const response = await fetch('/api/storage/check');
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `<span class="success">✅ Cloudflare R2 configuration check complete!</span>`;
+          resultDiv.innerHTML += `<p>R2 configured: ${data.r2Configured ? 'Yes' : 'No'}</p>`;
+          resultDiv.innerHTML += `<p>Bucket name: ${data.bucketName || 'Not available'}</p>`;
+          resultDiv.innerHTML += `<p>Public URL: ${data.publicUrl || 'Not available'}</p>`;
+        } else {
+          resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error || 'Unknown error'}</span>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+      }
+    }
+    
+    // Check environment variables
+    async function checkEnvironmentVariables() {
+      const resultDiv = document.getElementById('env-result');
+      resultDiv.innerHTML = 'Checking environment variables...';
+      
+      try {
+        const response = await fetch('/api/env-check');
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `<span class="success">✅ Environment variables check complete!</span>`;
+          resultDiv.innerHTML += `<p>Supabase URL: ${data.supabaseUrl ? 'Set' : 'Not set'}</p>`;
+          resultDiv.innerHTML += `<p>Supabase Anon Key: ${data.supabaseAnonKey ? 'Set' : 'Not set'}</p>`;
+          resultDiv.innerHTML += `<p>Supabase Service Role Key: ${data.supabaseServiceRoleKey ? 'Set' : 'Not set'}</p>`;
+          resultDiv.innerHTML += `<p>Cloudflare Account ID: ${data.cloudflareAccountId ? 'Set' : 'Not set'}</p>`;
+          resultDiv.innerHTML += `<p>Cloudflare R2 Bucket: ${data.cloudflareR2Bucket ? 'Set' : 'Not set'}</p>`;
+        } else {
+          resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error || 'Unknown error'}</span>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('test-supabase-btn').addEventListener('click', testSupabaseConnection);
+      document.getElementById('test-cloudflare-btn').addEventListener('click', testCloudflareConnection);
+      document.getElementById('check-env-btn').addEventListener('click', checkEnvironmentVariables);
+    });
+  </script>
+</body>
+</html>

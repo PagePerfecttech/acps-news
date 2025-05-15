@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install cloudinary && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "init-db": "node scripts/init-database.js",
@@ -15,10 +15,11 @@
     "fix-users": "node scripts/fix-users-table.js",
     "test-rss": "node scripts/test-rss-feeds.js",
     "init-categories": "node scripts/init-categories.js",
-    "init-storage": "node scripts/init-storage.js"
+    "init-storage": "node scripts/init-storage.js",
+    "deploy": "node deploy.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/client-s3": "^3.810.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.9.0",

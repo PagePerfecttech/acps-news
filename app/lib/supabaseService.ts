@@ -184,38 +184,8 @@ export const fetchAllComments = async () => {
   }
 };
 
-// Fetch all ads
-export const fetchAds = async (): Promise<Ad[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('ads')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching ads:', error);
-      return [];
-    }
-
-    return data.map(ad => ({
-      id: ad.id,
-      title: ad.title,
-      description: ad.description,
-      image_url: ad.image_url,
-      video_url: ad.video_url,
-      video_type: ad.video_type,
-      text_content: ad.text_content,
-      link_url: ad.link_url,
-      frequency: ad.frequency,
-      active: ad.active,
-      created_at: ad.created_at,
-      updated_at: ad.updated_at
-    }));
-  } catch (error) {
-    console.error('Error in fetchAds:', error);
-    return [];
-  }
-};
+// Legacy function - replaced by the admin API version below
+// This comment is kept to maintain code structure
 
 // Approve a comment
 export const approveComment = async (commentId: string): Promise<boolean> => {
@@ -421,17 +391,16 @@ export const hasUserLikedArticle = async (articleId: string, ipAddress: string):
 // Fetch all categories
 export const fetchCategories = async (): Promise<Category[]> => {
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name', { ascending: true });
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch('/api/admin/categories');
+    const result = await response.json();
 
-    if (error) {
-      console.error('Error fetching categories:', error);
+    if (!result.success) {
+      console.error('Error fetching categories:', result.error);
       return [];
     }
 
-    return data;
+    return result.data;
   } catch (error) {
     console.error('Error in fetchCategories:', error);
     return [];
@@ -441,25 +410,26 @@ export const fetchCategories = async (): Promise<Category[]> => {
 // Add a new category
 export const addCategoryToSupabase = async (category: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<Category | null> => {
   try {
-    const now = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from('categories')
-      .insert({
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         name: category.name,
-        slug: category.slug,
-        created_at: now,
-        updated_at: now
+        slug: category.slug
       })
-      .select()
-      .single();
+    });
 
-    if (error) {
-      console.error('Error adding category:', error);
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error adding category:', result.error);
       return null;
     }
 
-    return data;
+    return result.data;
   } catch (error) {
     console.error('Error in addCategoryToSupabase:', error);
     return null;
@@ -469,24 +439,26 @@ export const addCategoryToSupabase = async (category: Omit<Category, 'id' | 'cre
 // Update a category
 export const updateCategoryInSupabase = async (id: string, category: Partial<Category>): Promise<Category | null> => {
   try {
-    const now = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from('categories')
-      .update({
-        ...category,
-        updated_at: now
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch(`/api/admin/categories/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: category.name,
+        slug: category.slug
       })
-      .eq('id', id)
-      .select()
-      .single();
+    });
 
-    if (error) {
-      console.error('Error updating category:', error);
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error updating category:', result.error);
       return null;
     }
 
-    return data;
+    return result.data;
   } catch (error) {
     console.error('Error in updateCategoryInSupabase:', error);
     return null;
@@ -496,13 +468,15 @@ export const updateCategoryInSupabase = async (id: string, category: Partial<Cat
 // Delete a category
 export const deleteCategoryFromSupabase = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id);
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch(`/api/admin/categories/${id}`, {
+      method: 'DELETE'
+    });
 
-    if (error) {
-      console.error('Error deleting category:', error);
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error deleting category:', result.error);
       return false;
     }
 
@@ -657,6 +631,101 @@ export const uploadVideo = async (
   } catch (error: unknown) {
     console.error('Error in uploadVideo:', error);
     return { url: null, error: error.message || 'Unknown error' };
+  }
+};
+
+// Ad Management Functions
+
+// Fetch all ads
+export const fetchAds = async (): Promise<Ad[]> => {
+  try {
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch('/api/admin/ads');
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error fetching ads:', result.error);
+      return [];
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in fetchAds:', error);
+    return [];
+  }
+};
+
+// Add a new ad
+export const addAdToSupabase = async (ad: Omit<Ad, 'id' | 'created_at' | 'updated_at'>): Promise<Ad | null> => {
+  try {
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch('/api/admin/ads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(ad)
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error adding ad:', result.error);
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in addAdToSupabase:', error);
+    return null;
+  }
+};
+
+// Update an ad
+export const updateAdInSupabase = async (id: string, ad: Partial<Ad>): Promise<Ad | null> => {
+  try {
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch(`/api/admin/ads/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(ad)
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error updating ad:', result.error);
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in updateAdInSupabase:', error);
+    return null;
+  }
+};
+
+// Delete an ad
+export const deleteAdFromSupabase = async (id: string): Promise<boolean> => {
+  try {
+    // Use the admin API endpoint to bypass RLS
+    const response = await fetch(`/api/admin/ads/${id}`, {
+      method: 'DELETE'
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('Error deleting ad:', result.error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteAdFromSupabase:', error);
+    return false;
   }
 };
 

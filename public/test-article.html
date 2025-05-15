@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Article Creation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #0055b3;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .success {
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .error {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    button {
+      background-color: #0055b3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #003b7a;
+    }
+    #result {
+      margin-top: 20px;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .article-preview {
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background-color: white;
+    }
+    .article-preview img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Article Creation</h1>
+  
+  <div class="card">
+    <h2>Add Test Article</h2>
+    <p>Click the button below to add a test article to the Supabase database:</p>
+    <button id="add-article-btn">Add Test Article</button>
+    <div id="result">No article created yet.</div>
+  </div>
+  
+  <div class="card">
+    <h2>View Articles</h2>
+    <p>Click the button below to view all articles in the database:</p>
+    <button id="view-articles-btn">View Articles</button>
+    <div id="articles-result">No articles loaded yet.</div>
+  </div>
+  
+  <script>
+    // Add a test article
+    async function addTestArticle() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = 'Adding test article...';
+      
+      try {
+        const response = await fetch('/api/admin/add-test-article', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `<span class="success">✅ Article created successfully!</span>`;
+          resultDiv.innerHTML += `<p>Title: ${data.article.title}</p>`;
+          resultDiv.innerHTML += `<p>Category: ${data.category}</p>`;
+          
+          // Show article preview
+          resultDiv.innerHTML += `<div class="article-preview">
+            <h3>${data.article.title}</h3>
+            <p><strong>Summary:</strong> ${data.article.summary}</p>
+            <img src="${data.article.image_url}" alt="Article image">
+            <div>${data.article.content}</div>
+          </div>`;
+        } else {
+          resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error}</span>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+      }
+    }
+    
+    // View all articles
+    async function viewArticles() {
+      const articlesResultDiv = document.getElementById('articles-result');
+      articlesResultDiv.innerHTML = 'Loading articles...';
+      
+      try {
+        const response = await fetch('/api/news');
+        const data = await response.json();
+        
+        if (data.data && Array.isArray(data.data)) {
+          if (data.data.length === 0) {
+            articlesResultDiv.innerHTML = 'No articles found in the database.';
+            return;
+          }
+          
+          articlesResultDiv.innerHTML = `<p>Found ${data.data.length} articles:</p>`;
+          
+          // Display articles
+          data.data.forEach(article => {
+            articlesResultDiv.innerHTML += `<div class="article-preview">
+              <h3>${article.title}</h3>
+              <p><strong>Author:</strong> ${article.author || 'Unknown'}</p>
+              <p><strong>Created:</strong> ${new Date(article.created_at).toLocaleString()}</p>
+              ${article.image_url ? `<img src="${article.image_url}" alt="Article image">` : ''}
+              <p>${article.summary || 'No summary available.'}</p>
+            </div>`;
+          });
+        } else {
+          articlesResultDiv.innerHTML = `<span class="error">❌ Error: ${data.error || 'Unknown error'}</span>`;
+        }
+      } catch (error) {
+        articlesResultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('add-article-btn').addEventListener('click', addTestArticle);
+      document.getElementById('view-articles-btn').addEventListener('click', viewArticles);
+    });
+  </script>
+</body>
+</html>

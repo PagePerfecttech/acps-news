@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloudflare R2 Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #0055b3;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .success {
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .error {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    button {
+      background-color: #0055b3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #003b7a;
+    }
+    #result {
+      margin-top: 20px;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .file-input {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cloudflare R2 Integration Test</h1>
+  
+  <div class="card">
+    <h2>Configuration</h2>
+    <div id="config-status">Checking configuration...</div>
+  </div>
+  
+  <div class="card">
+    <h2>Upload Test</h2>
+    <p>Select a file to upload to Cloudflare R2:</p>
+    <div class="file-input">
+      <input type="file" id="file-input">
+    </div>
+    <button id="upload-btn">Upload to R2</button>
+    <div id="upload-result"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Test Results</h2>
+    <div id="result">No tests run yet.</div>
+  </div>
+  
+  <script>
+    // Check if Cloudflare R2 is configured
+    async function checkConfiguration() {
+      const configStatus = document.getElementById('config-status');
+      
+      try {
+        const response = await fetch('/api/storage/check');
+        const data = await response.json();
+        
+        if (data.r2Configured) {
+          configStatus.innerHTML = '<span class="success">✅ Cloudflare R2 is configured</span>';
+          configStatus.innerHTML += `<p>Bucket: ${data.bucketName || 'Not available'}</p>`;
+          configStatus.innerHTML += `<p>Public URL: ${data.publicUrl || 'Not available'}</p>`;
+        } else {
+          configStatus.innerHTML = '<span class="error">❌ Cloudflare R2 is not configured</span>';
+          configStatus.innerHTML += '<p>Please check your environment variables.</p>';
+        }
+      } catch (error) {
+        configStatus.innerHTML = `<span class="error">❌ Error checking configuration: ${error.message}</span>`;
+      }
+    }
+    
+    // Upload a file to Cloudflare R2
+    async function uploadFile() {
+      const fileInput = document.getElementById('file-input');
+      const uploadResult = document.getElementById('upload-result');
+      const resultDiv = document.getElementById('result');
+      
+      if (!fileInput.files || fileInput.files.length === 0) {
+        uploadResult.innerHTML = '<span class="error">Please select a file first</span>';
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      uploadResult.innerHTML = `Uploading ${file.name}...`;
+      
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'test-uploads');
+        
+        const response = await fetch('/api/upload/r2', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.url) {
+          uploadResult.innerHTML = `<span class="success">✅ File uploaded successfully!</span>`;
+          uploadResult.innerHTML += `<p>URL: <a href="${data.url}" target="_blank">${data.url}</a></p>`;
+          
+          // Show the image if it's an image file
+          if (file.type.startsWith('image/')) {
+            uploadResult.innerHTML += `<p><img src="${data.url}" alt="Uploaded image" style="max-width: 100%; max-height: 300px;"></p>`;
+          }
+          
+          resultDiv.innerHTML = '<span class="success">✅ Cloudflare R2 integration is working correctly!</span>';
+        } else {
+          uploadResult.innerHTML = `<span class="error">❌ Upload failed: ${data.error || 'Unknown error'}</span>`;
+          resultDiv.innerHTML = '<span class="error">❌ Cloudflare R2 integration test failed</span>';
+        }
+      } catch (error) {
+        uploadResult.innerHTML = `<span class="error">❌ Upload error: ${error.message}</span>`;
+        resultDiv.innerHTML = '<span class="error">❌ Cloudflare R2 integration test failed</span>';
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      checkConfiguration();
+      
+      document.getElementById('upload-btn').addEventListener('click', uploadFile);
+    });
+  </script>
+</body>
+</html>

@@ -25,14 +25,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Get settings to check admin credentials
-      const settings = await import('../../lib/settingsService').then(module => module.getSettings());
+      // Hardcoded admin credentials for now
+      const adminEmail = 'admin@flipnews.com';
+      const adminPassword = 'admin123';
 
-      // Check if credentials match the ones in settings
-      if (formData.email === settings.admin_email && formData.password === settings.admin_password) {
+      // Check if credentials match
+      if (formData.email === adminEmail && formData.password === adminPassword) {
         // Set auth token in localStorage
         localStorage.setItem('flipnews_auth', 'true');
-        localStorage.setItem('flipnews_admin_name', settings.admin_name || 'Admin');
+        localStorage.setItem('flipnews_admin_name', 'Admin');
 
         // Redirect to admin dashboard
         router.push('/admin');
@@ -69,6 +70,12 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+            <p className="text-sm text-gray-600 font-medium">Demo Credentials:</p>
+            <p className="text-sm text-gray-600">Email: admin@flipnews.com</p>
+            <p className="text-sm text-gray-600">Password: admin123</p>
+          </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
