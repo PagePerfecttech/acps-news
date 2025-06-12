@@ -8,10 +8,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import cloudinaryService from './cloudinaryService';
 import imgbbService from './imgbbService';
+import cloudflareR2Service from './cloudflareR2Service';
 import { isSupabaseConfigured } from './supabase';
 
 // Types
-export type StorageProvider = 'supabase' | 'cloudinary' | 'imgbb' | 'local';
+export type StorageProvider = 'cloudflare-r2' | 'supabase' | 'cloudinary' | 'imgbb' | 'local';
 
 export type UploadResult = {
   url: string | null;
@@ -21,6 +22,7 @@ export type UploadResult = {
 
 // Default provider order (can be overridden)
 const DEFAULT_PROVIDER_ORDER: StorageProvider[] = [
+  'cloudflare-r2',
   'cloudinary',
   'supabase',
   'imgbb',
@@ -74,6 +76,17 @@ export const uploadImage = async (
       let result: UploadResult | null = null;
 
       switch (provider) {
+        case 'cloudflare-r2':
+          if (cloudflareR2Service.isR2Configured()) {
+            console.log('Cloudflare R2 is configured, attempting upload...');
+            const uploadResult = await cloudflareR2Service.uploadImage(file, folder);
+            console.log('Cloudflare R2 upload result:', uploadResult);
+            result = { ...uploadResult, provider };
+          } else {
+            console.log('Cloudflare R2 is not configured, skipping');
+          }
+          break;
+
         case 'supabase':
           if (await isSupabaseConfigured()) {
             console.log('Supabase is configured, attempting upload...');
@@ -337,6 +350,7 @@ const storeFileLocally = async (
  */
 export const getConfiguredProviders = async (): Promise<Record<StorageProvider, boolean>> => {
   return {
+    'cloudflare-r2': cloudflareR2Service.isR2Configured(),
     supabase: await isSupabaseConfigured(),
     cloudinary: cloudinaryService.isCloudinaryConfigured(),
     imgbb: imgbbService.isImgBBConfigured(),
