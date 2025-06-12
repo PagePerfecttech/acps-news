@@ -244,3 +244,30 @@ html, body {
   right: 20px;
   z-index: 50;
 }
+
+/* Background logo styles - will be dynamically updated */
+.content-with-logo-bg {
+  position: relative;
+}
+
+.content-with-logo-bg::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 70%;
+  background-image: var(--background-logo-url, url('/logo-background.svg'));
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  opacity: var(--background-logo-opacity, 0.1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.content-with-logo-bg > * {
+  position: relative;
+  z-index: 2;
+}

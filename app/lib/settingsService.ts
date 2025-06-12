@@ -8,6 +8,8 @@ export interface SiteSettings {
   secondary_color: string;
   share_link: string;
   logo_url?: string;
+  background_logo_url?: string;
+  background_logo_opacity?: number;
   black_strip_text?: string;
   admin_email?: string;
   admin_password?: string;
@@ -18,13 +20,15 @@ export interface SiteSettings {
 
 // Default settings
 const defaultSettings: SiteSettings = {
-  site_name: 'FlipNews',
+  site_name: 'Vizag News',
   primary_color: '#FACC15', // Yellow-500
   secondary_color: '#000000',
-  share_link: 'https://flipnews.vercel.app',
+  share_link: 'https://vizag-news.vercel.app',
   logo_url: '',
-  black_strip_text: 'No.1 తెలుగు న్యూస్ డైలీ',
-  admin_email: 'admin@flipnews.com',
+  background_logo_url: '/logo-background.svg',
+  background_logo_opacity: 0.1,
+  black_strip_text: 'No.1 విజయవాడ న్యూస్ డైలీ',
+  admin_email: 'admin@vizagnews.com',
   admin_password: 'admin123',
   admin_name: 'Admin',
 };
@@ -85,6 +89,8 @@ export const getSettings = async (): Promise<SiteSettings> => {
               secondary_color: settingsObj.secondary_color || settingsObj.theme_secondary_color || defaultSettings.secondary_color,
               share_link: settingsObj.share_link || defaultSettings.share_link,
               logo_url: settingsObj.logo_url || defaultSettings.logo_url,
+              background_logo_url: settingsObj.background_logo_url || defaultSettings.background_logo_url,
+              background_logo_opacity: parseFloat(settingsObj.background_logo_opacity) || defaultSettings.background_logo_opacity,
               black_strip_text: settingsObj.black_strip_text || defaultSettings.black_strip_text,
               admin_email: settingsObj.admin_email || defaultSettings.admin_email,
               admin_password: settingsObj.admin_password || defaultSettings.admin_password,
@@ -150,6 +156,14 @@ export const saveSettings = async (settings: SiteSettings): Promise<boolean> => 
 
         if (settings.logo_url) {
           settingsToSave.push({ key: 'logo_url', value: settings.logo_url });
+        }
+
+        if (settings.background_logo_url) {
+          settingsToSave.push({ key: 'background_logo_url', value: settings.background_logo_url });
+        }
+
+        if (settings.background_logo_opacity !== undefined) {
+          settingsToSave.push({ key: 'background_logo_opacity', value: settings.background_logo_opacity.toString() });
         }
 
         // Add additional settings for the app

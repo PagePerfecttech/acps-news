@@ -1,6 +1,6 @@
-# FlipNews
+# Vizag News
 
-FlipNews is a modern news application that displays articles in a card format with a vertical swipe navigation system. Users can swipe up or down to navigate between news articles and ads.
+Vizag News is a modern Telugu news application that displays articles in a card format with a vertical swipe navigation system. Users can swipe up or down to navigate between news articles and ads.
 
 ## Features
 
@@ -38,8 +38,8 @@ FlipNews is a modern news application that displays articles in a card format wi
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/flipnews.git
-cd flipnews
+git clone https://github.com/yourusername/vizag-news.git
+cd vizag-news
 ```
 
 2. Install dependencies
@@ -79,7 +79,7 @@ For Cloudinary setup instructions, see the `CLOUDINARY_SETUP.md` file.
 Access the admin panel at [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
 
 Default login credentials:
-- Email: admin@flipnews.com
+- Email: admin@vizagnews.com
 - Password: admin123
 
 ## Deployment

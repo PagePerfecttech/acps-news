@@ -1,0 +1,39 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FACC15;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#FACC15;stop-opacity:0.05"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="150" cy="150" r="140" fill="url(#bgGradient)"/>
+
+  <!-- Main logo text with better styling -->
+  <text x="150" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#FACC15" opacity="0.15">
+    VIZAG
+  </text>
+
+  <!-- Subtitle -->
+  <text x="150" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#FACC15" opacity="0.15">
+    NEWS
+  </text>
+
+  <!-- Tagline -->
+  <text x="150" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#FACC15" opacity="0.1">
+    విజయవాడ న్యూస్
+  </text>
+
+  <!-- Decorative newspaper icon -->
+  <g transform="translate(150,150)" opacity="0.08">
+    <!-- Newspaper outline -->
+    <rect x="-40" y="-60" width="80" height="60" fill="none" stroke="#FACC15" stroke-width="2" rx="4"/>
+    <!-- Header line -->
+    <line x1="-35" y1="-50" x2="35" y2="-50" stroke="#FACC15" stroke-width="3"/>
+    <!-- Content lines -->
+    <line x1="-35" y1="-40" x2="35" y2="-40" stroke="#FACC15" stroke-width="1"/>
+    <line x1="-35" y1="-30" x2="35" y2="-30" stroke="#FACC15" stroke-width="1"/>
+    <line x1="-35" y1="-20" x2="35" y2="-20" stroke="#FACC15" stroke-width="1"/>
+    <line x1="-35" y1="-10" x2="35" y2="-10" stroke="#FACC15" stroke-width="1"/>
+  </g>
+</svg>

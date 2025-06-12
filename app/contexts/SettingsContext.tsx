@@ -8,11 +8,13 @@ import { applyThemeColors } from '../lib/themeUtils';
 
 // Default settings
 const defaultSettings: SiteSettings = {
-  site_name: 'FlipNews',
+  site_name: 'Vizag News',
   primary_color: '#FACC15', // Yellow-500
   secondary_color: '#000000',
-  share_link: 'https://flipnews.vercel.app',
+  share_link: 'https://vizag-news.vercel.app',
   logo_url: '',
+  background_logo_url: '/logo-background.svg',
+  background_logo_opacity: 0.1,
 };
 
 interface SettingsContextType {

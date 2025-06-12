@@ -33,6 +33,17 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
   const [usingSupabase, setUsingSupabase] = useState(false);
   const { settings } = useSettings();
 
+  // Apply dynamic background logo styles
+  useEffect(() => {
+    if (settings && typeof document !== 'undefined') {
+      const backgroundLogoUrl = settings.background_logo_url || '/logo-background.svg';
+      const backgroundLogoOpacity = settings.background_logo_opacity || 0.1;
+
+      document.documentElement.style.setProperty('--background-logo-url', `url(${backgroundLogoUrl})`);
+      document.documentElement.style.setProperty('--background-logo-opacity', backgroundLogoOpacity.toString());
+    }
+  }, [settings]);
+
   // Check if Supabase is configured
   useEffect(() => {
     let isMounted = true;
@@ -321,8 +332,8 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
             </div>
           </div>
 
-          {/* Content - white background with black text */}
-          <div className="flex-grow flex flex-col justify-between p-0 bg-white text-black">
+          {/* Content - white background with black text and logo background */}
+          <div className="flex-grow flex flex-col justify-between p-0 bg-white text-black content-with-logo-bg">
             {/* News Content Section */}
             <div className="flex flex-col">
               {/* Headline */}

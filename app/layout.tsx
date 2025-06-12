@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "News Portal",
-  description: "Your source for the latest news with an interactive flip experience",
+  title: "Vizag News",
+  description: "Your source for the latest Telugu news from Vizag with an interactive flip experience",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 

@@ -12,6 +12,8 @@ export default function SettingsPage() {
     secondary_color: '',
     share_link: '',
     logo_url: '',
+    background_logo_url: '',
+    background_logo_opacity: 0.1,
     black_strip_text: '',
     admin_email: '',
     admin_password: '',
@@ -19,6 +21,7 @@ export default function SettingsPage() {
   });
 
   const [previewLogo, setPreviewLogo] = useState<string>('');
+  const [previewBackgroundLogo, setPreviewBackgroundLogo] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
@@ -32,6 +35,9 @@ export default function SettingsPage() {
         if (loadedSettings.logo_url) {
           setPreviewLogo(loadedSettings.logo_url);
         }
+        if (loadedSettings.background_logo_url) {
+          setPreviewBackgroundLogo(loadedSettings.background_logo_url);
+        }
       } catch (error) {
         console.error('Error loading settings:', error);
         setMessage({ type: 'error', text: 'Failed to load settings. Please try again.' });
@@ -44,8 +50,12 @@ export default function SettingsPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setSettings(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === 'range' || name === 'background_logo_opacity') {
+      setSettings(prev => ({ ...prev, [name]: parseFloat(value) }));
+    } else {
+      setSettings(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,6 +103,58 @@ export default function SettingsPage() {
         setMessage({
           type: 'error',
           text: 'Failed to upload logo. Please try again.'
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleBackgroundLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        // Show preview immediately for better UX
+        const previewUrl = URL.createObjectURL(file);
+        setPreviewBackgroundLogo(previewUrl);
+
+        // Set loading state
+        setIsSubmitting(true);
+
+        // Create form data for upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        formData.append('bucket', 'site-assets');
+
+        // Upload the image using the API
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          console.error('Error uploading background logo:', result.error);
+          setMessage({
+            type: 'error',
+            text: `Failed to upload background logo: ${result.error || 'Unknown error'}`
+          });
+          // Keep the preview but don't update the form data
+        } else {
+          // Update settings with the actual storage URL
+          setSettings(prev => ({
+            ...prev,
+            background_logo_url: result.url,
+          }));
+          console.log('Background logo uploaded successfully:', result.url);
+        }
+      } catch (error) {
+        console.error('Error in background logo upload:', error);
+        setMessage({
+          type: 'error',
+          text: 'Failed to upload background logo. Please try again.'
         });
       } finally {
         setIsSubmitting(false);
@@ -304,6 +366,84 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Background Logo Upload */}
+        <div className="mb-6">
+          <label htmlFor="background_logo_url" className="block text-sm font-medium text-gray-700 mb-1">
+            Background Logo (Content Area)
+          </label>
+          <div className="flex flex-col space-y-2">
+            <div className="flex">
+              <input
+                type="text"
+                id="background_logo_url"
+                name="background_logo_url"
+                value={settings.background_logo_url || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
+                placeholder="Enter background logo URL"
+              />
+              <label
+                htmlFor="background_logo_upload"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-r-md cursor-pointer flex items-center"
+              >
+                <FiUpload />
+              </label>
+              <input
+                type="file"
+                id="background_logo_upload"
+                accept="image/*"
+                className="hidden"
+                onChange={handleBackgroundLogoUpload}
+              />
+            </div>
+
+            {/* Background Logo Opacity Control */}
+            <div className="mt-4">
+              <label htmlFor="background_logo_opacity" className="block text-sm font-medium text-gray-700 mb-2">
+                Background Logo Opacity: {Math.round((settings.background_logo_opacity || 0.1) * 100)}%
+              </label>
+              <input
+                type="range"
+                id="background_logo_opacity"
+                name="background_logo_opacity"
+                min="0.05"
+                max="0.5"
+                step="0.05"
+                value={settings.background_logo_opacity || 0.1}
+                onChange={handleChange}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>5%</span>
+                <span>25%</span>
+                <span>50%</span>
+              </div>
+            </div>
+
+            {/* Background Logo Preview */}
+            {previewBackgroundLogo && (
+              <div className="mt-2 border rounded-md p-2 bg-gray-50">
+                <p className="text-xs text-gray-500 mb-1">Background Logo Preview:</p>
+                <div className="relative h-16 w-full bg-white rounded" style={{
+                  backgroundImage: `url(${previewBackgroundLogo})`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center center',
+                  backgroundSize: 'contain',
+                  opacity: settings.background_logo_opacity || 0.1
+                }}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-gray-600 text-sm">Sample content text</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500">
+              This logo will appear as a subtle background in the news content area. Recommended: SVG or PNG with transparent background.
+            </p>
           </div>
         </div>
 
