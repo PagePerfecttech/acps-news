@@ -1,29 +1,40 @@
-# Vizag News
+# Vizag News 📰
 
-Vizag News is a modern Telugu news application that displays articles in a card format with a vertical swipe navigation system. Users can swipe up or down to navigate between news articles and ads.
+Vizag News is a modern Telugu news application that displays articles in a card format with a vertical swipe navigation system. Built specifically for Telugu-speaking audiences, it provides an intuitive and engaging way to consume news content.
 
-## Features
+## ✨ Features
 
-- Vertical swipe navigation for news articles
-- Clean, minimalist UI with white background and black text
-- Read More functionality for longer articles
-- Engagement metrics display (likes, comments, views)
-- Admin panel for content management
-- Category management
-- Ad management with frequency control
-- Media upload capabilities
-- Supabase database integration
-- Cloudinary media storage integration
+### 🎯 Core Features
+- **Vertical Swipe Navigation** - Smooth swipe up/down to navigate between articles
+- **Telugu Content Support** - Full support for Telugu language content
+- **Clean, Minimalist UI** - White background with black text for optimal readability
+- **Read More Functionality** - Expandable content for longer articles
+- **Engagement Metrics** - Display likes, comments, and views
+- **Background Logo Management** - Customizable background branding with opacity control
 
-## Tech Stack
+### 🛠️ Admin Features
+- **Complete Admin Panel** - Full content management system
+- **Background Logo Upload** - Upload and manage background logos from admin panel
+- **Opacity Control** - Adjust background logo opacity (5%-50%)
+- **Category Management** - Organize news by categories (సినిమా, రాజకీయం, క్రీడలు, etc.)
+- **Ad Management** - Control ad frequency and placement
+- **Media Upload** - Support for images and videos
+- **Real-time Preview** - See changes instantly
 
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- Swiper.js
-- Supabase (PostgreSQL database, authentication)
-- Cloudinary (Image and video storage, transformations, and delivery)
+### 🔧 Technical Features
+- **Supabase Integration** - PostgreSQL database with real-time capabilities
+- **Responsive Design** - Works perfectly on all devices
+- **SEO Optimized** - Meta tags and structured data
+- **Performance Optimized** - Fast loading and smooth animations
+
+## 🚀 Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
+- **Navigation**: Swiper.js for smooth vertical scrolling
+- **Database**: Supabase (PostgreSQL with real-time capabilities)
+- **Storage**: Cloudinary for media storage and transformations
+- **Deployment**: Vercel-ready configuration
 
 ## Getting Started
 
@@ -68,11 +79,30 @@ yarn dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application
 
-## Database and Storage Setup
+## 🎨 Background Logo Management
 
-See the `DEPLOYMENT.md` file for detailed instructions on setting up the Supabase database.
+One of the unique features of Vizag News is the ability to manage background logos directly from the admin panel:
 
-For Cloudinary setup instructions, see the `CLOUDINARY_SETUP.md` file.
+### How to Use:
+1. **Access Admin Panel**: Go to `/admin/login`
+2. **Navigate to Settings**: Click "Site Settings" in the sidebar
+3. **Upload Background Logo**:
+   - Scroll to "Background Logo (Content Area)" section
+   - Click upload button or enter URL
+   - Adjust opacity with slider (5%-50%)
+   - See live preview with sample text
+4. **Save Changes**: Click "Save Settings" - changes apply immediately
+
+### Features:
+- ✅ **Real-time Preview** - See exactly how the logo will look
+- ✅ **Opacity Control** - Fine-tune visibility from 5% to 50%
+- ✅ **Multiple Formats** - Support for SVG, PNG, JPG
+- ✅ **Responsive** - Automatically scales on all devices
+- ✅ **Database Storage** - Settings saved to Supabase
+
+## 🗄️ Database Setup
+
+The application uses Supabase for data storage. Run the provided SQL schema in your Supabase dashboard to set up all required tables.
 
 ## Admin Panel
 
@@ -82,12 +112,38 @@ Default login credentials:
 - Email: admin@vizagnews.com
 - Password: admin123
 
-## Deployment
+## 🚀 Deployment
 
-This project is configured for easy deployment on Vercel with a Supabase database.
+This project is configured for easy deployment on Vercel:
 
-For detailed deployment instructions, see the `DEPLOYMENT.md` file.
+1. **Push to GitHub** (this repository)
+2. **Connect to Vercel** - Import your GitHub repository
+3. **Set Environment Variables** in Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. **Deploy** - Automatic deployments on every push
 
-## License
+## 📱 Screenshots
+
+- **Main Feed**: Vertical swipe navigation with Telugu news
+- **Admin Panel**: Complete content management system
+- **Background Logo**: Customizable branding with opacity control
+- **Settings**: Real-time preview and configuration
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Built with ❤️ for the Telugu community
+- Special thanks to the open-source community
+- Powered by Supabase and Vercel
