@@ -6,13 +6,11 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import cloudinaryService from './cloudinaryService';
 import imgbbService from './imgbbService';
 import cloudflareR2Service from './cloudflareR2Service';
-import { isSupabaseConfigured } from './supabase';
 
 // Types
-export type StorageProvider = 'cloudflare-r2' | 'supabase' | 'cloudinary' | 'imgbb' | 'local';
+export type StorageProvider = 'cloudflare-r2' | 'imgbb' | 'local';
 
 export type UploadResult = {
   url: string | null;
@@ -20,14 +18,53 @@ export type UploadResult = {
   provider?: StorageProvider;
 };
 
-// Default provider order (can be overridden)
+// Default provider order (can be overridden) - Prioritizing Cloudflare R2
 const DEFAULT_PROVIDER_ORDER: StorageProvider[] = [
   'cloudflare-r2',
-  'cloudinary',
-  'supabase',
-  'imgbb',
+  'imgbb', // Keep as emergency fallback only
   'local',
 ];
+
+/**
+ * Converts image to PNG format if it's intended for background use
+ */
+const convertToPngIfNeeded = async (file: File, folder: string): Promise<File> => {
+  // Convert to PNG for background images (site-assets folder)
+  if (folder === 'site-assets' && file.type !== 'image/png') {
+    try {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx?.drawImage(img, 0, 0);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const pngFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.png'), {
+                type: 'image/png',
+                lastModified: Date.now()
+              });
+              resolve(pngFile);
+            } else {
+              reject(new Error('Failed to convert image to PNG'));
+            }
+          }, 'image/png', 0.95);
+        };
+
+        img.onerror = () => reject(new Error('Failed to load image for PNG conversion'));
+        img.src = URL.createObjectURL(file);
+      });
+    } catch (error) {
+      console.warn('PNG conversion failed, using original file:', error);
+      return file;
+    }
+  }
+  return file;
+};
 
 /**
  * Uploads an image to the configured storage provider
@@ -64,6 +101,17 @@ export const uploadImage = async (
     };
   }
 
+  // Convert to PNG if needed for background images
+  let processedFile = file;
+  try {
+    processedFile = await convertToPngIfNeeded(file, folder);
+    if (processedFile !== file) {
+      console.log('File converted to PNG for background use');
+    }
+  } catch (error) {
+    console.warn('PNG conversion failed, using original file:', error);
+  }
+
   // Determine the order of providers to try
   const providers = determineProviderOrder(preferredProvider);
   console.log('Providers to try in order:', providers);
@@ -79,7 +127,7 @@ export const uploadImage = async (
         case 'cloudflare-r2':
           if (cloudflareR2Service.isR2Configured()) {
             console.log('Cloudflare R2 is configured, attempting upload...');
-            const uploadResult = await cloudflareR2Service.uploadImage(file, folder);
+            const uploadResult = await cloudflareR2Service.uploadImage(processedFile, folder);
             console.log('Cloudflare R2 upload result:', uploadResult);
             result = { ...uploadResult, provider };
           } else {
@@ -87,32 +135,10 @@ export const uploadImage = async (
           }
           break;
 
-        case 'supabase':
-          if (await isSupabaseConfigured()) {
-            console.log('Supabase is configured, attempting upload...');
-            const uploadResult = await uploadImageToSupabase(file, folder);
-            console.log('Supabase upload result:', uploadResult);
-            result = { ...uploadResult, provider };
-          } else {
-            console.log('Supabase is not configured, skipping');
-          }
-          break;
-
-        case 'cloudinary':
-          if (cloudinaryService.isCloudinaryConfigured()) {
-            console.log('Cloudinary is configured, attempting upload...');
-            const uploadResult = await cloudinaryService.uploadImage(file, folder);
-            console.log('Cloudinary upload result:', uploadResult);
-            result = { ...uploadResult, provider };
-          } else {
-            console.log('Cloudinary is not configured, skipping');
-          }
-          break;
-
         case 'imgbb':
           if (imgbbService.isImgBBConfigured()) {
             console.log('ImgBB is configured, attempting upload...');
-            const uploadResult = await imgbbService.uploadImage(file, fileName);
+            const uploadResult = await imgbbService.uploadImage(processedFile, fileName);
             console.log('ImgBB upload result:', uploadResult);
             result = { ...uploadResult, provider };
           } else {
@@ -123,7 +149,7 @@ export const uploadImage = async (
         case 'local':
           // Local storage fallback (for development/testing)
           console.log('Using local storage fallback...');
-          const localResult = await storeFileLocally(file, 'image');
+          const localResult = await storeFileLocally(processedFile, 'image');
           console.log('Local storage result:', localResult);
           result = { ...localResult, provider };
           break;
@@ -147,7 +173,7 @@ export const uploadImage = async (
     
     // Create a FormData object for the server upload
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processedFile);
     formData.append('type', 'image');
     formData.append('folder', folder);
     
@@ -211,69 +237,7 @@ export const uploadVideo = async (
   });
 };
 
-/**
- * Uploads an image to Supabase Storage
- *
- * @param file The image file to upload
- * @param bucket The storage bucket to use
- * @returns Promise with the upload result
- */
-const uploadImageToSupabase = async (
-  file: File,
-  bucket: string = 'news-images'
-): Promise<{ url: string | null; error: string | null }> => {
-  try {
-    // Import dynamically to avoid circular dependencies
-    const { supabase } = await import('./supabase');
-
-    // Check if the bucket exists
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-
-    if (bucketsError) {
-      console.error('Error listing buckets:', bucketsError);
-      return { url: null, error: bucketsError.message };
-    }
-
-    const bucketExists = buckets.some((b) => b.name === bucket);
-
-    if (!bucketExists) {
-      console.warn(`⚠️ Bucket ${bucket} doesn't exist!`);
-      return { url: null, error: `Storage bucket "${bucket}" not found` };
-    }
-
-    // Generate a unique file name if not provided
-    const fileName = `${uuidv4()}.${file.name.split('.').pop()}`;
-
-    // Upload the file
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) {
-      console.error('Error uploading to Supabase Storage:', error);
-      return { url: null, error: error.message };
-    }
-
-    // Get the public URL
-    const { data: publicUrlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    return {
-      url: publicUrlData.publicUrl,
-      error: null,
-    };
-  } catch (error: unknown) {
-    console.error('Error uploading to Supabase Storage:', error);
-    return {
-      url: null,
-      error: error.message || 'Failed to upload to Supabase Storage',
-    };
-  }
-};
+// Supabase upload function removed - using R2 only
 
 /**
  * Determines the order of providers to try
@@ -351,10 +315,9 @@ const storeFileLocally = async (
 export const getConfiguredProviders = async (): Promise<Record<StorageProvider, boolean>> => {
   return {
     'cloudflare-r2': cloudflareR2Service.isR2Configured(),
-    supabase: await isSupabaseConfigured(),
-    cloudinary: cloudinaryService.isCloudinaryConfigured(),
     imgbb: imgbbService.isImgBBConfigured(),
     local: true, // Local storage is always available
+    // Removed Supabase and Cloudinary - using R2 only
   };
 };
 

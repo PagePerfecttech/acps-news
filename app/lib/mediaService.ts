@@ -3,22 +3,12 @@
  *
  * This service provides a unified interface for uploading media files.
  * It tries different storage providers in order of preference:
- * 1. Cloudflare R2 (if configured)
- * 2. Supabase Storage (if configured)
- * 3. ImgBB (if configured, images only)
- * 4. Local storage fallback (for development/testing)
+ * 1. Cloudflare R2 (primary storage)
+ * 2. ImgBB (emergency fallback for images only)
+ * 3. Local storage fallback (for development/testing)
  *
- * Note: Cloudinary has been removed as a storage provider
+ * Note: Cloudinary and Supabase storage have been removed
  */
-
-// Import supabase service functions directly to avoid naming conflicts
-import {
-  uploadImage as uploadImageToSupabase,
-  uploadVideo as uploadVideoToSupabase,
-  isSupabaseConfigured
-} from './supabaseService';
-
-// Cloudinary service has been removed
 
 // Import imgbb service with fallbacks
 import * as imgbbServiceImport from './imgbbService';
@@ -36,7 +26,7 @@ const r2Service = {
 };
 
 // Storage provider types
-export type StorageProvider = 'r2' | 'supabase' | 'imgbb' | 'local';
+export type StorageProvider = 'r2' | 'imgbb' | 'local';
 
 // Upload result interface
 export interface UploadResult {
@@ -93,18 +83,7 @@ export const uploadImage = async (
           }
           break;
 
-        case 'supabase':
-          if (await isSupabaseConfigured()) {
-            console.log('Supabase is configured, attempting upload...');
-            const uploadResult = await uploadImageToSupabase(file, folder);
-            console.log('Supabase upload result:', uploadResult);
-            result = { ...uploadResult, provider };
-          } else {
-            console.log('Supabase is not configured, skipping');
-          }
-          break;
-
-        // Cloudinary case removed
+        // Supabase and Cloudinary cases removed
 
         case 'imgbb':
           if (imgbbService.isImgBBConfigured()) {
@@ -182,16 +161,7 @@ export const uploadVideo = async (
           }
           break;
 
-        case 'supabase':
-          if (await isSupabaseConfigured()) {
-            console.log('Supabase is configured, attempting video upload...');
-            const uploadResult = await uploadVideoToSupabase(file);
-            console.log('Supabase video upload result:', uploadResult);
-            result = { ...uploadResult, provider };
-          }
-          break;
-
-        // Cloudinary case removed
+        // Supabase and Cloudinary cases removed
 
         case 'local':
           // Local storage fallback (for development/testing)
@@ -225,8 +195,8 @@ export const uploadVideo = async (
  * @returns Array of providers in order of preference
  */
 const determineProviderOrder = (preferredProvider?: StorageProvider): StorageProvider[] => {
-  // Prioritize R2 over other providers
-  const defaultOrder: StorageProvider[] = ['r2', 'supabase', 'imgbb', 'local'];
+  // Prioritize R2 as primary storage
+  const defaultOrder: StorageProvider[] = ['r2', 'imgbb', 'local'];
 
   if (!preferredProvider) {
     return defaultOrder;
@@ -282,7 +252,6 @@ const storeFileLocally = async (
 export const getConfiguredProviders = async (): Promise<Record<StorageProvider, boolean>> => {
   return {
     r2: r2Service.isR2Configured(),
-    supabase: await isSupabaseConfigured(),
     imgbb: imgbbService.isImgBBConfigured(),
     local: true, // Local storage is always available
   };

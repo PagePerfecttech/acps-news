@@ -114,6 +114,15 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       try {
+        // Validate file type - prefer PNG for background images
+        if (!file.type.startsWith('image/')) {
+          setMessage({
+            type: 'error',
+            text: 'Please select a valid image file.'
+          });
+          return;
+        }
+
         // Show preview immediately for better UX
         const previewUrl = URL.createObjectURL(file);
         setPreviewBackgroundLogo(previewUrl);
@@ -121,14 +130,19 @@ export default function SettingsPage() {
         // Set loading state
         setIsSubmitting(true);
 
-        // Create form data for upload
+        // Create form data for upload - use R2 directly for better control
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('type', 'image');
-        formData.append('bucket', 'site-assets');
+        formData.append('folder', 'site-assets');
 
-        // Upload the image using the API
-        const response = await fetch('/api/upload', {
+        // Add filename with PNG extension if converting
+        if (file.type !== 'image/png') {
+          const baseName = file.name.replace(/\.[^/.]+$/, '');
+          formData.append('fileName', `${baseName}.png`);
+        }
+
+        // Upload the image using R2 API directly for better PNG handling
+        const response = await fetch('/api/upload/r2', {
           method: 'POST',
           body: formData,
         });
@@ -394,7 +408,7 @@ export default function SettingsPage() {
               <input
                 type="file"
                 id="background_logo_upload"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                 className="hidden"
                 onChange={handleBackgroundLogoUpload}
               />

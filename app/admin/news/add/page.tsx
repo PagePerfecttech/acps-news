@@ -112,14 +112,13 @@ export default function AddNewsPage() {
         // Set loading state
         setIsSubmitting(true);
 
-        // Create form data for upload
+        // Create form data for upload to R2
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('type', 'image');
-        formData.append('bucket', 'news-images');
+        formData.append('folder', 'news-images');
 
-        // Upload the image using the server-side API
-        const response = await fetch('/api/upload/server', {
+        // Upload the image using R2 API directly
+        const response = await fetch('/api/upload/r2', {
           method: 'POST',
           body: formData,
         });
@@ -168,14 +167,13 @@ export default function AddNewsPage() {
         // Set loading state
         setIsSubmitting(true);
 
-        // Create form data for upload
+        // Create form data for upload to R2
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('type', 'video');
-        formData.append('bucket', 'news-videos');
+        formData.append('folder', 'news-videos');
 
-        // Upload the video using the server-side API
-        const response = await fetch('/api/upload/server', {
+        // Upload the video using R2 API directly
+        const response = await fetch('/api/upload/r2', {
           method: 'POST',
           body: formData,
         });

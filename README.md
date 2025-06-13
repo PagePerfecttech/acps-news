@@ -22,7 +22,9 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 - **Real-time Preview** - See changes instantly
 
 ### 🔧 Technical Features
-- **Supabase Integration** - PostgreSQL database with real-time capabilities
+- **Cloudflare R2 Storage** - Cost-effective S3-compatible media storage
+- **PNG Optimization** - Automatic conversion for background images
+- **RSS Feed Integration** - Real-time news aggregation
 - **Responsive Design** - Works perfectly on all devices
 - **SEO Optimized** - Meta tags and structured data
 - **Performance Optimized** - Fast loading and smooth animations
@@ -32,18 +34,17 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS 4
 - **Navigation**: Swiper.js for smooth vertical scrolling
-- **Database**: Supabase (PostgreSQL with real-time capabilities)
-- **Storage**: Cloudinary for media storage and transformations
+- **Storage**: Cloudflare R2 (S3-compatible) for media storage
+- **Database**: Local storage with optional Supabase integration
 - **Deployment**: Vercel-ready configuration
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 16.x or later
+- Node.js 18.x or later
 - npm or yarn
-- Supabase account (for database)
-- Cloudinary account (for media storage)
+- Cloudflare R2 account (for media storage)
 
 ### Installation
 
@@ -63,11 +64,15 @@ yarn install
 3. Set up environment variables
 Create a `.env.local` file with the following variables:
 ```
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-NEXT_PUBLIC_CLOUDINARY_API_KEY=your-cloudinary-api-key
-CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+# Cloudflare R2 Configuration (Primary Storage)
+NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+CLOUDFLARE_R2_ACCESS_KEY_ID=your_r2_access_key_id
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+CLOUDFLARE_R2_BUCKET_NAME=your_r2_bucket_name
+NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL=https://your-bucket.your-domain.com
+
+# ImgBB Configuration (Emergency Fallback)
+NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_api_key
 ```
 
 4. Run the development server

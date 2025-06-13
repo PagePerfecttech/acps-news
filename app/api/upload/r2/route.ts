@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-// Define allowed file types
+// Define allowed file types - PNG prioritized for background images
 const ALLOWED_IMAGE_TYPES = [
+  'image/png',    // Prioritized for background images
   'image/jpeg',
-  'image/png',
+  'image/jpg',
   'image/gif',
   'image/webp',
   'image/svg+xml'
@@ -93,7 +94,13 @@ export async function POST(request: NextRequest) {
 
     // Generate a unique file name if not provided
     if (!fileName) {
-      const fileExt = file.name.split('.').pop();
+      let fileExt = file.name.split('.').pop();
+
+      // For site-assets folder (background images), prefer PNG extension
+      if (folder === 'site-assets' && file.type === 'image/png') {
+        fileExt = 'png';
+      }
+
       fileName = `${uuidv4()}.${fileExt}`;
     }
 

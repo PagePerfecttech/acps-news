@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import * as mediaService from '../../lib/mediaService.fixed';
 
-// Define allowed file types
+// Define allowed file types - PNG prioritized for background images
 const ALLOWED_IMAGE_TYPES = [
+  'image/png',    // Prioritized for background images
   'image/jpeg',
-  'image/png',
+  'image/jpg',
   'image/gif',
   'image/webp',
   'image/svg+xml'
@@ -80,7 +81,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate a unique file name
-    const fileExt = file.name.split('.').pop();
+    let fileExt = file.name.split('.').pop();
+
+    // For site-assets folder (background images), prefer PNG extension
+    if (bucket === 'site-assets' && file.type === 'image/png') {
+      fileExt = 'png';
+    }
+
     const fileName = `${uuidv4()}.${fileExt}`;
 
     // Get configured providers
