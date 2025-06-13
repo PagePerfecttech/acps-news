@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Note: Supabase has been removed - this now returns mock data
 // for compatibility during the R2 migration
 
-// GET /api/admin/news - Get all news articles
+// GET /api/admin/news - Get all news articles (Mock implementation)
 export async function GET(request: NextRequest) {
   try {
     // Get query parameters
@@ -18,43 +18,39 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '50');
     const page = parseInt(url.searchParams.get('page') || '1');
     const category = url.searchParams.get('category');
-    
-    // Calculate offset
-    const offset = (page - 1) * limit;
-    
-    // Build query
-    let query = supabaseAdmin
-      .from('news_articles')
-      .select(`
-        *,
-        categories(name, slug)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-      .range(offset, offset + limit - 1);
-    
-    // Add category filter if provided
-    if (category) {
-      query = query.eq('categories.slug', category);
-    }
-    
-    // Execute query
-    const { data, error, count } = await query;
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error fetching news articles: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
+    // Return mock news articles
+    const mockArticles = [
+      {
+        id: '1',
+        title: 'Sample Admin News Article',
+        content: 'This is a sample news article from admin API.',
+        summary: 'Sample article summary',
+        category_id: 'general',
+        image_url: '',
+        video_url: '',
+        video_type: '',
+        author: 'Admin',
+        published: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        categories: { name: 'General', slug: 'general' }
+      }
+    ];
+
+    // Filter by category if provided
+    const filteredArticles = category
+      ? mockArticles.filter(article => article.categories.slug === category)
+      : mockArticles;
+
     return NextResponse.json({
       success: true,
-      data: data || [],
+      data: filteredArticles,
       page,
       limit,
-      total: count,
-      hasMore: data && data.length === limit
+      total: filteredArticles.length,
+      hasMore: false,
+      note: 'This is mock data - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/news:', error);
@@ -65,53 +61,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/news - Create a new news article
+// POST /api/admin/news - Create a new news article (Mock implementation)
 export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    
+
     // Validate required fields
-    if (!body.title || !body.content || !body.category_id) {
+    if (!body.title || !body.content) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, content, category_id' },
+        { error: 'Missing required fields: title, content' },
         { status: 400 }
       );
     }
-    
-    // Create article object
+
+    // Create mock article object
     const now = new Date().toISOString();
     const article = {
       id: body.id || uuidv4(),
       title: body.title,
       content: body.content,
-      summary: body.summary,
-      category_id: body.category_id,
-      image_url: body.image_url,
-      video_url: body.video_url,
-      video_type: body.video_type,
+      summary: body.summary || '',
+      category_id: body.category_id || 'general',
+      image_url: body.image_url || '',
+      video_url: body.video_url || '',
+      video_type: body.video_type || '',
       author: body.author || 'Admin',
       published: body.published !== false,
       created_at: now,
       updated_at: now
     };
-    
-    // Insert article
-    const { data, error } = await supabaseAdmin
-      .from('news_articles')
-      .insert([article])
-      .select();
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error creating news article: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
+    console.log('Mock article created:', article);
+
     return NextResponse.json({
       success: true,
-      data: data[0]
+      data: article,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/news:', error);

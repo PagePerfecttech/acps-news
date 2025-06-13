@@ -10,25 +10,38 @@ import { v4 as uuidv4 } from 'uuid';
 // Note: Supabase has been removed - this now returns mock data
 // for compatibility during the R2 migration
 
-// GET /api/admin/categories - Get all categories
+// GET /api/admin/categories - Get all categories (Mock implementation)
 export async function GET(request: NextRequest) {
   try {
-    // Get all categories
-    const { data, error } = await supabaseAdmin
-      .from('categories')
-      .select('*')
-      .order('name', { ascending: true });
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error fetching categories: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+    // Return mock categories
+    const mockCategories = [
+      {
+        id: 'general',
+        name: 'General',
+        slug: 'general',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'politics',
+        name: 'Politics',
+        slug: 'politics',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'sports',
+        name: 'Sports',
+        slug: 'sports',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+
     return NextResponse.json({
       success: true,
-      data
+      data: mockCategories,
+      note: 'This is mock data - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/categories:', error);
@@ -39,12 +52,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/categories - Create a new category
+// POST /api/admin/categories - Create a new category (Mock implementation)
 export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.name || !body.slug) {
       return NextResponse.json(
@@ -52,8 +65,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Create a new category
+
+    // Create a mock new category
     const now = new Date().toISOString();
     const newCategory = {
       id: body.id || uuidv4(),
@@ -62,23 +75,11 @@ export async function POST(request: NextRequest) {
       created_at: now,
       updated_at: now
     };
-    
-    // Insert the category
-    const { data, error } = await supabaseAdmin
-      .from('categories')
-      .insert([newCategory])
-      .select();
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error creating category: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
     return NextResponse.json({
       success: true,
-      data: data[0]
+      data: newCategory,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/categories:', error);
@@ -114,31 +115,19 @@ export async function PUT(request: NextRequest) {
       );
     }
     
-    // Update the category
+    // Create mock updated category
     const now = new Date().toISOString();
     const updatedCategory = {
+      id,
       name: body.name,
       slug: body.slug,
       updated_at: now
     };
-    
-    // Update the category
-    const { data, error } = await supabaseAdmin
-      .from('categories')
-      .update(updatedCategory)
-      .eq('id', id)
-      .select();
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error updating category: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
     return NextResponse.json({
       success: true,
-      data: data[0]
+      data: updatedCategory,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in PUT /api/admin/categories:', error);
@@ -163,21 +152,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    // Delete the category
-    const { error } = await supabaseAdmin
-      .from('categories')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error deleting category: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+    // Mock category deletion
     return NextResponse.json({
-      success: true
+      success: true,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in DELETE /api/admin/categories:', error);
