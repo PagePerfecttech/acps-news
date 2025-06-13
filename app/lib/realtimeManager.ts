@@ -1,9 +1,15 @@
-import { RealtimeChannel } from '@supabase/supabase-js';
-import { supabase, getConnectionStatus, isSupabaseConfigured } from './supabase';
+// Note: Supabase real-time has been removed - this now provides mock functionality
+// for compatibility during the R2 migration
+import { getConnectionStatus, isSupabaseConfigured } from './supabase';
 
 // Types
 type SubscriptionCallback = (payload: unknown) => void;
 type SubscriptionEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+
+// Mock channel interface for compatibility
+interface MockChannel {
+  unsubscribe: () => void;
+}
 
 interface Subscription {
   id: string;
@@ -12,7 +18,7 @@ interface Subscription {
   filter?: string;
   filterValue?: string;
   callback: SubscriptionCallback;
-  channel: RealtimeChannel;
+  channel: MockChannel;
   status: 'active' | 'inactive' | 'error';
   lastEvent?: number;
   errorCount: number;
@@ -72,7 +78,7 @@ const generateSubscriptionId = (
   return `${table}:${event}${filter ? `:${filter}:${filterValue}` : ''}:${Date.now()}`;
 };
 
-// Subscribe to real-time changes
+// Subscribe to real-time changes (Mock implementation)
 export const subscribeToChanges = (
   table: string,
   callback: SubscriptionCallback,
@@ -82,60 +88,17 @@ export const subscribeToChanges = (
 ): { unsubscribe: () => void; id: string } => {
   // Generate a unique ID for this subscription
   const subscriptionId = generateSubscriptionId(table, event, filter, filterValue);
-  
-  // Create filter object if filter is provided
-  const filterObj = filter && filterValue ? { [filter]: filterValue } : undefined;
-  
-  // Create the channel
-  const channel = supabase
-    .channel(`${subscriptionId}`)
-    .on(
-      'postgres_changes',
-      {
-        event,
-        schema: 'public',
-        table,
-        filter: filterObj,
-      },
-      (payload) => {
-        try {
-          // Update last event timestamp
-          const subscription = subscriptions.get(subscriptionId);
-          if (subscription) {
-            subscription.lastEvent = Date.now();
-            subscription.errorCount = 0; // Reset error count on successful event
-          }
-          
-          // Call the callback
-          callback(payload);
-        } catch (error) {
-          console.error(`Error in subscription callback for ${subscriptionId}:`, error);
-          
-          // Increment error count
-          const subscription = subscriptions.get(subscriptionId);
-          if (subscription) {
-            subscription.errorCount += 1;
-            
-            // If too many errors, mark as error
-            if (subscription.errorCount >= MAX_ERROR_COUNT) {
-              subscription.status = 'error';
-              console.error(`Subscription ${subscriptionId} has too many errors, marking as error`);
-            }
-          }
-        }
-      }
-    )
-    .subscribe((status) => {
-      console.log(`Subscription ${subscriptionId} status:`, status);
-      
-      // Update subscription status
-      const subscription = subscriptions.get(subscriptionId);
-      if (subscription) {
-        subscription.status = status === 'SUBSCRIBED' ? 'active' : 'inactive';
-      }
-    });
-  
-  // Store the subscription
+
+  console.log(`Mock subscription created for table: ${table}, event: ${event}`);
+
+  // Create a mock channel
+  const mockChannel: MockChannel = {
+    unsubscribe: () => {
+      console.log(`Mock channel unsubscribed: ${subscriptionId}`);
+    }
+  };
+
+  // Store the mock subscription
   subscriptions.set(subscriptionId, {
     id: subscriptionId,
     table,
@@ -143,17 +106,18 @@ export const subscribeToChanges = (
     filter,
     filterValue,
     callback,
-    channel,
+    channel: mockChannel,
     status: 'active',
     errorCount: 0,
   });
-  
+
   // Return unsubscribe function and subscription ID
   return {
     unsubscribe: () => {
       try {
-        channel.unsubscribe();
+        mockChannel.unsubscribe();
         subscriptions.delete(subscriptionId);
+        console.log(`Mock subscription ${subscriptionId} unsubscribed`);
       } catch (error) {
         console.error(`Error unsubscribing from ${subscriptionId}:`, error);
       }
@@ -162,62 +126,19 @@ export const subscribeToChanges = (
   };
 };
 
-// Check the health of all subscriptions
+// Check the health of all subscriptions (Mock implementation)
 const checkSubscriptionsHealth = async (): Promise<void> => {
   // Skip if no subscriptions
   if (subscriptions.size === 0) return;
-  
-  // Check Supabase connection
-  const connectionStatus = getConnectionStatus();
-  const isConnected = connectionStatus === 'connected';
-  
-  // If not connected, try to reconnect
-  if (!isConnected) {
-    console.warn('Supabase connection is not active, attempting to reconnect...');
-    const reconnected = await isSupabaseConfigured();
-    
-    if (!reconnected) {
-      console.error('Failed to reconnect to Supabase');
-      return;
-    }
-  }
-  
-  // Check each subscription
-  subscriptions.forEach((subscription, id) => {
-    // If subscription is in error state, try to resubscribe
+
+  console.log('Mock health check: All subscriptions are healthy (mock implementation)');
+
+  // Mark all subscriptions as active (mock behavior)
+  subscriptions.forEach((subscription) => {
     if (subscription.status === 'error') {
-      console.log(`Attempting to resubscribe to ${id}...`);
-      
-      try {
-        // Unsubscribe from the old channel
-        subscription.channel.unsubscribe();
-        
-        // Create a new channel
-        const newChannel = supabase
-          .channel(`${id}-reconnect`)
-          .on(
-            'postgres_changes',
-            {
-              event: subscription.event,
-              schema: 'public',
-              table: subscription.table,
-              filter: subscription.filter && subscription.filterValue
-                ? { [subscription.filter]: subscription.filterValue }
-                : undefined,
-            },
-            subscription.callback
-          )
-          .subscribe();
-        
-        // Update the subscription
-        subscription.channel = newChannel;
-        subscription.status = 'active';
-        subscription.errorCount = 0;
-        
-        console.log(`Successfully resubscribed to ${id}`);
-      } catch (error) {
-        console.error(`Error resubscribing to ${id}:`, error);
-      }
+      subscription.status = 'active';
+      subscription.errorCount = 0;
+      console.log(`Mock resubscription successful for ${subscription.id}`);
     }
   });
 };

@@ -32,6 +32,19 @@ export const supabase = {
     }),
   },
   rpc: (fn: string, params?: any) => Promise.resolve({ data: null, error: null }),
+  // Mock channel method for real-time compatibility
+  channel: (name: string) => ({
+    on: (event: string, config: any, callback: Function) => ({
+      subscribe: (statusCallback?: Function) => {
+        console.log(`Mock channel subscription: ${name}`);
+        if (statusCallback) statusCallback('SUBSCRIBED');
+        return {
+          unsubscribe: () => console.log(`Mock channel unsubscribed: ${name}`)
+        };
+      }
+    }),
+    unsubscribe: () => console.log(`Mock channel unsubscribed: ${name}`)
+  }),
 };
 
 // Mock functions for compatibility
