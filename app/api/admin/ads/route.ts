@@ -1,38 +1,38 @@
 /**
- * API Route for managing ads
- * 
- * This route bypasses RLS policies by using the service role key
+ * API Route for managing ads (Mock implementation)
+ *
+ * Note: Supabase has been removed - this now returns mock data
+ * for compatibility during the R2 migration
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
-// Create Supabase client - use service role key if available, otherwise use anon key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
-
-// GET /api/admin/ads - Get all ads
+// GET /api/admin/ads - Get all ads (Mock implementation)
 export async function GET(request: NextRequest) {
   try {
-    // Get all ads
-    const { data, error } = await supabaseAdmin
-      .from('ads')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error fetching ads: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+    // Return mock ads data
+    const mockAds = [
+      {
+        id: '1',
+        title: 'Sample Ad 1',
+        description: 'This is a sample advertisement',
+        text_content: 'Sample ad content',
+        image_url: null,
+        video_url: null,
+        video_type: null,
+        link_url: 'https://example.com',
+        frequency: 5,
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+
     return NextResponse.json({
       success: true,
-      data
+      data: mockAds,
+      note: 'This is mock data - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/ads:', error);
@@ -43,12 +43,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/ads - Create a new ad
+// POST /api/admin/ads - Create a new ad (Mock implementation)
 export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.title) {
       return NextResponse.json(
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Create a new ad
+
+    // Create a mock new ad
     const now = new Date().toISOString();
     const newAd = {
       id: body.id || uuidv4(),
@@ -73,23 +73,11 @@ export async function POST(request: NextRequest) {
       created_at: now,
       updated_at: now
     };
-    
-    // Insert the ad
-    const { data, error } = await supabaseAdmin
-      .from('ads')
-      .insert([newAd])
-      .select();
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error creating ad: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
     return NextResponse.json({
       success: true,
-      data: data[0]
+      data: newAd,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/ads:', error);
@@ -100,23 +88,23 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/admin/ads/:id - Update an ad
+// PUT /api/admin/ads/:id - Update an ad (Mock implementation)
 export async function PUT(request: NextRequest) {
   try {
     // Get the ad ID from the URL
     const url = new URL(request.url);
     const id = url.pathname.split('/').pop();
-    
+
     if (!id) {
       return NextResponse.json(
         { error: 'Ad ID is required' },
         { status: 400 }
       );
     }
-    
+
     // Parse request body
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.title) {
       return NextResponse.json(
@@ -124,10 +112,11 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Update the ad
+
+    // Create mock updated ad
     const now = new Date().toISOString();
     const updatedAd = {
+      id,
       title: body.title,
       description: body.description,
       text_content: body.text_content,
@@ -139,24 +128,11 @@ export async function PUT(request: NextRequest) {
       active: body.active,
       updated_at: now
     };
-    
-    // Update the ad
-    const { data, error } = await supabaseAdmin
-      .from('ads')
-      .update(updatedAd)
-      .eq('id', id)
-      .select();
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error updating ad: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
     return NextResponse.json({
       success: true,
-      data: data[0]
+      data: updatedAd,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in PUT /api/admin/ads:', error);
@@ -167,35 +143,23 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/admin/ads/:id - Delete an ad
+// DELETE /api/admin/ads/:id - Delete an ad (Mock implementation)
 export async function DELETE(request: NextRequest) {
   try {
     // Get the ad ID from the URL
     const url = new URL(request.url);
     const id = url.pathname.split('/').pop();
-    
+
     if (!id) {
       return NextResponse.json(
         { error: 'Ad ID is required' },
         { status: 400 }
       );
     }
-    
-    // Delete the ad
-    const { error } = await supabaseAdmin
-      .from('ads')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      return NextResponse.json(
-        { error: `Error deleting ad: ${error.message}` },
-        { status: 500 }
-      );
-    }
-    
+
     return NextResponse.json({
-      success: true
+      success: true,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error in DELETE /api/admin/ads:', error);

@@ -1,193 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
+// Supabase client removed - using local storage only
+// This file is kept for compatibility but no longer uses Supabase
 
-// Get Supabase URL and anon key from environment variables
-// Use hardcoded values as fallback for build process
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tnaqvbrflguwpeafwclz.supabase.co';
-let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuYXF2YnJmbGd1d3BlYWZ3Y2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE3NDIsImV4cCI6MjA2MjU0Nzc0Mn0.wosmLe8bA0LOJQttRD03c7tIa8woLbFNSVWuc0ntcME';
-
-// Log warning if environment variables are not set
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  console.warn('Supabase environment variables are not set in the environment. Using fallback values for build process.');
-}
-
-// Fix malformed URL if it contains the PowerShell command
-if (supabaseUrl && supabaseUrl.includes('PS C:')) {
-  // Extract the actual URL from the malformed string
-  const matches = supabaseUrl.match(/(https:\/\/[a-z0-9-]+\.supabase\.co)/);
-  if (matches && matches[1]) {
-    console.log('Fixed malformed Supabase URL');
-    supabaseUrl = matches[1];
-  }
-}
-
-// Validate URL before creating client
-const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url);
-    return url.includes('supabase.co'); // Additional check to ensure it&apos;s a Supabase URL
-  } catch (e) {
-    console.error('Invalid Supabase URL:', url);
-    return false;
-  }
-};
-
-// Use placeholder URL if the provided URL is invalid
-const validSupabaseUrl = isValidUrl(supabaseUrl) ? supabaseUrl : 'https://placeholder-url.supabase.co';
-
-// Create Supabase client with enhanced options
-export const supabase = createClient(validSupabaseUrl, supabaseAnonKey, {
+// Mock Supabase client for compatibility
+export const supabase = {
+  from: (table: string) => ({
+    select: (columns?: string) => Promise.resolve({ data: [], error: null }),
+    insert: (data: any) => Promise.resolve({ data: [], error: null }),
+    update: (data: any) => Promise.resolve({ data: [], error: null }),
+    delete: () => Promise.resolve({ data: [], error: null }),
+    eq: (column: string, value: any) => ({
+      select: (columns?: string) => Promise.resolve({ data: [], error: null }),
+      update: (data: any) => Promise.resolve({ data: [], error: null }),
+      delete: () => Promise.resolve({ data: [], error: null }),
+    }),
+    order: (column: string, options?: any) => ({
+      select: (columns?: string) => Promise.resolve({ data: [], error: null }),
+    }),
+    limit: (count: number) => ({
+      select: (columns?: string) => Promise.resolve({ data: [], error: null }),
+    }),
+  }),
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
+    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+    signIn: (credentials: any) => Promise.resolve({ data: null, error: null }),
+    signOut: () => Promise.resolve({ error: null }),
   },
-  realtime: {
-    params: {
-      eventsPerSecond: 10, // Increase events per second for better real-time performance
-    },
+  storage: {
+    from: (bucket: string) => ({
+      upload: (path: string, file: File) => Promise.resolve({ data: null, error: null }),
+      getPublicUrl: (path: string) => ({ data: { publicUrl: '' } }),
+    }),
   },
-  global: {
-    headers: {
-      'x-application-name': 'FlipNews',
-    },
-  },
-});
+  rpc: (fn: string, params?: any) => Promise.resolve({ data: null, error: null }),
+};
 
-// Connection status tracking
-let connectionStatus: 'connected' | 'disconnected' | 'connecting' | 'error' = 'disconnected';
-let lastConnectionCheck: number = 0;
-const CONNECTION_CHECK_INTERVAL = 30000; // 30 seconds
-
-// Helper function to check if Supabase is properly configured
+// Mock functions for compatibility
 export const isSupabaseConfigured = async (): Promise<boolean> => {
-  try {
-    // Check if the URL is valid (after our fix for malformed URLs)
-    if (!isValidUrl(validSupabaseUrl)) {
-      console.warn('Supabase URL is invalid or not a Supabase URL');
-      connectionStatus = 'error';
-      return false;
-    }
-
-    // Check if environment variables are set
-    const envVarsConfigured = (
-      validSupabaseUrl !== 'https://placeholder-url.supabase.co' &&
-      supabaseAnonKey !== undefined &&
-      supabaseAnonKey !== '' &&
-      supabaseAnonKey !== 'placeholder-key'
-    );
-
-    if (!envVarsConfigured) {
-      console.warn('Supabase environment variables not properly configured');
-      connectionStatus = 'error';
-      return false;
-    }
-
-    // Try to make a simple query to verify connection
-    try {
-      connectionStatus = 'connecting';
-
-      // Try to query the pg_catalog tables first (should always exist)
-      const { data: pgData, error: pgError } = await supabase
-        .from('pg_catalog.pg_tables')
-        .select('tablename')
-        .eq('schemaname', 'public')
-        .limit(1);
-
-      if (!pgError) {
-        // Successfully connected to Supabase
-        connectionStatus = 'connected';
-        lastConnectionCheck = Date.now();
-        return true;
-      }
-
-      // If that fails, try news_articles table
-      const { error } = await supabase.from('news_articles').select('count', { count: 'exact', head: true });
-
-      if (error) {
-        // If there&apos;s an error, try a different approach - just check if we can connect
-        const { data, error: rpcError } = await supabase.rpc('get_service_status');
-
-        if (rpcError) {
-          // If RPC fails too, try a simple REST call
-          const response = await fetch(`${validSupabaseUrl}/rest/v1/?apikey=${supabaseAnonKey}`);
-
-          if (!response.ok) {
-            console.error('Error testing Supabase connection via REST');
-            connectionStatus = 'error';
-            return false;
-          }
-        }
-      }
-
-      connectionStatus = 'connected';
-      lastConnectionCheck = Date.now();
-      return true;
-    } catch (error) {
-      // Even if there&apos;s an error, if we got this far, the connection might be working
-      // The error might be due to missing tables, not connection issues
-      console.warn('Error testing Supabase connection, but continuing:', error);
-
-      // Try one more approach - direct REST API call
-      try {
-        const response = await fetch(`${validSupabaseUrl}/rest/v1/`, {
-          headers: {
-            'apikey': supabaseAnonKey,
-            'Authorization': `Bearer ${supabaseAnonKey}`
-          }
-        });
-
-        if (response.ok) {
-          connectionStatus = 'connected'; // Assume connected but with issues
-          lastConnectionCheck = Date.now();
-          return true;
-        } else {
-          connectionStatus = 'error';
-          return false;
-        }
-      } catch (fetchError) {
-        console.error('Final connection test failed:', fetchError);
-        connectionStatus = 'error';
-        return false;
-      }
-    }
-  } catch (error) {
-    console.error('Error in isSupabaseConfigured:', error);
-    connectionStatus = 'error';
-    return false;
-  }
+  console.warn('Supabase is disabled - using local storage only');
+  return false;
 };
 
-// Get current connection status
 export const getConnectionStatus = (): string => {
-  // If it&apos;s been more than 30 seconds since our last check and we think we&apos;re connected,
-  // we should verify the connection again
-  if (connectionStatus === 'connected' &&
-      Date.now() - lastConnectionCheck > CONNECTION_CHECK_INTERVAL) {
-    // Don&apos;t await this, just trigger the check
-    isSupabaseConfigured();
-  }
-  return connectionStatus;
+  return 'disabled';
 };
 
-// Manually check connection and return detailed status
 export const checkConnection = async (): Promise<{
   status: string;
   message: string;
   timestamp: number;
 }> => {
-  try {
-    const isConfigured = await isSupabaseConfigured();
-    return {
-      status: connectionStatus,
-      message: isConfigured
-        ? 'Connected to Supabase'
-        : 'Failed to connect to Supabase',
-      timestamp: Date.now()
-    };
-  } catch (error) {
-    return {
-      status: 'error',
-      message: `Error checking connection: ${error}`,
-      timestamp: Date.now()
-    };
-  }
+  return {
+    status: 'disabled',
+    message: 'Supabase is disabled - using local storage only',
+    timestamp: Date.now()
+  };
 };
