@@ -1,17 +1,11 @@
 /**
- * API Route for managing news articles
- * 
- * This route bypasses RLS policies by using the service role key
+ * API Route for managing news articles (Local Storage Implementation)
+ *
+ * This route uses local storage instead of Supabase for article management
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-
-// Create Supabase admin client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 // GET /api/admin/news - Get all news articles
 export async function GET(request: NextRequest) {

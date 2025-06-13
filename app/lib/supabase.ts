@@ -1,5 +1,5 @@
-// Supabase client removed - using local storage only
-// This file is kept for compatibility but no longer uses Supabase
+// Supabase client configuration
+// This file configures the Supabase client for data storage
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -10,14 +10,35 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Mock functions for compatibility
+// Check if Supabase is configured
 export const isSupabaseConfigured = async (): Promise<boolean> => {
-  console.warn('Supabase is disabled - using local storage only');
-  return false;
+  try {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('Supabase credentials are missing');
+      return false;
+    }
+
+    // Test connection with a simple query
+    const { error } = await supabase.from('news_articles').select('id').limit(1);
+
+    if (error) {
+      console.error('Supabase connection error:', error);
+      return false;
+    }
+
+    console.log('Supabase is properly configured and connected');
+    return true;
+  } catch (error) {
+    console.error('Error checking Supabase configuration:', error);
+    return false;
+  }
 };
 
 export const getConnectionStatus = (): string => {
-  return 'disabled';
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return 'not-configured';
+  }
+  return 'configured';
 };
 
 export const checkConnection = async (): Promise<{
@@ -25,9 +46,27 @@ export const checkConnection = async (): Promise<{
   message: string;
   timestamp: number;
 }> => {
-  return {
-    status: 'disabled',
-    message: 'Supabase is disabled - using local storage only',
-    timestamp: Date.now()
-  };
+  try {
+    const isConfigured = await isSupabaseConfigured();
+
+    if (!isConfigured) {
+      return {
+        status: 'error',
+        message: 'Supabase is not properly configured or connection failed',
+        timestamp: Date.now()
+      };
+    }
+
+    return {
+      status: 'connected',
+      message: 'Supabase is connected and working properly',
+      timestamp: Date.now()
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      timestamp: Date.now()
+    };
+  }
 };

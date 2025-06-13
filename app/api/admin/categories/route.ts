@@ -1,47 +1,42 @@
 /**
  * API Route for managing categories
- * 
+ *
  * This route bypasses RLS policies by using the service role key
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
-// Note: Supabase has been removed - this now returns mock data
-// for compatibility during the R2 migration
+// Create Supabase admin client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-// GET /api/admin/categories - Get all categories (Mock implementation)
+// GET /api/admin/categories - Get all categories
 export async function GET(request: NextRequest) {
   try {
-    // Return mock categories
-    const mockCategories = [
-      {
-        id: 'general',
-        name: 'General',
-        slug: 'general',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: 'politics',
-        name: 'Politics',
-        slug: 'politics',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: 'sports',
-        name: 'Sports',
-        slug: 'sports',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
+    console.log('Fetching categories via admin API');
+
+    // Fetch categories from Supabase
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { error: `Failed to fetch categories: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    console.log(`Fetched ${data?.length || 0} categories from Supabase`);
 
     return NextResponse.json({
       success: true,
-      data: mockCategories,
-      note: 'This is mock data - Supabase has been replaced with local storage'
+      data: data || []
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/categories:', error);
@@ -52,11 +47,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/categories - Create a new category (Mock implementation)
+// POST /api/admin/categories - Create a new category
 export async function POST(request: NextRequest) {
   try {
+    console.log('Creating category via admin API');
+
     // Parse request body
     const body = await request.json();
+    console.log('Received category data:', body);
 
     // Validate required fields
     if (!body.name || !body.slug) {
@@ -66,9 +64,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create a mock new category
+    // Create category object for Supabase
     const now = new Date().toISOString();
-    const newCategory = {
+    const category = {
       id: body.id || uuidv4(),
       name: body.name,
       slug: body.slug,
@@ -76,10 +74,28 @@ export async function POST(request: NextRequest) {
       updated_at: now
     };
 
+    console.log('Inserting category into Supabase:', category);
+
+    // Insert into Supabase
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .insert([category])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { error: `Failed to save category: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    console.log('Category saved successfully:', data);
+
     return NextResponse.json({
       success: true,
-      data: newCategory,
-      note: 'This is a mock response - Supabase has been replaced with local storage'
+      data: data
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/categories:', error);
