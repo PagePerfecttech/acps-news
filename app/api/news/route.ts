@@ -1,66 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 import { isSupabaseConfigured } from '../../lib/supabase';
 
-// Create Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Note: Supabase has been removed - this now returns mock data
+// for compatibility during the R2 migration
 
-// GET /api/news - Get all news articles
+// GET /api/news - Get all news articles (Mock implementation)
 export async function GET(request: NextRequest) {
   try {
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
-    if (!configured) {
-      return NextResponse.json({
-        data: [],
-        message: 'Supabase is not configured'
-      });
-    }
-
     // Get query parameters
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const page = parseInt(url.searchParams.get('page') || '1');
     const category = url.searchParams.get('category');
 
-    // Calculate offset
-    const offset = (page - 1) * limit;
+    // Return mock news articles
+    const mockArticles = [
+      {
+        id: '1',
+        title: 'Sample News Article 1',
+        content: 'This is a sample news article content.',
+        summary: 'Sample article summary',
+        category_id: 'general',
+        image_url: '',
+        video_url: '',
+        video_type: '',
+        author: 'Mock Author',
+        likes: 0,
+        views: 0,
+        published: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        categories: { name: 'General', slug: 'general' }
+      }
+    ];
 
-    // Build query
-    let query = supabase
-      .from('news_articles')
-      .select(`
-        *,
-        categories(name, slug)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-      .range(offset, offset + limit - 1);
-
-    // Add category filter if provided
-    if (category) {
-      query = query.eq('categories.slug', category);
-    }
-
-    // Execute query
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error('Error fetching news articles:', error);
-      return NextResponse.json(
-        { error: `Error fetching news articles: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    // Filter by category if provided
+    const filteredArticles = category
+      ? mockArticles.filter(article => article.categories.slug === category)
+      : mockArticles;
 
     return NextResponse.json({
-      data: data || [],
+      data: filteredArticles,
       page,
       limit,
-      total: count,
-      hasMore: data && data.length === limit
+      total: filteredArticles.length,
+      hasMore: false,
+      note: 'This is mock data - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error:', error);
@@ -71,61 +57,40 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/news - Create a new news article
+// POST /api/news - Create a new news article (Mock implementation)
 export async function POST(request: NextRequest) {
   try {
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
-    if (!configured) {
-      return NextResponse.json(
-        { error: 'Supabase is not configured' },
-        { status: 500 }
-      );
-    }
-
     // Parse request body
     const body = await request.json();
 
     // Validate required fields
-    if (!body.title || !body.content || !body.category_id) {
+    if (!body.title || !body.content) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, content, category_id' },
+        { error: 'Missing required fields: title, content' },
         { status: 400 }
       );
     }
 
-    // Create article object
+    // Create mock article object
     const article = {
+      id: uuidv4(),
       title: body.title,
       content: body.content,
-      summary: body.summary,
-      category_id: body.category_id,
-      image_url: body.image_url,
-      video_url: body.video_url,
-      video_type: body.video_type,
-      author: body.author,
+      summary: body.summary || '',
+      category_id: body.category_id || 'general',
+      image_url: body.image_url || '',
+      video_url: body.video_url || '',
+      video_type: body.video_type || '',
+      author: body.author || 'Anonymous',
       published: body.published !== false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    // Insert article
-    const { data, error } = await supabase
-      .from('news_articles')
-      .insert([article])
-      .select();
-
-    if (error) {
-      console.error('Error creating news article:', error);
-      return NextResponse.json(
-        { error: `Error creating news article: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({
       success: true,
-      data: data[0]
+      data: article,
+      note: 'This is a mock response - Supabase has been replaced with local storage'
     });
   } catch (error: any) {
     console.error('Error:', error);
