@@ -8,7 +8,7 @@ config({ path: '.env.local' });
 const r2Config = {
   endpoint: process.env.CLOUDFLARE_R2_ENDPOINT,
   bucket: process.env.CLOUDFLARE_R2_BUCKET,
-  publicUrl: process.env.CLOUDFLARE_R2_PUBLIC_URL,
+  publicUrl: process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL,
   accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
   secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
 };
