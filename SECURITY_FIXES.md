@@ -1,6 +1,6 @@
-# Security Fixes for FlipNEWS
+# Security Fixes for Vizag News
 
-This document outlines the security fixes that have been applied to the FlipNEWS application.
+This document outlines the security fixes that have been applied to the Vizag News application.
 
 ## 1. Removed Hardcoded API Keys
 

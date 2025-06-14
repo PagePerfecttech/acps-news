@@ -37,8 +37,8 @@ const defaultSettings: SiteSettings = {
 const initializeSettings = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
-  if (!localStorage.getItem('flipnews_settings')) {
-    localStorage.setItem('flipnews_settings', JSON.stringify(defaultSettings));
+  if (!localStorage.getItem('vizagnews_settings')) {
+    localStorage.setItem('vizagnews_settings', JSON.stringify(defaultSettings));
   }
 };
 
@@ -131,7 +131,7 @@ const getLocalSettings = (): SiteSettings => {
   }
 
   initializeSettings();
-  const settings = localStorage.getItem('flipnews_settings');
+  const settings = localStorage.getItem('vizagnews_settings');
   return settings ? JSON.parse(settings) : defaultSettings;
 };
 
@@ -229,7 +229,7 @@ const saveLocalSettings = (settings: SiteSettings): boolean => {
     const currentSettings = getLocalSettings();
     const updatedSettings = { ...currentSettings, ...settings };
 
-    localStorage.setItem('flipnews_settings', JSON.stringify(updatedSettings));
+    localStorage.setItem('vizagnews_settings', JSON.stringify(updatedSettings));
 
     // Also update document title if site_name is changed
     if (settings.site_name && typeof document !== 'undefined') {

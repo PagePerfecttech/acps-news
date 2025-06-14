@@ -1,5 +1,5 @@
--- FlipNews Database Schema
--- This SQL file creates all the necessary tables for the FlipNews application
+-- Vizag News Database Schema
+-- This SQL file creates all the necessary tables for the Vizag News application
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -121,13 +121,13 @@ ON CONFLICT DO NOTHING;
 -- Create site_settings table
 CREATE TABLE IF NOT EXISTS site_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  site_name VARCHAR(100) DEFAULT 'FlipNews',
+  site_name VARCHAR(100) DEFAULT 'Vizag News',
   site_description TEXT DEFAULT 'A modern news aggregator',
   primary_color VARCHAR(20) DEFAULT '#FACC15',
   secondary_color VARCHAR(20) DEFAULT '#000000',
   logo_url TEXT,
   favicon_url TEXT,
-  share_link TEXT DEFAULT 'https://flipnews.vercel.app',
+  share_link TEXT DEFAULT 'https://vizagnews.vercel.app',
   analytics_code TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
 
 -- Insert default site settings
 INSERT INTO site_settings (site_name, site_description, primary_color, secondary_color)
-VALUES ('FlipNews', 'A modern news aggregator', '#FACC15', '#000000')
+VALUES ('Vizag News', 'A modern news aggregator', '#FACC15', '#000000')
 ON CONFLICT DO NOTHING;
 
 -- Insert default categories

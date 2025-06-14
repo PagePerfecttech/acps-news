@@ -58,21 +58,21 @@ const initializeData = () => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
   // Check if news data exists in localStorage
-  if (!localStorage.getItem('flipnews_articles')) {
+  if (!localStorage.getItem('vizagnews_articles')) {
     // Initialize with the default data
-    localStorage.setItem('flipnews_articles', JSON.stringify(longNewsPosts));
+    localStorage.setItem('vizagnews_articles', JSON.stringify(longNewsPosts));
   }
 
   // Check if ads data exists in localStorage
-  if (!localStorage.getItem('flipnews_ads')) {
+  if (!localStorage.getItem('vizagnews_ads')) {
     // Initialize with the default ads
-    localStorage.setItem('flipnews_ads', JSON.stringify(defaultAds));
+    localStorage.setItem('vizagnews_ads', JSON.stringify(defaultAds));
   }
 
   // Check if categories data exists in localStorage
-  if (!localStorage.getItem('flipnews_categories')) {
+  if (!localStorage.getItem('vizagnews_categories')) {
     // Initialize with the default categories
-    localStorage.setItem('flipnews_categories', JSON.stringify(defaultCategories));
+    localStorage.setItem('vizagnews_categories', JSON.stringify(defaultCategories));
   }
 };
 
@@ -131,10 +131,10 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
 
         // Update localStorage with the latest data
         if (typeof window !== 'undefined') {
-          localStorage.setItem('flipnews_articles', JSON.stringify(formattedData));
-          localStorage.setItem('flipnews_articles_cache', JSON.stringify(formattedData));
-          localStorage.setItem('flipnews_articles_cache_timestamp', Date.now().toString());
-          localStorage.setItem('flipnews_articles_updated', Date.now().toString());
+          localStorage.setItem('vizagnews_articles', JSON.stringify(formattedData));
+          localStorage.setItem('vizagnews_articles_cache', JSON.stringify(formattedData));
+          localStorage.setItem('vizagnews_articles_cache_timestamp', Date.now().toString());
+          localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
         }
 
         return formattedData;
@@ -155,11 +155,11 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
   initializeData();
 
   // Check if we have a cached version and when it was last updated
-  const lastUpdated = localStorage.getItem('flipnews_articles_updated');
-  const cachedArticles = localStorage.getItem('flipnews_articles_cache');
+  const lastUpdated = localStorage.getItem('vizagnews_articles_updated');
+  const cachedArticles = localStorage.getItem('vizagnews_articles_cache');
 
   // Get the actual articles from storage
-  const articles = localStorage.getItem('flipnews_articles');
+  const articles = localStorage.getItem('vizagnews_articles');
 
   if (!articles) {
     return longNewsPosts;
@@ -170,7 +170,7 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
 
   // If we have cached articles, check if they&apos;re still fresh
   if (cachedArticles && lastUpdated) {
-    const cachedTimestamp = localStorage.getItem('flipnews_articles_cache_timestamp');
+    const cachedTimestamp = localStorage.getItem('vizagnews_articles_cache_timestamp');
 
     // If the cache timestamp is newer than the last update, use the cache
     if (cachedTimestamp && parseInt(cachedTimestamp, 10) > parseInt(lastUpdated, 10)) {
@@ -181,8 +181,8 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
 
   // If we get here, either there&apos;s no cache or it&apos;s stale
   // Update the cache with the fresh data
-  localStorage.setItem('flipnews_articles_cache', JSON.stringify(parsedArticles));
-  localStorage.setItem('flipnews_articles_cache_timestamp', Date.now().toString());
+  localStorage.setItem('vizagnews_articles_cache', JSON.stringify(parsedArticles));
+  localStorage.setItem('vizagnews_articles_cache_timestamp', Date.now().toString());
 
   console.log('Using fresh articles data from localStorage');
   return parsedArticles;
@@ -259,7 +259,7 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | unde
 
     // If not found, try the cache
     if (typeof window !== 'undefined') {
-      const cachedArticlesJson = localStorage.getItem('flipnews_articles_cache');
+      const cachedArticlesJson = localStorage.getItem('vizagnews_articles_cache');
       if (cachedArticlesJson) {
         try {
           const cachedArticles = JSON.parse(cachedArticlesJson);
@@ -368,13 +368,13 @@ export const updateNewsArticle = async (updatedArticle: NewsArticle): Promise<bo
     if (index === -1) return false;
 
     articles[index] = updatedArticle;
-    localStorage.setItem('flipnews_articles', JSON.stringify(articles));
+    localStorage.setItem('vizagnews_articles', JSON.stringify(articles));
 
     // Clear any cached data to ensure fresh data is loaded
-    localStorage.removeItem('flipnews_articles_cache');
+    localStorage.removeItem('vizagnews_articles_cache');
 
     // Set a timestamp for when the articles were last updated
-    localStorage.setItem('flipnews_articles_updated', Date.now().toString());
+    localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
 
     console.log('Article updated successfully, cache cleared');
     return true;
@@ -503,11 +503,11 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
     const articlesPromise = getNewsArticles();
     const articles = await articlesPromise;
     articles.unshift(newArticle); // Add to the beginning of the array
-    localStorage.setItem('flipnews_articles', JSON.stringify(articles));
+    localStorage.setItem('vizagnews_articles', JSON.stringify(articles));
 
     // Clear cache to ensure fresh data is loaded
-    localStorage.removeItem('flipnews_articles_cache');
-    localStorage.setItem('flipnews_articles_updated', Date.now().toString());
+    localStorage.removeItem('vizagnews_articles_cache');
+    localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
 
     return true;
   } catch (error) {
@@ -553,11 +553,11 @@ export const deleteNewsArticle = async (id: string): Promise<boolean> => {
     const articlesPromise = getNewsArticles();
     const articles = await articlesPromise;
     const filteredArticles = articles.filter(article => article.id !== id);
-    localStorage.setItem('flipnews_articles', JSON.stringify(filteredArticles));
+    localStorage.setItem('vizagnews_articles', JSON.stringify(filteredArticles));
 
     // Clear any cached data to ensure fresh data is loaded
-    localStorage.removeItem('flipnews_articles_cache');
-    localStorage.setItem('flipnews_articles_updated', Date.now().toString());
+    localStorage.removeItem('vizagnews_articles_cache');
+    localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
 
     return true;
   } catch (error) {
@@ -569,9 +569,9 @@ export const deleteNewsArticle = async (id: string): Promise<boolean> => {
 // Reset to default data (for testing)
 export const resetToDefaultData = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
-  localStorage.setItem('flipnews_articles', JSON.stringify(longNewsPosts));
-  localStorage.setItem('flipnews_ads', JSON.stringify(defaultAds));
-  localStorage.setItem('flipnews_categories', JSON.stringify(defaultCategories));
+  localStorage.setItem('vizagnews_articles', JSON.stringify(longNewsPosts));
+  localStorage.setItem('vizagnews_ads', JSON.stringify(defaultAds));
+  localStorage.setItem('vizagnews_categories', JSON.stringify(defaultCategories));
 };
 
 // Ad Management Functions
@@ -595,7 +595,7 @@ export const getAds = async (): Promise<Ad[]> => {
 
         // Update localStorage with the latest data
         if (typeof window !== 'undefined') {
-          localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+          localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
         }
 
         return ads;
@@ -614,7 +614,7 @@ export const getAds = async (): Promise<Ad[]> => {
   }
 
   initializeData();
-  const ads = localStorage.getItem('flipnews_ads');
+  const ads = localStorage.getItem('vizagnews_ads');
   return ads ? JSON.parse(ads) : defaultAds;
 };
 
@@ -668,7 +668,7 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
 
           if (index !== -1) {
             ads[index] = updatedAd;
-            localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+            localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
           }
 
           return true;
@@ -689,7 +689,7 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
     if (index === -1) return false;
 
     ads[index] = updatedAd;
-    localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+    localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
     return true;
   } catch (error) {
     console.error('Error updating ad:', error);
@@ -741,7 +741,7 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
           const adsPromise = getAds();
           const ads = await adsPromise;
           ads.unshift(newAd); // Add to the beginning of the array
-          localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+          localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
 
           return true;
         } else {
@@ -757,7 +757,7 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
     const adsPromise = getAds();
     const ads = await adsPromise;
     ads.unshift(newAd); // Add to the beginning of the array
-    localStorage.setItem('flipnews_ads', JSON.stringify(ads));
+    localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
     return true;
   } catch (error) {
     console.error('Error adding ad:', error);
@@ -791,7 +791,7 @@ export const deleteAd = async (id: string): Promise<boolean> => {
           const adsPromise = getAds();
           const ads = await adsPromise;
           const filteredAds = ads.filter(ad => ad.id !== id);
-          localStorage.setItem('flipnews_ads', JSON.stringify(filteredAds));
+          localStorage.setItem('vizagnews_ads', JSON.stringify(filteredAds));
 
           return true;
         } else {
@@ -807,7 +807,7 @@ export const deleteAd = async (id: string): Promise<boolean> => {
     const adsPromise = getAds();
     const ads = await adsPromise;
     const filteredAds = ads.filter(ad => ad.id !== id);
-    localStorage.setItem('flipnews_ads', JSON.stringify(filteredAds));
+    localStorage.setItem('vizagnews_ads', JSON.stringify(filteredAds));
     return true;
   } catch (error) {
     console.error('Error deleting ad:', error);
@@ -837,7 +837,7 @@ export const getCategories = async (): Promise<Category[]> => {
 
           // Update localStorage with the latest data
           if (typeof window !== 'undefined') {
-            localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+            localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
           }
 
           return categories;
@@ -857,7 +857,7 @@ export const getCategories = async (): Promise<Category[]> => {
     }
 
     initializeData();
-    const categories = localStorage.getItem('flipnews_categories');
+    const categories = localStorage.getItem('vizagnews_categories');
     return categories ? JSON.parse(categories) : defaultCategories;
   } catch (error) {
     console.error('Error in getCategories:', error);
@@ -873,7 +873,7 @@ export const getCategoriesSync = (): Category[] => {
   }
 
   initializeData();
-  const categories = localStorage.getItem('flipnews_categories');
+  const categories = localStorage.getItem('vizagnews_categories');
   return categories ? JSON.parse(categories) : defaultCategories;
 };
 
@@ -919,7 +919,7 @@ export const updateCategory = async (updatedCategory: Category): Promise<boolean
 
           if (index !== -1) {
             categories[index] = updatedCategory;
-            localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+            localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
           }
 
           return true;
@@ -939,7 +939,7 @@ export const updateCategory = async (updatedCategory: Category): Promise<boolean
     if (index === -1) return false;
 
     categories[index] = updatedCategory;
-    localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+    localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
     return true;
   } catch (error) {
     console.error('Error updating category:', error);
@@ -983,7 +983,7 @@ export const addCategory = async (newCategory: Category): Promise<boolean> => {
           };
 
           categories.push(updatedCategory);
-          localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+          localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
 
           return true;
         } else {
@@ -1006,7 +1006,7 @@ export const addCategory = async (newCategory: Category): Promise<boolean> => {
     }
 
     categories.push(newCategory);
-    localStorage.setItem('flipnews_categories', JSON.stringify(categories));
+    localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
     return true;
   } catch (error) {
     console.error('Error adding category:', error);
@@ -1038,7 +1038,7 @@ export const deleteCategory = async (id: string): Promise<boolean> => {
           // Update localStorage
           const categories = await getCategories();
           const filteredCategories = categories.filter(category => category.id !== id);
-          localStorage.setItem('flipnews_categories', JSON.stringify(filteredCategories));
+          localStorage.setItem('vizagnews_categories', JSON.stringify(filteredCategories));
 
           return true;
         } else {
@@ -1053,7 +1053,7 @@ export const deleteCategory = async (id: string): Promise<boolean> => {
     // Fall back to localStorage
     const categories = await getCategories();
     const filteredCategories = categories.filter(category => category.id !== id);
-    localStorage.setItem('flipnews_categories', JSON.stringify(filteredCategories));
+    localStorage.setItem('vizagnews_categories', JSON.stringify(filteredCategories));
     return true;
   } catch (error) {
     console.error('Error deleting category:', error);

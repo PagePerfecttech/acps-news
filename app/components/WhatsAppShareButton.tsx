@@ -36,7 +36,7 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
   const handleWhatsAppShare = () => {
     try {
       // Get share link from settings
-      const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
+      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
 
       // Get description from the article element - with error handling
       let description = '';

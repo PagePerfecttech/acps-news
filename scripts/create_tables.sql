@@ -151,9 +151,9 @@ INSERT INTO categories (name, slug) VALUES
 
 -- Insert default site settings
 INSERT INTO site_settings (key, value) VALUES
-('site_name', 'FlipNews'),
+('site_name', 'Vizag News'),
 ('primary_color', '#FACC15'),
 ('secondary_color', '#000000'),
-('share_link', 'https://flipnews.vercel.app'),
+('share_link', 'https://vizagnews.vercel.app'),
 ('app_version', '1.0.0'),
 ('last_updated', CURRENT_TIMESTAMP);

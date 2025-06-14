@@ -292,7 +292,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
         alert('Screenshot is not ready yet. Please try again in a moment.');
         return;
       }
-      const siteName = settings?.site_name || 'FlipNews';
+      const siteName = settings?.site_name || 'Vizag News';
       downloadDataUrl(screenshotUrl, `${siteName}-news.png`);
     } catch (error) {
       console.error('Error downloading screenshot:', error);
@@ -425,7 +425,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
                   style={{ maxHeight: '70vh', objectFit: 'contain' }}
                 />
                 <div className="absolute bottom-2 right-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs font-bold">
-                  <span data-site-name>{settings?.site_name || 'FlipNews'}</span>
+                  <span data-site-name>{settings?.site_name || 'Vizag News'}</span>
                 </div>
               </div>
             ) : (
@@ -463,7 +463,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             <div className="flex items-center">
               <textarea
                 rows={4}
-                value={`${title}\n\n${getDescriptionForShare()}\n\nRead More: ${settings?.share_link || 'https://flipnews.vercel.app'}`}
+                value={`${title}\n\n${getDescriptionForShare()}\n\nRead More: ${settings?.share_link || 'https://vizag-news.vercel.app'}`}
                 readOnly
                 className="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black text-sm"
               />

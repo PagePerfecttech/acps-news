@@ -41,8 +41,8 @@ CREATE POLICY "Allow service role full access to site_settings"
 -- Insert default settings
 INSERT INTO site_settings (key, value, description)
 VALUES
-  ('app_name', '"FlipNEWS"', 'Application name'),
-  ('app_description', '"FlipNEWS is your source for the latest Telugu news with an interactive flip experience"', 'Application description'),
+  ('app_name', '"Vizag News"', 'Application name'),
+  ('app_description', '"Vizag News is your source for the latest Telugu news with an interactive flip experience"', 'Application description'),
   ('theme_primary_color', '"#FFCC00"', 'Primary theme color'),
   ('theme_secondary_color', '"#333333"', 'Secondary theme color'),
   ('max_articles_per_page', '10', 'Maximum number of articles to show per page'),

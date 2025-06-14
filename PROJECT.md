@@ -1,8 +1,8 @@
-# FlipNews - News Card Swiper Application
+# Vizag News - News Card Swiper Application
 
 ## Project Overview
 
-FlipNews is a modern news application that displays news articles in a card format with a swipe-based interface. Users can swipe up for the next news article and swipe down for the previous one. The application features a clean, minimalist UI focused on content consumption.
+Vizag News is a modern news application that displays news articles in a card format with a swipe-based interface. Users can swipe up for the next news article and swipe down for the previous one. The application features a clean, minimalist UI focused on content consumption.
 
 ## Key Features
 
@@ -113,10 +113,10 @@ CREATE TABLE ads (
 ```sql
 CREATE TABLE settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  site_name TEXT DEFAULT 'FlipNews',
+  site_name TEXT DEFAULT 'Vizag News',
   primary_color TEXT DEFAULT '#3B82F6',
   secondary_color TEXT DEFAULT '#8B5CF6',
-  share_link TEXT DEFAULT 'https://flipnews.vercel.app',
+  share_link TEXT DEFAULT 'https://vizagnews.vercel.app',
   ad_frequency INTEGER DEFAULT 5,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -141,8 +141,8 @@ CREATE TABLE rss_feeds (
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/PagePerfecttech/FlipNEWS.git
-cd FlipNews
+git clone https://github.com/PagePerfecttech/Vizag News.git
+cd Vizag News
 ```
 
 2. Install dependencies:
@@ -189,7 +189,7 @@ yarn start
 ## Project Structure
 
 ```
-FlipNews/
+Vizag News/
 ├── app/                  # Next.js app directory
 │   ├── admin/            # Admin panel pages
 │   ├── api/              # API routes

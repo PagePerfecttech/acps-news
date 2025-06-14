@@ -1,4 +1,4 @@
-// This script helps you add RSS feeds to your FlipNews application
+// This script helps you add RSS feeds to your Vizag News application
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const readline = require('readline');
@@ -22,9 +22,9 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-console.log('FlipNews RSS Feed Manager');
+console.log('Vizag News RSS Feed Manager');
 console.log('========================');
-console.log('This script will help you add RSS feeds to your FlipNews application.');
+console.log('This script will help you add RSS feeds to your Vizag News application.');
 console.log('');
 
 // Function to add a feed

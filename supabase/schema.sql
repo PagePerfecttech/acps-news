@@ -1,4 +1,4 @@
--- Create tables for FlipNews
+-- Create tables for Vizag News
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -183,10 +183,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- Site settings table
 CREATE TABLE site_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  site_name VARCHAR(255) NOT NULL DEFAULT 'FlipNews',
+  site_name VARCHAR(255) NOT NULL DEFAULT 'Vizag News',
   primary_color VARCHAR(50) NOT NULL DEFAULT '#FACC15',
   secondary_color VARCHAR(50) NOT NULL DEFAULT '#000000',
-  share_link VARCHAR(255) NOT NULL DEFAULT 'https://flipnews.vercel.app',
+  share_link VARCHAR(255) NOT NULL DEFAULT 'https://vizagnews.vercel.app',
   logo_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -271,7 +271,7 @@ CREATE POLICY "Allow read access to anonymous users" ON ad_settings
 
 -- Insert default site settings
 INSERT INTO site_settings (site_name, primary_color, secondary_color, share_link)
-VALUES ('FlipNews', '#FACC15', '#000000', 'https://flipnews.vercel.app');
+VALUES ('Vizag News', '#FACC15', '#000000', 'https://vizagnews.vercel.app');
 
 -- Insert default ad settings
 INSERT INTO ad_settings (frequency)

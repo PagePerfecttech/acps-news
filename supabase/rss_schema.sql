@@ -1,4 +1,4 @@
--- RSS Feed tables for FlipNews
+-- RSS Feed tables for Vizag News
 
 -- RSS Feed sources table
 CREATE TABLE rss_feeds (
