@@ -2,6 +2,8 @@
 
 Vizag News is a modern Telugu news application that displays articles in a card format with a vertical swipe navigation system. Built specifically for Telugu-speaking audiences, it provides an intuitive and engaging way to consume news content.
 
+> **🎉 Latest Update**: All systems fully operational! Complete ads management, enhanced share functionality, and 100% Supabase integration.
+
 ## ✨ Features
 
 ### 🎯 Core Features
@@ -13,29 +15,33 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 - **Background Logo Management** - Customizable background branding with opacity control
 
 ### 🛠️ Admin Features
-- **Complete Admin Panel** - Full content management system
-- **Background Logo Upload** - Upload and manage background logos from admin panel
-- **Opacity Control** - Adjust background logo opacity (5%-50%)
+- **Complete Admin Panel** - Full content management system with Supabase integration
+- **Ads Management** - Create, edit, delete advertisements with frequency control
+- **News Management** - Full CRUD operations for news articles
 - **Category Management** - Organize news by categories (సినిమా, రాజకీయం, క్రీడలు, etc.)
-- **Ad Management** - Control ad frequency and placement
-- **Media Upload** - Support for images and videos
+- **Media Upload** - Cloudflare R2 integration for images and videos
+- **Share Functionality** - Complete page screenshot sharing on social media
 - **Real-time Preview** - See changes instantly
+- **Background Logo Upload** - Upload and manage background logos with opacity control
 
 ### 🔧 Technical Features
+- **Supabase Integration** - Complete database integration with real-time updates
 - **Cloudflare R2 Storage** - Cost-effective S3-compatible media storage
-- **PNG Optimization** - Automatic conversion for background images
-- **RSS Feed Integration** - Real-time news aggregation
+- **Enhanced Screenshot Sharing** - High-quality page screenshots for social media
+- **API-First Architecture** - RESTful APIs for all operations
 - **Responsive Design** - Works perfectly on all devices
 - **SEO Optimized** - Meta tags and structured data
 - **Performance Optimized** - Fast loading and smooth animations
+- **Real-time Diagnostics** - Comprehensive health monitoring tools
 
 ## 🚀 Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS 4
 - **Navigation**: Swiper.js for smooth vertical scrolling
+- **Database**: Supabase (PostgreSQL) with real-time features
 - **Storage**: Cloudflare R2 (S3-compatible) for media storage
-- **Database**: Local storage with optional Supabase integration
+- **Screenshots**: html2canvas for page capture and sharing
 - **Deployment**: Vercel-ready configuration
 
 ## Getting Started
@@ -44,6 +50,7 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 
 - Node.js 18.x or later
 - npm or yarn
+- Supabase account (for database)
 - Cloudflare R2 account (for media storage)
 
 ### Installation
@@ -64,15 +71,17 @@ yarn install
 3. Set up environment variables
 Create a `.env.local` file with the following variables:
 ```
-# Cloudflare R2 Configuration (Primary Storage)
+# Supabase Configuration (Primary Database)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Cloudflare R2 Configuration (Media Storage)
 NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
 CLOUDFLARE_R2_ACCESS_KEY_ID=your_r2_access_key_id
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
 CLOUDFLARE_R2_BUCKET_NAME=your_r2_bucket_name
 NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL=https://your-bucket.your-domain.com
-
-# ImgBB Configuration (Emergency Fallback)
-NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_api_key
 ```
 
 4. Run the development server
@@ -83,6 +92,52 @@ yarn dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application
+
+## 🔧 Database Setup
+
+Run the following scripts to set up your database:
+
+```bash
+# Test and setup ads table
+node test-ads-setup.js
+
+# Run comprehensive health check
+node test-project-health.js
+```
+
+Or manually run the SQL script in your Supabase dashboard:
+- Execute `scripts/create-ads-table.sql` in Supabase SQL Editor
+
+## 🆕 Latest Updates & Fixes
+
+### ✅ Ads Management System (Fully Working)
+- **Complete Supabase Integration**: All CRUD operations working
+- **Admin Panel**: Create, edit, delete ads with real-time updates
+- **Telugu Sample Data**: Pre-loaded with Telugu advertisements
+- **Frequency Control**: Configure ad display frequency
+
+### ✅ Enhanced Share Functionality
+- **Page Screenshots**: Captures complete page content for sharing
+- **High Quality**: 1.5x scale for crisp, clear images
+- **Social Media Ready**: Optimized for WhatsApp, Facebook, Twitter
+- **Fallback Handling**: Branded fallback image with Vizag News branding
+
+### ✅ Complete Branding Update
+- **Vizag News Branding**: Updated from FlipNews to Vizag News
+- **Telugu Integration**: విజయవాడ వార్తలు - Latest Telugu News
+- **Consistent URLs**: All links point to vizag-news.vercel.app
+- **Proper Fallback Images**: Branded SVG with Telugu text
+
+### ✅ Infrastructure Improvements
+- **Environment Variables**: Fixed server configuration issues
+- **R2 Upload**: Cloudflare R2 integration working perfectly
+- **API Endpoints**: All admin APIs functional
+- **Health Monitoring**: Comprehensive diagnostic tools
+
+### 🧪 Testing Tools
+- `test-project-health.js`: Complete system health check
+- `test-ads-setup.js`: Ads system verification
+- `test-server-r2.js`: R2 upload testing
 
 ## 🎨 Background Logo Management
 
