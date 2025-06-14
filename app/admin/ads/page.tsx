@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiEdit, FiTrash2, FiPlus, FiEye, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import { Ad } from '../../types';
-import { getAds, deleteAd, updateAd } from '../../lib/dataService';
 
 export default function AdManagement() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,8 +17,21 @@ export default function AdManagement() {
   useEffect(() => {
     const fetchAds = async () => {
       try {
-        const loadedAds = await getAds();
-        setAds(loadedAds);
+        console.log('Fetching ads from API...');
+        const response = await fetch('/api/admin/ads');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          setAds(result.data || []);
+          console.log(`Loaded ${result.data?.length || 0} ads`);
+        } else {
+          throw new Error(result.error || 'Failed to fetch ads');
+        }
       } catch (error) {
         console.error('Error loading ads:', error);
         setMessage({ type: 'error', text: 'Failed to load ads. Please refresh the page.' });
@@ -27,7 +39,7 @@ export default function AdManagement() {
     };
 
     fetchAds();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []);
 
   // Filter ads based on search term and status
   const filteredAds = ads.filter(ad => {
@@ -51,7 +63,7 @@ export default function AdManagement() {
     });
   };
 
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
     try {
       // Find the ad
       const adToUpdate = ads.find(ad => ad.id === id);
@@ -61,21 +73,34 @@ export default function AdManagement() {
       }
 
       // Toggle the status
-      const updatedAd: Ad = {
+      const updatedAdData = {
         ...adToUpdate,
-        active: !adToUpdate.active,
-        updated_at: new Date().toISOString()
+        active: !adToUpdate.active
       };
 
-      // Update the ad
-      const success = updateAd(updatedAd);
+      console.log('Updating ad status via API:', id, updatedAdData.active);
 
-      if (success) {
+      // Update the ad via API
+      const response = await fetch(`/api/admin/ads/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedAdData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
         // Update the ads list
-        setAds(prev => prev.map(ad => ad.id === id ? updatedAd : ad));
+        setAds(prev => prev.map(ad => ad.id === id ? result.data : ad));
         setMessage({
           type: 'success',
-          text: `Ad ${updatedAd.active ? 'activated' : 'deactivated'} successfully!`
+          text: `Ad ${result.data.active ? 'activated' : 'deactivated'} successfully!`
         });
 
         // Clear message after 3 seconds
@@ -83,7 +108,7 @@ export default function AdManagement() {
           setMessage({ type: '', text: '' });
         }, 3000);
       } else {
-        throw new Error('Failed to update ad status');
+        throw new Error(result.error || 'Failed to update ad status');
       }
     } catch (error) {
       console.error('Error updating ad status:', error);
@@ -91,14 +116,24 @@ export default function AdManagement() {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this ad?')) {
       setIsDeleting(true);
 
       try {
-        const success = deleteAd(id);
+        console.log('Deleting ad via API:', id);
 
-        if (success) {
+        const response = await fetch(`/api/admin/ads/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
           // Update the ads list
           setAds(prev => prev.filter(ad => ad.id !== id));
           setMessage({ type: 'success', text: 'Ad deleted successfully!' });
@@ -108,7 +143,7 @@ export default function AdManagement() {
             setMessage({ type: '', text: '' });
           }, 3000);
         } else {
-          throw new Error('Failed to delete ad');
+          throw new Error(result.error || 'Failed to delete ad');
         }
       } catch (error) {
         console.error('Error deleting ad:', error);

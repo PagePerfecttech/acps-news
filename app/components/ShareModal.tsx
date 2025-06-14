@@ -164,8 +164,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       }
 
       // Use the share link from settings, or fallback to a default
-      const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
-      const siteName = settings?.site_name || 'FlipNEWS';
+      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
+      const siteName = settings?.site_name || 'Vizag News';
 
       // Get the article element to extract content
       const articleElement = document.getElementById(elementId);
@@ -324,7 +324,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
   // Handle copy link button click
   const handleCopyLink = () => {
     try {
-      const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
+      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
       const description = getDescriptionForShare();
       const shareMessage = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
 

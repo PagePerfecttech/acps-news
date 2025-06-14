@@ -188,9 +188,11 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/admin/ads/:id - Delete an ad (Mock implementation)
+// DELETE /api/admin/ads/:id - Delete an ad
 export async function DELETE(request: NextRequest) {
   try {
+    console.log('Deleting ad via admin API');
+
     // Get the ad ID from the URL
     const url = new URL(request.url);
     const id = url.pathname.split('/').pop();
@@ -202,9 +204,27 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    console.log('Deleting ad with ID:', id);
+
+    // Delete from Supabase
+    const { error } = await supabaseAdmin
+      .from('ads')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { error: `Failed to delete ad: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    console.log('Ad deleted successfully');
+
     return NextResponse.json({
       success: true,
-      note: 'This is a mock response - Supabase has been replaced with local storage'
+      message: 'Ad deleted successfully'
     });
   } catch (error: any) {
     console.error('Error in DELETE /api/admin/ads:', error);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
-import { getAdById, updateAd } from '../../../../lib/dataService';
+
 import { Ad } from '../../../../types';
 
 export default function EditAd({ params }: { params: { id: string } }) {
@@ -30,23 +30,41 @@ export default function EditAd({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchAd = async () => {
       try {
-        const fetchedAd = await getAdById(id);
-        setAd(fetchedAd);
-        if (fetchedAd) {
-          // Initialize form data with ad values
-          setFormData({
-            title: fetchedAd.title || '',
-            description: fetchedAd.description || '',
-            text_content: fetchedAd.text_content || '',
-            link_url: fetchedAd.link_url || '',
-            frequency: fetchedAd.frequency || 3,
-            active: fetchedAd.active !== false,
-            mediaType: fetchedAd.video_url ? (fetchedAd.video_type === 'youtube' ? 'youtube' : 'video') :
-                      fetchedAd.image_url ? 'image' : 'text',
-            imageUrl: fetchedAd.image_url || '',
-            videoUrl: fetchedAd.video_url || '',
-            youtubeUrl: fetchedAd.video_url || '',
-          });
+        console.log('Fetching ad with ID:', id);
+
+        const response = await fetch(`/api/admin/ads`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Find the ad with the matching ID
+          const fetchedAd = result.data.find((ad: any) => ad.id === id);
+
+          if (fetchedAd) {
+            setAd(fetchedAd);
+            // Initialize form data with ad values
+            setFormData({
+              title: fetchedAd.title || '',
+              description: fetchedAd.description || '',
+              text_content: fetchedAd.text_content || '',
+              link_url: fetchedAd.link_url || '',
+              frequency: fetchedAd.frequency || 3,
+              active: fetchedAd.active !== false,
+              mediaType: fetchedAd.video_url ? (fetchedAd.video_type === 'youtube' ? 'youtube' : 'video') :
+                        fetchedAd.image_url ? 'image' : 'text',
+              imageUrl: fetchedAd.image_url || '',
+              videoUrl: fetchedAd.video_url || '',
+              youtubeUrl: fetchedAd.video_url || '',
+            });
+          } else {
+            console.error('Ad not found with ID:', id);
+          }
+        } else {
+          throw new Error(result.error || 'Failed to fetch ads');
         }
       } catch (error) {
         console.error('Error fetching ad:', error);
@@ -151,16 +169,29 @@ export default function EditAd({ params }: { params: { id: string } }) {
 
       console.log('Updating ad:', updatedAd);
 
-      // Update the ad using the data service
-      const success = updateAd(updatedAd);
+      // Update the ad using the API
+      const response = await fetch(`/api/admin/ads/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedAd),
+      });
 
-      if (success) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
         setMessage({ type: 'success', text: 'Ad updated successfully!' });
+        console.log('Ad updated successfully:', result.data);
         setTimeout(() => {
           router.push('/admin/ads');
         }, 1500);
       } else {
-        throw new Error('Failed to update ad');
+        throw new Error(result.error || 'Failed to update ad');
       }
     } catch (error) {
       console.error('Error updating ad:', error);

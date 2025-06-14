@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { FiSave, FiX, FiUpload } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { addAd } from '../../../lib/dataService';
-import { Ad } from '../../../types';
+
 
 export default function AddAdPage() {
   const router = useRouter();
@@ -45,39 +44,50 @@ export default function AddAdPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // Create a new ad object
-      const newAd: Ad = {
-        id: `ad-${Date.now()}`, // Generate a unique ID
+      // Create a new ad object (without id, created_at, updated_at - server will handle these)
+      const newAdData = {
         title: formData.title,
-        description: formData.description || undefined,
-        text_content: adType === 'text' ? formData.text_content : undefined,
-        image_url: adType === 'image' ? formData.image_url : undefined,
-        video_url: adType === 'video' ? formData.video_url : undefined,
-        video_type: adType === 'video' ? (formData.video_type as 'youtube' | 'uploaded') : undefined,
+        description: formData.description || '',
+        text_content: adType === 'text' ? formData.text_content : '',
+        image_url: adType === 'image' ? formData.image_url : '',
+        video_url: adType === 'video' ? formData.video_url : '',
+        video_type: adType === 'video' ? formData.video_type : '',
         link_url: formData.link_url,
         frequency: Number(formData.frequency),
-        active: formData.active,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        active: formData.active
       };
 
-      console.log('Adding new ad:', newAd);
+      console.log('Adding new ad via API:', newAdData);
 
-      // Add the ad using the data service
-      const success = addAd(newAd);
+      // Add the ad using the API
+      const response = await fetch('/api/admin/ads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newAdData),
+      });
 
-      if (success) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
         setMessage({
           type: 'success',
           text: 'Advertisement created successfully!'
         });
+
+        console.log('Ad created successfully:', result.data);
 
         // Navigate to the ads list after a short delay
         setTimeout(() => {
           router.push('/admin/ads');
         }, 1500);
       } else {
-        throw new Error('Failed to add advertisement');
+        throw new Error(result.error || 'Failed to add advertisement');
       }
     } catch (error) {
       console.error('Error adding ad:', error);
