@@ -17,17 +17,30 @@ export async function GET(request: NextRequest) {
     const cloudflareR2Bucket = process.env.CLOUDFLARE_R2_BUCKET_NAME;
     const cloudflareR2PublicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL;
     
-    // Return environment variables status
+    // Return environment variables status with more details
     return NextResponse.json({
       success: true,
-      supabaseUrl: !!supabaseUrl,
-      supabaseAnonKey: !!supabaseAnonKey,
-      supabaseServiceRoleKey: !!supabaseServiceRoleKey,
-      cloudflareAccountId: !!cloudflareAccountId,
-      cloudflareR2AccessKeyId: !!cloudflareR2AccessKeyId,
-      cloudflareR2SecretAccessKey: !!cloudflareR2SecretAccessKey,
-      cloudflareR2Bucket: !!cloudflareR2Bucket,
-      cloudflareR2PublicUrl: !!cloudflareR2PublicUrl,
+      environment: process.env.NODE_ENV || 'unknown',
+      supabase: {
+        url: !!supabaseUrl,
+        urlValue: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing',
+        anonKey: !!supabaseAnonKey,
+        serviceRoleKey: !!supabaseServiceRoleKey
+      },
+      cloudflare: {
+        accountId: !!cloudflareAccountId,
+        accountIdValue: cloudflareAccountId ? cloudflareAccountId.substring(0, 10) + '...' : 'missing',
+        r2AccessKeyId: !!cloudflareR2AccessKeyId,
+        r2AccessKeyIdValue: cloudflareR2AccessKeyId ? cloudflareR2AccessKeyId.substring(0, 10) + '...' : 'missing',
+        r2SecretAccessKey: !!cloudflareR2SecretAccessKey,
+        r2Bucket: !!cloudflareR2Bucket,
+        r2BucketValue: cloudflareR2Bucket || 'missing',
+        r2PublicUrl: !!cloudflareR2PublicUrl,
+        r2PublicUrlValue: cloudflareR2PublicUrl || 'missing'
+      },
+      allConfigured: !!(supabaseUrl && supabaseAnonKey && cloudflareAccountId &&
+                       cloudflareR2AccessKeyId && cloudflareR2SecretAccessKey &&
+                       cloudflareR2Bucket && cloudflareR2PublicUrl),
       timestamp: Date.now()
     });
   } catch (error: any) {

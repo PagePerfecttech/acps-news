@@ -5,11 +5,11 @@ const nextConfig = {
     domains: [
       'images.unsplash.com',
       'localhost',
-      'flipnews.vercel.app',
-      'tnaqvbrflguwpeafwclz.supabase.co',
+      'vizag-news.vercel.app',
+      'wtwetyalktzkimwtiwun.supabase.co',
       'res.cloudinary.com',
       'dejesejon.cloudinary.com',
-      'pub-e7ff7485d109499f9164e5959b53f7dc.r2.dev'
+      'pub-8f37c342d7194c4199e9b0e6c186f62d.r2.dev'
     ],
     remotePatterns: [
       {
