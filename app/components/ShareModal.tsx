@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiShare2, FiDownload, FiCopy, FiFacebook, FiTwitter } from 'react-icons/fi';
-import { captureScreenshot, shareContent, dataUrlToFile, downloadDataUrl } from '../utils/screenshotUtil';
+import { shareContent } from '../utils/screenshotUtil';
+import { capturePageScreenshot, dataUrlToFile, downloadDataUrl } from '../utils/improvedScreenshot';
 import { useSettings } from '../contexts/SettingsContext';
 
 interface ShareModalProps {
@@ -57,18 +58,21 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
 
     // Reference to store the timeout ID
     let timeoutId: NodeJS.Timeout;
+    let animTimeoutId: NodeJS.Timeout;
 
     // Set a timeout to ensure we don&apos;t wait too long
     const timeoutPromise = new Promise<string>((resolve) => {
       timeoutId = setTimeout(() => {
+        console.warn('Screenshot capture timed out, using fallback image');
         // Use a fallback image if it takes too long
         resolve('/images/fallback-share-image.svg');
-      }, 6000); // 6 seconds timeout (increased for better reliability)
+      }, 10000); // 10 seconds timeout (increased for better reliability)
     });
 
-    // Cleanup function to clear the timeout if component unmounts
+    // Cleanup function to clear all timeouts
     const cleanup = () => {
       if (timeoutId) clearTimeout(timeoutId);
+      if (animTimeoutId) clearTimeout(animTimeoutId);
     };
 
     try {
@@ -121,21 +125,17 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
 
       // Wait a moment for any animations or transitions to complete
       await new Promise(resolve => {
-        const animTimeoutId = setTimeout(resolve, 200); // Increased from 100ms
-
-        // Add to cleanup list
-        const originalCleanup = cleanup;
-        cleanup = () => {
-          clearTimeout(animTimeoutId);
-          originalCleanup();
-        };
+        setTimeout(resolve, 300); // Increased for better reliability
       });
 
-      // Race between screenshot capture and timeout
-      const dataUrl = await Promise.race([
-        captureScreenshot(element),
-        timeoutPromise
-      ]);
+      // Use improved screenshot capture
+      const dataUrl = await capturePageScreenshot(elementId, {
+        quality: 0.9,
+        scale: 1.5,
+        timeout: 10000,
+        maxWidth: 1200,
+        maxHeight: 1600
+      });
 
       // Verify that we got a valid data URL
       if (dataUrl.startsWith('data:image/')) {
@@ -233,8 +233,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       }
 
       // Use the share link from settings, or fallback to a default
-      const shareLink = settings?.share_link || 'https://flipnews.vercel.app';
-      const siteName = settings?.site_name || 'FlipNEWS';
+      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
 
       // Get the article element to extract content
       const articleElement = document.getElementById(elementId);

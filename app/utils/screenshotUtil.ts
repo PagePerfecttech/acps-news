@@ -103,19 +103,25 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
     const canvas = await html2canvas(wrapper, {
       allowTaint: true,
       useCORS: true,
-      scale: 2, // Higher scale for better quality
+      scale: 1.5, // Balanced scale for quality and performance
       logging: false,
       backgroundColor: '#ffffff',
-      imageTimeout: 5000, // 5 second timeout for images
+      imageTimeout: 8000, // Increased timeout for better reliability
       foreignObjectRendering: false, // More compatible rendering
       removeContainer: true, // Clean up after capture
-      width: originalRect.width, // Ensure correct width
-      height: originalRect.height, // Ensure correct height
+      width: Math.min(originalRect.width, 1200), // Limit width for better performance
+      height: Math.min(originalRect.height, 1600), // Limit height for better performance
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
       ignoreElements: (el) => {
         // Ignore elements that are not visible or not important for the screenshot
         return el.classList.contains('ignore-screenshot') ||
                el.tagName === 'SCRIPT' ||
-               el.tagName === 'STYLE';
+               el.tagName === 'STYLE' ||
+               el.style.display === 'none' ||
+               el.style.visibility === 'hidden';
       },
       onclone: (document, clonedElement) => {
         try {
