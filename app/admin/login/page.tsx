@@ -25,20 +25,24 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Hardcoded admin credentials for now
-      const adminEmail = 'admin@flipnews.com';
-      const adminPassword = 'admin123';
+      // Use Supabase auth for real authentication
+      const { supabase } = await import('../../lib/supabase');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      // Check if credentials match
-      if (formData.email === adminEmail && formData.password === adminPassword) {
-        // Set auth token in localStorage
+      if (error) {
+        setError(error.message);
+        console.error('Login error:', error);
+      } else if (data.user) {
+        // Set auth token in localStorage for compatibility
         localStorage.setItem('flipnews_auth', 'true');
-        localStorage.setItem('flipnews_admin_name', 'Admin');
+        localStorage.setItem('flipnews_admin_name', data.user.email || 'Admin');
+        localStorage.setItem('flipnews_user_id', data.user.id);
 
         // Redirect to admin dashboard
         router.push('/admin');
-      } else {
-        setError('Invalid email or password');
       }
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Login failed. Please try again.');

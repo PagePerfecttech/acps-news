@@ -19,20 +19,58 @@ export default function AdminLayout({
   const { settings } = useSettings();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const auth = localStorage.getItem('flipnews_auth');
-    setIsAuthenticated(auth === 'true');
-    setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        // Check Supabase session first
+        const { supabase } = await import('../lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
 
-    // If not authenticated and not on login page, redirect to login
-    if (!auth && pathname !== '/admin/login') {
-      router.push('/admin/login');
-    }
+        if (session) {
+          // User is authenticated with Supabase
+          setIsAuthenticated(true);
+          localStorage.setItem('flipnews_auth', 'true');
+          localStorage.setItem('flipnews_admin_name', session.user.email || 'Admin');
+        } else {
+          // Fallback to localStorage check for compatibility
+          const auth = localStorage.getItem('flipnews_auth');
+          setIsAuthenticated(auth === 'true');
+
+          // If not authenticated and not on login page, redirect to login
+          if (!auth && pathname !== '/admin/login') {
+            router.push('/admin/login');
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        // Fallback to localStorage
+        const auth = localStorage.getItem('flipnews_auth');
+        setIsAuthenticated(auth === 'true');
+
+        if (!auth && pathname !== '/admin/login') {
+          router.push('/admin/login');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, [pathname, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('flipnews_auth');
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    try {
+      // Sign out from Supabase
+      const { supabase } = await import('../lib/supabase');
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear localStorage and redirect
+      localStorage.removeItem('flipnews_auth');
+      localStorage.removeItem('flipnews_admin_name');
+      localStorage.removeItem('flipnews_user_id');
+      router.push('/admin/login');
+    }
   };
 
   const toggleSidebar = () => {

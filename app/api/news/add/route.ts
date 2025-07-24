@@ -1,16 +1,22 @@
 /**
- * API Route for adding news articles (Mock implementation)
- *
- * Note: Supabase has been removed - this now stores articles locally
- * for compatibility during the R2 migration
+ * API Route for adding news articles
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
+import { isSupabaseConfigured, supabase } from '../../../lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('News article add API called (Mock implementation)');
+    console.log('News article add API called');
+
+    // Check if Supabase is configured
+    const configured = await isSupabaseConfigured();
+    if (!configured) {
+      return NextResponse.json(
+        { error: 'Supabase not configured' },
+        { status: 500 }
+      );
+    }
 
     // Parse request body
     const newArticle = await request.json();
@@ -24,13 +30,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a unique ID for the article
-    const articleId = uuidv4();
+    // Prepare the article data for Supabase
+    const now = new Date().toISOString();
     const categoryId = newArticle.category || 'general';
-
-    // Prepare the article data
     const articleData = {
-      id: articleId,
       title: newArticle.title,
       content: newArticle.content,
       summary: newArticle.summary || '',
@@ -39,24 +42,39 @@ export async function POST(request: NextRequest) {
       video_url: newArticle.video_url || '',
       video_type: newArticle.video_type || '',
       author: newArticle.author || 'Anonymous',
-      likes: newArticle.likes || 0,
-      views: 0,
       published: newArticle.published !== false,
-      created_at: newArticle.created_at || new Date().toISOString(),
-      updated_at: newArticle.updated_at || new Date().toISOString(),
-      tags: Array.isArray(newArticle.tags) ? newArticle.tags : []
+      created_at: newArticle.created_at || now,
+      updated_at: newArticle.updated_at || now
     };
 
-    console.log('Mock article data prepared:', articleData);
+    console.log('Inserting article into Supabase:', articleData);
 
-    // Store in localStorage (client-side will handle this)
-    // For now, just return success with the article data
+    // Insert into Supabase
+    const { data, error } = await supabase
+      .from('news_articles')
+      .insert([articleData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to save article: ${error.message}`,
+          details: error
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('Article saved successfully:', data);
+
     return NextResponse.json({
       success: true,
-      id: articleId,
-      article: articleData,
-      message: 'Article added successfully (mock implementation)',
-      note: 'This is a mock response - Supabase has been replaced with local storage'
+      id: data.id,
+      article: data,
+      message: 'Article added successfully'
     });
   } catch (error: any) {
     console.error('Error in news article add API:', error);

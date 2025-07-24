@@ -17,18 +17,19 @@ export default function Login() {
     setError('');
 
     try {
-      // In a real application, you would use Supabase auth here
-      // const { error } = await supabase.auth.signInWithPassword({
-      //   email,
-      //   password,
-      // });
+      // Use Supabase auth for real authentication
+      const { supabase } = await import('../../lib/supabase');
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // For demo purposes, we&apos;ll just simulate a successful login
-      if (email === 'admin@flipnews.com' && password === 'password123') {
-        // Redirect to admin dashboard
-        router.push('/admin');
+      if (error) {
+        setError(error.message);
+        console.error('Login error:', error);
       } else {
-        setError('Invalid email or password');
+        // Successful login - redirect to admin dashboard
+        router.push('/admin');
       }
     } catch (err) {
       setError('An error occurred during login');
