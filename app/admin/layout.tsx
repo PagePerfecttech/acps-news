@@ -29,11 +29,11 @@ export default function AdminLayout({
         if (session) {
           // User is authenticated with Supabase
           setIsAuthenticated(true);
-          localStorage.setItem('flipnews_auth', 'true');
-          localStorage.setItem('flipnews_admin_name', session.user.email || 'Admin');
+          localStorage.setItem('acpsnews_auth', 'true');
+          localStorage.setItem('acpsnews_admin_name', session.user.email || 'Admin');
         } else {
           // Fallback to localStorage check for compatibility
-          const auth = localStorage.getItem('flipnews_auth');
+          const auth = localStorage.getItem('acpsnews_auth');
           setIsAuthenticated(auth === 'true');
 
           // If not authenticated and not on login page, redirect to login

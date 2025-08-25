@@ -37,9 +37,9 @@ export default function LoginPage() {
         console.error('Login error:', error);
       } else if (data.user) {
         // Set auth token in localStorage for compatibility
-        localStorage.setItem('flipnews_auth', 'true');
-        localStorage.setItem('flipnews_admin_name', data.user.email || 'Admin');
-        localStorage.setItem('flipnews_user_id', data.user.id);
+        localStorage.setItem('acpsnews_auth', 'true');
+        localStorage.setItem('acpsnews_admin_name', data.user.email || 'Admin');
+        localStorage.setItem('acpsnews_user_id', data.user.id);
 
         // Redirect to admin dashboard
         router.push('/admin');
@@ -57,13 +57,13 @@ export default function LoginPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-20 h-20 relative">
-            <div className="absolute inset-0 bg-yellow-500 rounded-full flex items-center justify-center">
-              <span className="text-black text-2xl font-bold">FN</span>
+            <div className="absolute inset-0 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">AN</span>
             </div>
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          FlipNews Admin Login
+          ACPS News Admin Login
         </h2>
       </div>
 
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
           <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
             <p className="text-sm text-gray-600 font-medium">Demo Credentials:</p>
-            <p className="text-sm text-gray-600">Email: admin@flipnews.com</p>
+            <p className="text-sm text-gray-600">Email: admin@acpsnews.com</p>
             <p className="text-sm text-gray-600">Password: admin123</p>
           </div>
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
                   value={formData.email}
                   onChange={handleChange}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
-                  placeholder="admin@flipnews.com"
+                  placeholder="admin@acpsnews.com"
                 />
               </div>
             </div>

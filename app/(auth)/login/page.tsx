@@ -44,7 +44,7 @@ export default function Login() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to FlipNews Admin
+            Sign in to ACPS News Admin
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Enter your credentials to access the admin dashboard
@@ -139,7 +139,7 @@ export default function Login() {
 
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
-            Demo credentials: admin@flipnews.com / password123
+            Demo credentials: admin@acpsnews.com / admin123
           </p>
         </div>
       </div>

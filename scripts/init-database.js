@@ -1,10 +1,13 @@
 // This script initializes the database with the required tables for the RSS feed functionality
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 
 // Get Supabase credentials from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Not set');
+console.log('Supabase Key:', supabaseKey ? 'Set' : 'Not set');
 
 // Create Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);

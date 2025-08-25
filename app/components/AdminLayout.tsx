@@ -28,11 +28,11 @@ export default function AdminLayout({
         if (session) {
           // User is authenticated with Supabase
           setIsAuthenticated(true);
-          localStorage.setItem('flipnews_auth', 'true');
-          localStorage.setItem('flipnews_admin_name', session.user.email || 'Admin');
+          localStorage.setItem('acpsnews_auth', 'true');
+          localStorage.setItem('acpsnews_admin_name', session.user.email || 'Admin');
         } else {
           // Fallback to localStorage check for compatibility
-          const auth = localStorage.getItem('flipnews_auth');
+          const auth = localStorage.getItem('acpsnews_auth');
           setIsAuthenticated(auth === 'true');
 
           // If not authenticated and not on login page, redirect to login
@@ -43,7 +43,7 @@ export default function AdminLayout({
       } catch (error) {
         console.error('Auth check error:', error);
         // Fallback to localStorage
-        const auth = localStorage.getItem('flipnews_auth');
+        const auth = localStorage.getItem('acpsnews_auth');
         setIsAuthenticated(auth === 'true');
 
         if (!auth && pathname !== '/admin/login') {
@@ -66,9 +66,9 @@ export default function AdminLayout({
       console.error('Logout error:', error);
     } finally {
       // Clear localStorage and redirect
-      localStorage.removeItem('flipnews_auth');
-      localStorage.removeItem('flipnews_admin_name');
-      localStorage.removeItem('flipnews_user_id');
+      localStorage.removeItem('acpsnews_auth');
+      localStorage.removeItem('acpsnews_admin_name');
+      localStorage.removeItem('acpsnews_user_id');
       router.push('/admin/login');
     }
   };
