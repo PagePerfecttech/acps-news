@@ -1,6 +1,6 @@
-# Vizag News 📰
+# ACPS News 📰
 
-Vizag News is a modern Telugu news application that displays articles in a card format with a vertical swipe navigation system. Built specifically for Telugu-speaking audiences, it provides an intuitive and engaging way to consume news content.
+ACPS News is a modern news application that displays articles in a card format with a vertical swipe navigation system. Built to provide an intuitive and engaging way to consume news content with a focus on educational and community news.
 
 > **🎉 Latest Update**: All systems fully operational! Complete ads management, enhanced share functionality, and 100% Supabase integration.
 
@@ -8,7 +8,7 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 
 ### 🎯 Core Features
 - **Vertical Swipe Navigation** - Smooth swipe up/down to navigate between articles
-- **Telugu Content Support** - Full support for Telugu language content
+- **Multi-language Content Support** - Support for multiple languages including English and regional languages
 - **Clean, Minimalist UI** - White background with black text for optimal readability
 - **Read More Functionality** - Expandable content for longer articles
 - **Engagement Metrics** - Display likes, comments, and views
@@ -18,7 +18,7 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 - **Complete Admin Panel** - Full content management system with Supabase integration
 - **Ads Management** - Create, edit, delete advertisements with frequency control
 - **News Management** - Full CRUD operations for news articles
-- **Category Management** - Organize news by categories (సినిమా, రాజకీయం, క్రీడలు, etc.)
+- **Category Management** - Organize news by categories (Education, Sports, Community, etc.)
 - **Media Upload** - Cloudflare R2 integration for images and videos
 - **Share Functionality** - Complete page screenshot sharing on social media
 - **Real-time Preview** - See changes instantly
@@ -57,8 +57,8 @@ Vizag News is a modern Telugu news application that displays articles in a card 
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/vizag-news.git
-cd vizag-news
+git clone https://github.com/yourusername/acps-news.git
+cd acps-news
 ```
 
 2. Install dependencies
@@ -169,7 +169,7 @@ The application uses Supabase for data storage. Run the provided SQL schema in y
 Access the admin panel at [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
 
 Default login credentials:
-- Email: admin@vizagnews.com
+- Email: admin@acpsnews.com
 - Password: admin123
 
 ## 🚀 Deployment
@@ -185,7 +185,7 @@ This project is configured for easy deployment on Vercel:
 
 ## 📱 Screenshots
 
-- **Main Feed**: Vertical swipe navigation with Telugu news
+- **Main Feed**: Vertical swipe navigation with news articles
 - **Admin Panel**: Complete content management system
 - **Background Logo**: Customizable branding with opacity control
 - **Settings**: Real-time preview and configuration
@@ -204,6 +204,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- Built with ❤️ for the Telugu community
+- Built with ❤️ for the educational community
 - Special thanks to the open-source community
 - Powered by Supabase and Vercel
