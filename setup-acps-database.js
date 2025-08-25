@@ -4,7 +4,7 @@ require('dotenv').config({ path: '.env.local' });
 
 // Get Supabase credentials from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
 console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Not set');
 console.log('Service Key:', supabaseServiceKey ? 'Set' : 'Not set');
