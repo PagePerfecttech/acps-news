@@ -201,9 +201,57 @@ const NotificationItem = ({ notification, onClose }: { notification: Notificatio
   );
 };
 
+// Helper functions for non-React usage (dispatches custom event)
+export const showSuccessNotification = (message: string, title?: string, duration?: number) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('show-notification', {
+      detail: { type: 'success', message, title, duration }
+    }));
+  }
+};
+
+export const showErrorNotification = (message: string, title?: string, duration?: number) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('show-notification', {
+      detail: { type: 'error', message, title, duration }
+    }));
+  }
+};
+
+export const showInfoNotification = (message: string, title?: string, duration?: number) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('show-notification', {
+      detail: { type: 'info', message, title, duration }
+    }));
+  }
+};
+
+export const showWarningNotification = (message: string, title?: string, duration?: number) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('show-notification', {
+      detail: { type: 'warning', message, title, duration }
+    }));
+  }
+};
+
 // Container for all notifications
 const NotificationContainer = () => {
-  const { notifications, removeNotification } = useNotification();
+  const { notifications, removeNotification, addNotification } = useNotification();
+
+  // Listen for custom events from non-React code
+  useEffect(() => {
+    const handleCustomNotification = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        addNotification(customEvent.detail);
+      }
+    };
+
+    window.addEventListener('show-notification', handleCustomNotification);
+    return () => {
+      window.removeEventListener('show-notification', handleCustomNotification);
+    };
+  }, [addNotification]);
 
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col items-end">
