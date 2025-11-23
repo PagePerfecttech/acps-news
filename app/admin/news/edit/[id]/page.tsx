@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 import { getNewsArticleById, updateNewsArticle, getCategories } from '../../../../lib/dataService';
 import { Category, NewsArticle } from '../../../../types';
 
-export default function EditNewsArticle({ params }: { params: { id: string } }) {
+export default function EditNewsArticle({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { id } = params;
+  const { id } = use(params);
 
   const [article, setArticle] = useState<NewsArticle | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
         title: article.title,
         content: article.content,
         summary: article.summary || '',
-        category: article.category,
+        category: article.category || '',
         author: article.author,
         image_url: article.image_url || '',
         video_url: article.video_url || '',
@@ -232,7 +232,7 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
           console.log('Article updated and cache cleared');
         }
 
-        setMessage({ type: 'success', text: 'Article updated successfully and saved to Supabase!' });
+        setMessage({ type: 'success', text: 'Article updated successfully!' });
         setTimeout(() => {
           router.push('/admin/news');
         }, 1500);

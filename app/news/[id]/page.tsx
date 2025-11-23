@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiClock, FiTag, FiUser, FiShare2, FiArrowLeft } from 'react-icons/fi';
 import { NewsArticle, Comment } from '../../types';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { getNewsArticleById, getArticleStats, subscribeToChanges } from '../../lib/supabaseService';
-import { getNewsArticleById as getLocalArticleById } from '../../lib/dataService';
+import { getNewsArticleById } from '../../lib/dataService';
 import ArticleNotFound from '../../components/ArticleNotFound';
 import { useSettings } from '../../contexts/SettingsContext';
 
@@ -55,140 +53,50 @@ The bill is expected to come to a vote next month, with passage looking increasi
   },
 };
 
-export default function NewsDetail({ params }: { params: { id: string } }) {
+export default function NewsDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ likes: 0, comments: 0, views: 0 });
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [usingSupabase, setUsingSupabase] = useState(false);
   const { settings } = useSettings();
 
   useEffect(() => {
-    const checkSupabase = async () => {
-      const configured = await isSupabaseConfigured();
-      setUsingSupabase(configured);
+    fetchArticle();
+    recordView();
+  }, [id]);
 
-      // Fetch article data
-      fetchArticle(configured);
 
-      // Record view
-      if (configured) {
-        recordView();
-      }
-    };
 
-    checkSupabase();
-  }, [params.id]);
-
-  // Set up real-time subscriptions
-  useEffect(() => {
-    if (!usingSupabase || !article) return;
-
-    let likesSubscription: { unsubscribe: () => void } | null = null;
-    let commentsSubscription: { unsubscribe: () => void } | null = null;
-
-    try {
-      // Subscribe to likes changes
-      likesSubscription = subscribeToChanges('likes', (payload) => {
-        if (payload.new && payload.new.news_id === article.id) {
-          setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
-        }
-      });
-
-      // Subscribe to comments changes
-      commentsSubscription = subscribeToChanges('comments', (payload) => {
-        if (payload.new && payload.new.news_id === article.id) {
-          setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
-          // Refresh article to get the new comment
-          fetchArticle(true);
-        }
-      });
-    } catch (error) {
-      console.error('Error setting up real-time subscriptions:', error);
-    }
-
-    return () => {
-      try {
-        if (likesSubscription) likesSubscription.unsubscribe();
-        if (commentsSubscription) commentsSubscription.unsubscribe();
-      } catch (error) {
-        console.error('Error unsubscribing from real-time subscriptions:', error);
-      }
-    };
-  }, [usingSupabase, article]);
-
-  const fetchArticle = async (useSupabase: boolean) => {
+  const fetchArticle = async () => {
     setLoading(true);
     try {
-      let fetchedArticle;
-      let articleStats;
-
-      // Try multiple sources for the article
-      if (useSupabase) {
-        // First try Supabase
-        console.log('Trying to fetch article from Supabase:', params.id);
-        try {
-          fetchedArticle = await getNewsArticleById(params.id);
-
-          // Only try to get stats if we found the article
-          if (fetchedArticle) {
-            try {
-              articleStats = await getArticleStats(params.id);
-            } catch (statsError) {
-              console.error('Error fetching article stats:', statsError);
-              // Provide default stats if there's an error
-              articleStats = {
-                likes: fetchedArticle.likes || 0,
-                comments: fetchedArticle.comments?.length || 0,
-                views: 0
-              };
-            }
-          }
-        } catch (supabaseError) {
-          console.error('Error fetching from Supabase:', supabaseError);
-        }
-      }
-
-      // If not found in Supabase or not using Supabase, try localStorage
-      if (!fetchedArticle) {
-        console.log('Trying to fetch article from localStorage:', params.id);
-        try {
-          fetchedArticle = await getLocalArticleById(params.id);
-
-          if (fetchedArticle) {
-            console.log('Article found in localStorage');
-            articleStats = {
-              likes: fetchedArticle.likes || 0,
-              comments: fetchedArticle.comments?.length || 0,
-              views: 0
-            };
-          }
-        } catch (error) {
-          console.error('Error fetching from localStorage:', error);
-        }
-      }
-
-      // If still not found, try mock data as last resort
-      if (!fetchedArticle) {
-        console.log('Trying to fetch article from mock data:', params.id);
-        fetchedArticle = mockArticles[params.id];
-
-        if (fetchedArticle) {
-          console.log('Article found in mock data');
-          articleStats = {
-            likes: fetchedArticle.likes || 0,
-            comments: fetchedArticle.comments?.length || 0,
-            views: 0
-          };
-        } else {
-          console.log('Article not found in any source');
-        }
-      }
+      console.log('Fetching article:', id);
+      const fetchedArticle = await getNewsArticleById(id);
 
       if (fetchedArticle) {
+        console.log('Article found');
         setArticle(fetchedArticle);
-        setStats(articleStats || { likes: 0, comments: 0, views: 0 });
+        setStats({
+          likes: fetchedArticle.likes || 0,
+          comments: fetchedArticle.comments?.length || 0,
+          views: fetchedArticle.views || 0
+        });
+      } else {
+        // Try mock data as fallback
+        const mockArticle = mockArticles[id];
+        if (mockArticle) {
+          console.log('Article found in mock data');
+          setArticle(mockArticle);
+          setStats({
+            likes: mockArticle.likes || 0,
+            comments: mockArticle.comments?.length || 0,
+            views: 0
+          });
+        } else {
+          console.log('Article not found');
+        }
       }
     } catch (error) {
       console.error('Error fetching article:', error);
@@ -203,7 +111,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
       await fetch('/api/news/view', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ articleId: params.id })
+        body: JSON.stringify({ articleId: id })
       });
     } catch (error) {
       console.error('Error recording view:', error);
@@ -219,7 +127,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
       const response = await fetch('/api/news/like', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ articleId: params.id })
+        body: JSON.stringify({ articleId: id })
       });
 
       if (!response.ok) {
@@ -245,7 +153,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          articleId: params.id,
+          articleId: id,
           content: commentText
         })
       });
@@ -254,10 +162,8 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
         // Clear form
         setCommentText('');
 
-        if (!usingSupabase) {
-          // If not using Supabase real-time, update manually
-          setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
-        }
+        // Update comment count
+        setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
       }
     } catch (error) {
       console.error('Error submitting comment:', error);
@@ -295,7 +201,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
   if (!article) {
     return (
       <ArticleNotFound
-        articleId={params.id}
+        articleId={id}
         onRetry={() => {
           setLoading(true);
           // Force clear any cached data
@@ -304,7 +210,7 @@ export default function NewsDetail({ params }: { params: { id: string } }) {
             console.log('Cache cleared for retry');
           }
           // Try fetching again from all sources
-          fetchArticle(usingSupabase);
+          fetchArticle();
         }}
       />
     );

@@ -34,7 +34,7 @@ export default function NewsManagement() {
   // Filter articles based on search term and category
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.content.toLowerCase().includes(searchTerm.toLowerCase());
+      article.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === '' || article.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -58,7 +58,7 @@ export default function NewsManagement() {
         if (success) {
           // Update the articles list
           setArticles(prev => prev.filter(article => article.id !== id));
-          setMessage({ type: 'success', text: 'Article deleted successfully from Supabase and local storage!' });
+          setMessage({ type: 'success', text: 'Article deleted successfully!' });
 
           // Clear message after 3 seconds
           setTimeout(() => {
@@ -90,9 +90,8 @@ export default function NewsManagement() {
 
       {message.text && (
         <div
-          className={`p-4 mb-6 rounded-md ${
-            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}
+          className={`p-4 mb-6 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
         >
           {message.text}
         </div>
@@ -190,11 +189,10 @@ export default function NewsManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        article.published
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${article.published
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       {article.published ? 'Published' : 'Draft'}
                     </span>

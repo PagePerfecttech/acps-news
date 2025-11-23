@@ -5,7 +5,6 @@ import { FiSave, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Category, User } from '../../../types';
-import { isSupabaseConfigured } from '../../../lib/supabase';
 import { getCategories } from '../../../lib/dataService';
 import { getUsers } from '../../../lib/userService';
 import AdminLayout from '../../../components/AdminLayout';
@@ -16,7 +15,6 @@ export default function AddRssFeedPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [supabaseConfigured, setSupabaseConfigured] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     url: '',
@@ -27,18 +25,7 @@ export default function AddRssFeedPage() {
   });
 
   useEffect(() => {
-    const checkSupabase = async () => {
-      const configured = await isSupabaseConfigured();
-      setSupabaseConfigured(configured);
-
-      if (configured) {
-        fetchData();
-      } else {
-        setError('Supabase is not configured. RSS feeds require a database connection.');
-      }
-    };
-
-    checkSupabase();
+    fetchData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps;
 
   const fetchData = async () => {
@@ -130,20 +117,6 @@ export default function AddRssFeedPage() {
       setLoading(false);
     }
   };
-
-  if (!supabaseConfigured) {
-    return (
-      <AdminLayout>
-        <div className="bg-white shadow rounded-lg p-6">
-          <h1 className="text-2xl font-bold mb-4">Add RSS Feed</h1>
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
-            <p>Supabase is not configured. RSS feeds require a database connection.</p>
-            <p className="mt-2">Please set up your Supabase environment variables to use this feature.</p>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
 
   return (
     <AdminLayout>

@@ -71,10 +71,8 @@ yarn install
 3. Set up environment variables
 Create a `.env.local` file with the following variables:
 ```
-# Supabase Configuration (Primary Database)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# Neon Database Configuration
+DATABASE_URL=your_neon_connection_string
 
 # Cloudflare R2 Configuration (Media Storage)
 NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id

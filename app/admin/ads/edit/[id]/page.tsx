@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiX, FiUpload, FiYoutube } from 'react-icons/fi';
 
 import { Ad } from '../../../../types';
 
-export default function EditAd({ params }: { params: { id: string } }) {
+export default function EditAd({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { id } = params;
+  const { id } = use(params);
 
   const [ad, setAd] = useState<Ad | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
               frequency: fetchedAd.frequency || 3,
               active: fetchedAd.active !== false,
               mediaType: fetchedAd.video_url ? (fetchedAd.video_type === 'youtube' ? 'youtube' : 'video') :
-                        fetchedAd.image_url ? 'image' : 'text',
+                fetchedAd.image_url ? 'image' : 'text',
               imageUrl: fetchedAd.image_url || '',
               videoUrl: fetchedAd.video_url || '',
               youtubeUrl: fetchedAd.video_url || '',
@@ -162,7 +162,7 @@ export default function EditAd({ params }: { params: { id: string } }) {
         active: formData.active,
         image_url: formData.mediaType === 'image' ? formData.imageUrl : undefined,
         video_url: formData.mediaType === 'video' ? formData.videoUrl :
-                  formData.mediaType === 'youtube' ? formData.youtubeUrl : undefined,
+          formData.mediaType === 'youtube' ? formData.youtubeUrl : undefined,
         video_type: formData.mediaType === 'youtube' ? 'youtube' : undefined,
         updated_at: new Date().toISOString(),
       };

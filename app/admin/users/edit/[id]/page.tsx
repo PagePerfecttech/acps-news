@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSave, FiArrowLeft, FiUpload, FiRefreshCw } from 'react-icons/fi';
 import Link from 'next/link';
 import { getUserById, updateUser } from '../../../../lib/userService';
 import { User } from '../../../../types';
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
+export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { id } = params;
-  
+  const { id } = use(params);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,18 +18,18 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     profile_pic: '',
     bio: ''
   });
-  
+
   const [previewImage, setPreviewImage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
-  
+
   // Load user data when component mounts
   useEffect(() => {
     const loadUser = async () => {
       try {
         const user = await getUserById(id);
-        
+
         if (user) {
           setFormData({
             name: user.name,
@@ -38,13 +38,13 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             profile_pic: user.profile_pic || '',
             bio: user.bio || ''
           });
-          
+
           if (user.profile_pic) {
             setPreviewImage(user.profile_pic);
           }
         } else {
           setMessage({ type: 'error', text: 'User not found' });
-          
+
           // Redirect to users list after 2 seconds
           setTimeout(() => {
             router.push('/admin/users');
@@ -57,15 +57,15 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         setLoading(false);
       }
     };
-    
+
     loadUser();
   }, [id, router]);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -73,28 +73,28 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       // For demo purposes, we&apos;ll just create a local URL
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
-      
+
       // In a real app, you would upload the file to a server and get the URL
       setFormData(prev => ({
         ...prev,
         profile_pic: imageUrl, // In a real app, this would be the URL from your server
       }));
-      
+
       console.log('File selected:', file.name, 'size:', (file.size / 1024).toFixed(2) + 'KB');
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
-    
+
     try {
       const success = await updateUser(id, formData);
-      
+
       if (success) {
         setMessage({ type: 'success', text: 'User updated successfully!' });
-        
+
         // Redirect to users list after 2 seconds
         setTimeout(() => {
           router.push('/admin/users');
@@ -108,7 +108,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       setIsSubmitting(false);
     }
   };
-  
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -116,7 +116,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       </div>
     );
   }
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -129,18 +129,17 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
           Back to Users
         </Link>
       </div>
-      
+
       {/* Message display */}
       {message.text && (
         <div
-          className={`p-4 mb-6 rounded-md ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}
+          className={`p-4 mb-6 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}
         >
           {message.text}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         {/* Name */}
         <div className="mb-4">
@@ -157,7 +156,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             required
           />
         </div>
-        
+
         {/* Email */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -173,7 +172,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             required
           />
         </div>
-        
+
         {/* Role */}
         <div className="mb-4">
           <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
@@ -192,7 +191,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             <option value="user">User</option>
           </select>
         </div>
-        
+
         {/* Profile Picture */}
         <div className="mb-4">
           <label htmlFor="profile_pic" className="block text-sm font-medium text-gray-700 mb-1">
@@ -223,7 +222,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                 onChange={handleImageUpload}
               />
             </div>
-            
+
             {/* Image Preview */}
             {(previewImage || formData.profile_pic) && (
               <div className="mt-2 border rounded-md p-2 bg-gray-50">
@@ -239,7 +238,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             )}
           </div>
         </div>
-        
+
         {/* Bio */}
         <div className="mb-6">
           <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
@@ -255,7 +254,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             placeholder="Brief description about the user"
           ></textarea>
         </div>
-        
+
         {/* Submit Button */}
         <div className="flex justify-end">
           <button

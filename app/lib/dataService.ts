@@ -123,21 +123,43 @@ export const updateNewsArticle = async (updatedArticle: NewsArticle): Promise<bo
   if (typeof window === 'undefined') return false;
 
   try {
-    // Update via API (you'll need to create a PUT endpoint)
     console.log('Updating article via API:', updatedArticle.title);
 
-    // For now, update localStorage
-    const articles = await getNewsArticles();
-    const index = articles.findIndex(article => article.id === updatedArticle.id);
+    const response = await fetch(`/api/news?id=${updatedArticle.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: updatedArticle.title,
+        content: updatedArticle.content,
+        summary: updatedArticle.summary || '',
+        category_id: updatedArticle.category,
+        image_url: updatedArticle.image_url || '',
+        video_url: updatedArticle.video_url || '',
+        video_type: updatedArticle.video_type || '',
+        author: updatedArticle.author || 'Anonymous',
+        published: updatedArticle.published !== false,
+      }),
+    });
 
-    if (index === -1) return false;
+    if (!response.ok) {
+      throw new Error('Failed to update article via API');
+    }
 
-    articles[index] = updatedArticle;
-    localStorage.setItem('acpsnews_articles', JSON.stringify(articles));
-    localStorage.removeItem('acpsnews_articles_cache');
-    localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
+    const result = await response.json();
 
-    return true;
+    if (result.success) {
+      console.log('Article updated successfully');
+
+      // Clear cache
+      localStorage.removeItem('acpsnews_articles_cache');
+      localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
+
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('Error updating article:', error);
     return false;
@@ -198,16 +220,29 @@ export const deleteNewsArticle = async (id: string): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
 
   try {
-    console.log('Deleting article:', id);
+    console.log('Deleting article via API:', id);
 
-    // Delete from localStorage
-    const articles = await getNewsArticles();
-    const filteredArticles = articles.filter(article => article.id !== id);
-    localStorage.setItem('acpsnews_articles', JSON.stringify(filteredArticles));
-    localStorage.removeItem('acpsnews_articles_cache');
-    localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
+    const response = await fetch(`/api/news?id=${id}`, {
+      method: 'DELETE',
+    });
 
-    return true;
+    if (!response.ok) {
+      throw new Error('Failed to delete article via API');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('Article deleted successfully from database');
+
+      // Clear cache
+      localStorage.removeItem('acpsnews_articles_cache');
+      localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
+
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('Error deleting article:', error);
     return false;

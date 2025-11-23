@@ -109,3 +109,108 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// PUT /api/news - Update an existing news article
+export async function PUT(request: NextRequest) {
+  try {
+    // Get article ID from query params
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing article ID' },
+        { status: 400 }
+      );
+    }
+
+    // Parse request body
+    const body = await request.json();
+
+    // Validate required fields
+    if (!body.title || !body.content) {
+      return NextResponse.json(
+        { error: 'Missing required fields: title, content' },
+        { status: 400 }
+      );
+    }
+
+    // Create update object
+    const updateData = {
+      title: body.title,
+      content: body.content,
+      summary: body.summary || '',
+      category_id: body.category_id || 'general',
+      image_url: body.image_url || '',
+      video_url: body.video_url || '',
+      video_type: body.video_type || '',
+      author: body.author || 'Anonymous',
+      published: body.published !== false,
+      updated_at: new Date()
+    };
+
+    // Update in database
+    const result = await db.update(newsArticles)
+      .set(updateData)
+      .where(eq(newsArticles.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: 'Article not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: result[0]
+    });
+  } catch (error: any) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'An error occurred while updating the article' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/news - Delete a news article
+export async function DELETE(request: NextRequest) {
+  try {
+    // Get article ID from query params
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing article ID' },
+        { status: 400 }
+      );
+    }
+
+    // Delete from database
+    const result = await db.delete(newsArticles)
+      .where(eq(newsArticles.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: 'Article not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Article deleted successfully',
+      data: result[0]
+    });
+  } catch (error: any) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'An error occurred while deleting the article' },
+      { status: 500 }
+    );
+  }
+}

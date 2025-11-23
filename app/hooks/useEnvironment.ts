@@ -58,12 +58,12 @@ export const useEnvironment = (): EnvironmentConfig => {
       url: {
         name: 'NEXT_PUBLIC_SUPABASE_URL',
         status: 'unknown',
-        required: true
+        required: false
       },
       anonKey: {
         name: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
         status: 'unknown',
-        required: true
+        required: false
       },
       status: 'not-configured'
     },
@@ -209,11 +209,9 @@ export const useEnvironment = (): EnvironmentConfig => {
       (supabaseAnonKeyStatus.required && supabaseAnonKeyStatus.status !== 'valid');
 
     // Determine overall status
-    let overallStatus: 'ready' | 'warning' | 'error' = 'error';
+    let overallStatus: 'ready' | 'warning' | 'error' = 'warning';
     if (supabaseStatus === 'configured') {
       overallStatus = 'ready';
-    } else if (supabaseStatus === 'partially-configured') {
-      overallStatus = 'warning';
     }
 
     // Update config

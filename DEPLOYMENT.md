@@ -45,9 +45,7 @@ git push origin main
 
 Add the following environment variables:
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
+- `DATABASE_URL`: Your Neon PostgreSQL connection string
 - `NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
 - `CLOUDFLARE_R2_ACCESS_KEY_ID`: Your Cloudflare R2 access key ID
 - `CLOUDFLARE_R2_SECRET_ACCESS_KEY`: Your Cloudflare R2 secret access key
