@@ -15,3 +15,4 @@ export const deleteComment = async () => false;
 export const subscribeToChanges = () => ({ unsubscribe: () => { } });
 export const getNewsArticleById = async () => null;
 export const getArticleStats = async () => ({ likes: 0, comments: 0, views: 0 });
+export const addComment = async () => null;

@@ -451,3 +451,101 @@ export const getCategories = async (): Promise<Category[]> => {
   const categories = localStorage.getItem('acpsnews_categories');
   return categories ? JSON.parse(categories) : defaultCategories;
 };
+
+// Add a new category
+export const addCategory = async (newCategory: Category): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    console.log('Adding category via API:', newCategory.name);
+
+    const response = await fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newCategory),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add category via API');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('Category added successfully:', result.data.id);
+      await getCategories(); // Refresh cache
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error adding category:', error);
+    return false;
+  }
+};
+
+// Update a category
+export const updateCategory = async (updatedCategory: Category): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    console.log('Updating category via API:', updatedCategory.name);
+
+    const response = await fetch(`/api/admin/categories?id=${updatedCategory.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedCategory),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update category via API');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('Category updated successfully');
+      await getCategories(); // Refresh cache
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error updating category:', error);
+    return false;
+  }
+};
+
+// Delete a category
+export const deleteCategory = async (id: string): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    console.log('Deleting category via API:', id);
+
+    const response = await fetch(`/api/admin/categories?id=${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete category via API');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('Category deleted successfully');
+      await getCategories(); // Refresh cache
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return false;
+  }
+};
