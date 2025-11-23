@@ -39,7 +39,7 @@ export function useRealtimeSubscription(
 
     // No cleanup needed here as initializeRealtimeManager is idempotent
     // and doesn&apos;t create resources that need to be cleaned up
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check if Supabase is configured
   useEffect(() => {

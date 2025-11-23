@@ -48,7 +48,7 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
     };
     
     checkSupabase();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = async () => {
     try {

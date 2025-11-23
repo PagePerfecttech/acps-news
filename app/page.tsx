@@ -105,7 +105,7 @@ export default function Home() {
     return () => {
       isMounted = false;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle swiper slide change
   const handleSlideChange = (swiper: { activeIndex: number }) => {

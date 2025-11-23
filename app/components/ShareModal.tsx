@@ -50,7 +50,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       timeoutIds.current.forEach(id => clearTimeout(id));
       timeoutIds.current = [];
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Capture the element as a screenshot with timeout
   const captureElement = async () => {

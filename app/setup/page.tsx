@@ -30,7 +30,7 @@ export default function SetupPage() {
       ...prev,
       timestamp: Date.now()
     }));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const checkSetup = async () => {
@@ -59,7 +59,7 @@ export default function SetupPage() {
     };
 
     checkSetup();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInitializeData = async () => {
     setInitializingData(true);

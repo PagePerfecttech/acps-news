@@ -89,7 +89,7 @@ export default function AddNewsPage() {
     } catch (error) {
       console.error('Error getting user info:', error);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

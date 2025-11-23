@@ -48,7 +48,7 @@ export default function CategoryManagement() {
     };
 
     loadCategories();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter categories based on search term
   const filteredCategories = categories.filter(category =>

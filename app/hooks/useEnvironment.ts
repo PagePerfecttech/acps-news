@@ -229,7 +229,7 @@ export const useEnvironment = (): EnvironmentConfig => {
       status: overallStatus,
       missingRequired
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps; // Empty dependency array is fine here as this only needs to run once on mount
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps // Empty dependency array is fine here as this only needs to run once on mount
   // and doesn&apos;t depend on any props or state
 
   return config;

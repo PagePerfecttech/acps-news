@@ -56,7 +56,7 @@ export default function DebugPage() {
     };
 
     init();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRefresh = async () => {
     // Force reload all data
