@@ -23,14 +23,22 @@ interface NotificationContextType {
   addNotification: (notification: Omit<Notification, 'id'>) => void;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
+  showSuccess: (message: string, title?: string, duration?: number) => void;
+  showError: (message: string, title?: string, duration?: number) => void;
+  showInfo: (message: string, title?: string, duration?: number) => void;
+  showWarning: (message: string, title?: string, duration?: number) => void;
 }
 
 // Create notification context
 const NotificationContext = createContext<NotificationContextType>({
   notifications: [],
-  addNotification: () => {},
-  removeNotification: () => {},
-  clearNotifications: () => {},
+  addNotification: () => { },
+  removeNotification: () => { },
+  clearNotifications: () => { },
+  showSuccess: () => { },
+  showError: () => { },
+  showInfo: () => { },
+  showWarning: () => { },
 });
 
 // Hook to use notifications
@@ -90,6 +98,23 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     setNotifications([]);
   };
 
+  // Helper functions
+  const showSuccess = (message: string, title?: string, duration?: number) => {
+    addNotification({ type: 'success', message, title, duration });
+  };
+
+  const showError = (message: string, title?: string, duration?: number) => {
+    addNotification({ type: 'error', message, title, duration });
+  };
+
+  const showInfo = (message: string, title?: string, duration?: number) => {
+    addNotification({ type: 'info', message, title, duration });
+  };
+
+  const showWarning = (message: string, title?: string, duration?: number) => {
+    addNotification({ type: 'warning', message, title, duration });
+  };
+
   // Cleanup timeouts when component unmounts
   useEffect(() => {
     return () => {
@@ -108,6 +133,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         addNotification,
         removeNotification,
         clearNotifications,
+        showSuccess,
+        showError,
+        showInfo,
+        showWarning,
       }}
     >
       {children}
@@ -189,45 +218,4 @@ const NotificationContainer = () => {
       </AnimatePresence>
     </div>
   );
-};
-
-// Helper functions for common notifications
-export const showSuccessNotification = (message: string, title?: string, duration?: number) => {
-  const { addNotification } = useNotification();
-  addNotification({
-    type: 'success',
-    message,
-    title,
-    duration,
-  });
-};
-
-export const showErrorNotification = (message: string, title?: string, duration?: number) => {
-  const { addNotification } = useNotification();
-  addNotification({
-    type: 'error',
-    message,
-    title,
-    duration,
-  });
-};
-
-export const showInfoNotification = (message: string, title?: string, duration?: number) => {
-  const { addNotification } = useNotification();
-  addNotification({
-    type: 'info',
-    message,
-    title,
-    duration,
-  });
-};
-
-export const showWarningNotification = (message: string, title?: string, duration?: number) => {
-  const { addNotification } = useNotification();
-  addNotification({
-    type: 'warning',
-    message,
-    title,
-    duration,
-  });
 };
