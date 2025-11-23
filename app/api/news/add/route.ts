@@ -3,20 +3,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isSupabaseConfigured, supabase } from '../../../lib/supabase';
+import { db } from '../../../lib/db';
+import { newsArticles } from '../../../lib/schema';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('News article add API called');
-
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
-    if (!configured) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
 
     // Parse request body
     const newArticle = await request.json();
@@ -30,8 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare the article data for Supabase
-    const now = new Date().toISOString();
+    // Prepare the article data
+    const now = new Date();
     const categoryId = newArticle.category || 'general';
     const articleData = {
       title: newArticle.title,
@@ -43,30 +35,18 @@ export async function POST(request: NextRequest) {
       video_type: newArticle.video_type || '',
       author: newArticle.author || 'Anonymous',
       published: newArticle.published !== false,
-      created_at: newArticle.created_at || now,
-      updated_at: newArticle.updated_at || now
+      created_at: newArticle.created_at ? new Date(newArticle.created_at) : now,
+      updated_at: newArticle.updated_at ? new Date(newArticle.updated_at) : now
     };
 
-    console.log('Inserting article into Supabase:', articleData);
+    console.log('Inserting article into database:', articleData);
 
-    // Insert into Supabase
-    const { data, error } = await supabase
-      .from('news_articles')
-      .insert([articleData])
-      .select()
-      .single();
+    // Insert into database
+    const result = await db.insert(newsArticles)
+      .values(articleData)
+      .returning();
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Failed to save article: ${error.message}`,
-          details: error
-        },
-        { status: 500 }
-      );
-    }
+    const data = result[0];
 
     console.log('Article saved successfully:', data);
 

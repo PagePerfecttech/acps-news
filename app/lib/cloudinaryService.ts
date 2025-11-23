@@ -208,7 +208,7 @@ export const uploadImage = async (
     const result = await uploadToCloudinary(fileData as string, {
       folder,
       resource_type: 'image',
-      tags: folder ? ['flipnews', folder] : ['flipnews'],
+      tags: folder ? ['acpsnews', folder] : ['acpsnews'],
     });
 
     if (!result) {
@@ -266,7 +266,7 @@ export const uploadVideo = async (
     const result = await uploadToCloudinary(fileData as string, {
       folder: FOLDERS.NEWS_VIDEOS,
       resource_type: 'video',
-      tags: ['flipnews', 'video'],
+      tags: ['acpsnews', 'video'],
     });
 
     if (!result || !result.secure_url) {

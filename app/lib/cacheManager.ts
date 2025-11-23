@@ -5,10 +5,10 @@ export const clearAllCache = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
   
   // Clear localStorage items
-  localStorage.removeItem('flipnews_articles_cache');
+  localStorage.removeItem('acpsnews_articles_cache');
   
   // Set a timestamp for the last cache clear
-  localStorage.setItem('flipnews_cache_cleared', Date.now().toString());
+  localStorage.setItem('acpsnews_cache_cleared', Date.now().toString());
   
   console.log('Application cache cleared');
 };
@@ -30,7 +30,7 @@ export const clearCache = (cacheKey: string): void => {
 export const getCacheTimestamp = (): number => {
   if (typeof window === 'undefined') return 0; // Skip on server-side
   
-  const timestamp = localStorage.getItem('flipnews_cache_cleared');
+  const timestamp = localStorage.getItem('acpsnews_cache_cleared');
   return timestamp ? parseInt(timestamp, 10) : 0;
 };
 

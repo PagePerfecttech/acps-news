@@ -22,7 +22,7 @@ export type UploadResult = {
 const DEFAULT_PROVIDER_ORDER: StorageProvider[] = [
   'cloudflare-r2',
   'imgbb', // Keep as emergency fallback only
-  'local',
+  // 'local' removed to force server-side upload API usage which handles local storage properly
 ];
 
 /**
@@ -82,7 +82,7 @@ export const uploadImage = async (
   } = {}
 ): Promise<UploadResult> => {
   const { folder = 'news-images', preferredProvider, fileName } = options;
-  
+
   console.log('uploadImage called with options:', {
     folder,
     preferredProvider,
@@ -97,7 +97,7 @@ export const uploadImage = async (
     return {
       url: null,
       error: 'Direct uploads from server-side are not supported. Use the /api/upload/server endpoint instead.',
-      provider: 'server'
+      provider: 'server' as any
     };
   }
 
@@ -170,33 +170,33 @@ export const uploadImage = async (
   // If all providers fail, try the server-side upload API
   try {
     console.log('All client-side providers failed, trying server-side upload API...');
-    
+
     // Create a FormData object for the server upload
     const formData = new FormData();
     formData.append('file', processedFile);
     formData.append('type', 'image');
     formData.append('folder', folder);
-    
+
     // Call the server-side upload API
     const response = await fetch('/api/upload/server', {
       method: 'POST',
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Server upload API error:', errorText);
       throw new Error(`Server upload failed: ${errorText}`);
     }
-    
+
     const result = await response.json();
-    
+
     if (result.success && result.url) {
       console.log('Server-side upload successful:', result);
       return {
         url: result.url,
         error: null,
-        provider: result.provider || 'server',
+        provider: result.provider || 'server' as any,
       };
     } else {
       console.error('Server upload API returned error:', result.error);
@@ -277,7 +277,7 @@ const storeFileLocally = async (
 
       // Store the URL in localStorage for persistence across page refreshes
       if (typeof localStorage !== 'undefined') {
-        const key = `flipnews_local_${type}_${Date.now()}`;
+        const key = `acpsnews_local_${type}_${Date.now()}`;
         localStorage.setItem(key, url);
       }
 
@@ -290,7 +290,7 @@ const storeFileLocally = async (
     } else {
       // Server-side handling - redirect to server upload API
       console.log('Server-side local storage is not supported, redirecting to server upload API');
-      
+
       // In a server environment, we should use a different approach
       // For now, just return an error
       return {
@@ -302,7 +302,7 @@ const storeFileLocally = async (
     console.error('Error storing file locally:', error);
     return {
       url: null,
-      error: error.message || 'Failed to store file locally',
+      error: error instanceof Error ? error.message : 'Failed to store file locally',
     };
   }
 };

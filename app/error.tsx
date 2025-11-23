@@ -19,8 +19,8 @@ export default function Error({
   const handleReset = () => {
     // Clear any cached data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
-      localStorage.removeItem('flipnews_settings');
+      localStorage.removeItem('acpsnews_articles_cache');
+      localStorage.removeItem('acpsnews_settings');
       console.log('Cache cleared due to error recovery');
     }
     // Reset the error boundary

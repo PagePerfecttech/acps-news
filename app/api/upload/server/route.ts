@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import fs from 'fs';
+import path from 'path';
+import { writeFile } from 'fs/promises';
 
 // Define allowed file types - PNG prioritized
 const ALLOWED_IMAGE_TYPES = [
@@ -22,10 +25,10 @@ const ALLOWED_VIDEO_TYPES = [
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
-// POST /api/upload/server - Server-side upload to Cloudflare R2
+// POST /api/upload/server - Server-side upload to Cloudflare R2 or Local Storage
 export async function POST(request: NextRequest) {
   try {
-    console.log('Server-side R2 upload API called');
+    console.log('Server-side upload API called');
 
     // Check if R2 is configured
     const accountId = process.env.NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID;
@@ -34,22 +37,18 @@ export async function POST(request: NextRequest) {
     const bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME;
     const publicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL;
 
-    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName || !publicUrl) {
-      return NextResponse.json(
-        { error: 'Cloudflare R2 is not configured' },
-        { status: 500 }
-      );
-    }
+    const isR2Configured = accountId && accessKeyId && secretAccessKey && bucketName && publicUrl;
 
     // Get form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folder = formData.get('folder') as string || 'news-images';
 
-    console.log('R2 upload request details:', {
+    console.log('Upload request details:', {
       fileType: file?.type,
       fileSize: file?.size,
-      folder
+      folder,
+      storage: isR2Configured ? 'R2' : 'Local'
     });
 
     // Validate file
@@ -69,7 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Invalid file type. Allowed types: ' +
-                 [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES].join(', ')
+            [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES].join(', ')
         },
         { status: 400 }
       );
@@ -99,52 +98,74 @@ export async function POST(request: NextRequest) {
     }
 
     const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `${folder}/${fileName}`;
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    console.log('Uploading to Cloudflare R2 with filename:', fileName);
+    if (isR2Configured) {
+      // Upload to R2
+      const filePath = `${folder}/${fileName}`;
+      console.log('Uploading to Cloudflare R2 with filename:', fileName);
 
-    // Initialize S3 client for R2
-    const s3 = new S3Client({
-      region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey
+      // Initialize S3 client for R2
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId,
+          secretAccessKey
+        }
+      });
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: filePath,
+        Body: buffer,
+        ContentType: file.type
+      });
+
+      await s3.send(command);
+
+      // Construct the public URL
+      const fileUrl = `${publicUrl}/${filePath}`;
+      const finalUrl = `${fileUrl}?t=${Date.now()}`;
+
+      console.log('Generated public URL (via R2):', finalUrl);
+
+      return NextResponse.json({
+        success: true,
+        url: finalUrl,
+        provider: 'r2'
+      });
+    } else {
+      // Upload to Local Storage (public/uploads)
+      console.log('Uploading to local storage with filename:', fileName);
+
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', folder);
+
+      // Ensure directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
       }
-    });
 
-    // Upload to R2
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: filePath,
-      Body: buffer,
-      ContentType: file.type
-    });
+      const filePath = path.join(uploadDir, fileName);
+      await writeFile(filePath, buffer);
 
-    await s3.send(command);
+      const fileUrl = `/uploads/${folder}/${fileName}`;
+      console.log('Generated public URL (via Local):', fileUrl);
 
-    // Construct the public URL
-    const fileUrl = `${publicUrl}/${filePath}`;
-
-    // Add cache-busting parameter to prevent caching issues
-    const finalUrl = `${fileUrl}?t=${Date.now()}`;
-
-    console.log('Generated public URL (via R2):', finalUrl);
-
-    return NextResponse.json({
-      success: true,
-      url: finalUrl,
-      provider: 'r2'
-    });
+      return NextResponse.json({
+        success: true,
+        url: fileUrl,
+        provider: 'local'
+      });
+    }
   } catch (error: any) {
-    console.error('Error in server-side R2 upload API:', error);
+    console.error('Error in server-side upload API:', error);
     return NextResponse.json(
       {
-        error: 'Failed to upload to Cloudflare R2',
+        error: 'Failed to upload file',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

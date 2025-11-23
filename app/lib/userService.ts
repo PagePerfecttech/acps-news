@@ -6,7 +6,7 @@ import { User } from '../types';
 const defaultUsers: User[] = [
   {
     id: '1',
-    email: 'admin@flipnews.com',
+    email: 'admin@acpsnews.com',
     name: 'Admin User',
     role: 'admin',
     profile_pic: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -18,8 +18,8 @@ const defaultUsers: User[] = [
 const initializeUsers = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
-  if (!localStorage.getItem('flipnews_users')) {
-    localStorage.setItem('flipnews_users', JSON.stringify(defaultUsers));
+  if (!localStorage.getItem('acpsnews_users')) {
+    localStorage.setItem('acpsnews_users', JSON.stringify(defaultUsers));
   }
 };
 
@@ -74,7 +74,7 @@ const getLocalUsers = (): User[] => {
   }
 
   initializeUsers();
-  const users = localStorage.getItem('flipnews_users');
+  const users = localStorage.getItem('acpsnews_users');
   return users ? JSON.parse(users) : defaultUsers;
 };
 
@@ -133,7 +133,7 @@ const getLocalUserById = (id: string): User | null => {
   }
 
   initializeUsers();
-  const users = localStorage.getItem('flipnews_users');
+  const users = localStorage.getItem('acpsnews_users');
   const parsedUsers = users ? JSON.parse(users) : defaultUsers;
   return parsedUsers.find((user: User) => user.id === id) || null;
 };
@@ -202,7 +202,7 @@ const addLocalUser = (user: Omit<User, 'id' | 'created_at'>): User | null => {
 
   try {
     initializeUsers();
-    const users = localStorage.getItem('flipnews_users');
+    const users = localStorage.getItem('acpsnews_users');
     const parsedUsers = users ? JSON.parse(users) : defaultUsers;
 
     // Check if email already exists
@@ -221,7 +221,7 @@ const addLocalUser = (user: Omit<User, 'id' | 'created_at'>): User | null => {
 
     // Add to users array
     parsedUsers.push(newUser);
-    localStorage.setItem('flipnews_users', JSON.stringify(parsedUsers));
+    localStorage.setItem('acpsnews_users', JSON.stringify(parsedUsers));
 
     return newUser;
   } catch (error) {
@@ -270,7 +270,7 @@ const updateLocalUser = (id: string, userData: Partial<User>): boolean => {
 
   try {
     initializeUsers();
-    const users = localStorage.getItem('flipnews_users');
+    const users = localStorage.getItem('acpsnews_users');
     const parsedUsers = users ? JSON.parse(users) : defaultUsers;
 
     // Find user index
@@ -287,7 +287,7 @@ const updateLocalUser = (id: string, userData: Partial<User>): boolean => {
       updated_at: new Date().toISOString()
     };
 
-    localStorage.setItem('flipnews_users', JSON.stringify(parsedUsers));
+    localStorage.setItem('acpsnews_users', JSON.stringify(parsedUsers));
     return true;
   } catch (error) {
     console.error('Error updating user in localStorage:', error);
@@ -332,13 +332,13 @@ const deleteLocalUser = (id: string): boolean => {
 
   try {
     initializeUsers();
-    const users = localStorage.getItem('flipnews_users');
+    const users = localStorage.getItem('acpsnews_users');
     const parsedUsers = users ? JSON.parse(users) : defaultUsers;
 
     // Filter out the user
     const filteredUsers = parsedUsers.filter((user: User) => user.id !== id);
 
-    localStorage.setItem('flipnews_users', JSON.stringify(filteredUsers));
+    localStorage.setItem('acpsnews_users', JSON.stringify(filteredUsers));
     return true;
   } catch (error) {
     console.error('Error deleting user from localStorage:', error);

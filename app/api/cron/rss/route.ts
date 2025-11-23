@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isSupabaseConfigured } from '../../../lib/supabase';
 import { fetchRssFeeds, fetchRssFeedItems, updateRssFeed } from '../../../lib/databaseService';
 import { processRssFeed } from '../../../lib/rssProcessor';
 
@@ -20,11 +19,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const usingSupabase = await isSupabaseConfigured();
-
-    if (!usingSupabase) {
+    // Check if DATABASE_URL is configured
+    if (!process.env.DATABASE_URL) {
       return NextResponse.json(
-        { error: 'Supabase not configured' },
+        { error: 'Database not configured' },
         { status: 500 }
       );
     }

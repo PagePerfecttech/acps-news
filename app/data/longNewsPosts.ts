@@ -1,6 +1,6 @@
 import { NewsArticle } from '../types';
 
-// 10 longer news posts for FlipNews app
+// 10 longer news posts for ACPS News app
 export const longNewsPosts: NewsArticle[] = [
   {
     id: '101',

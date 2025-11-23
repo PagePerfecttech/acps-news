@@ -20,25 +20,25 @@ export interface SiteSettings {
 
 // Default settings
 const defaultSettings: SiteSettings = {
-  site_name: 'Vizag News',
+  site_name: 'ACPS News',
   primary_color: '#FACC15', // Yellow-500
   secondary_color: '#000000',
-  share_link: 'https://vizag-news.vercel.app',
+  share_link: 'https://acps-news.vercel.app',
   logo_url: '',
   background_logo_url: '/logo-background.svg',
   background_logo_opacity: 0.1,
-  black_strip_text: 'No.1 విజయవాడ న్యూస్ డైలీ',
-  admin_email: 'admin@vizagnews.com',
+  black_strip_text: 'No.1 News Daily',
+  admin_email: 'admin@acpsnews.com',
   admin_password: 'admin123',
   admin_name: 'Admin',
 };
 
-// Initialize settings in localStorage if they don&apos;t exist
+// Initialize settings in localStorage if they don't exist
 const initializeSettings = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
-  if (!localStorage.getItem('vizagnews_settings')) {
-    localStorage.setItem('vizagnews_settings', JSON.stringify(defaultSettings));
+  if (!localStorage.getItem('acpsnews_settings')) {
+    localStorage.setItem('acpsnews_settings', JSON.stringify(defaultSettings));
   }
 };
 
@@ -131,7 +131,7 @@ const getLocalSettings = (): SiteSettings => {
   }
 
   initializeSettings();
-  const settings = localStorage.getItem('vizagnews_settings');
+  const settings = localStorage.getItem('acpsnews_settings');
   return settings ? JSON.parse(settings) : defaultSettings;
 };
 
@@ -222,14 +222,14 @@ export const saveSettings = async (settings: SiteSettings): Promise<boolean> => 
 
 // Save settings to localStorage
 const saveLocalSettings = (settings: SiteSettings): boolean => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false; // Can't update on server-side
 
   try {
-    // Make sure we&apos;re saving a complete settings object
+    // Make sure we're saving a complete settings object
     const currentSettings = getLocalSettings();
     const updatedSettings = { ...currentSettings, ...settings };
 
-    localStorage.setItem('vizagnews_settings', JSON.stringify(updatedSettings));
+    localStorage.setItem('acpsnews_settings', JSON.stringify(updatedSettings));
 
     // Also update document title if site_name is changed
     if (settings.site_name && typeof document !== 'undefined') {

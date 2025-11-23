@@ -89,7 +89,7 @@ export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
     setErrorInfo('');
     // Clear any cached data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
+      localStorage.removeItem('acpsnews_articles_cache');
       console.log('Cache cleared due to error recovery');
     }
     // Reload the page

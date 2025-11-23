@@ -21,7 +21,7 @@ export default function RefreshButton({
     
     // Clear any cached data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
+      localStorage.removeItem('acpsnews_articles_cache');
       console.log('Cache cleared via refresh button');
     }
     

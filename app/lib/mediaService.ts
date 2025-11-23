@@ -226,7 +226,7 @@ const storeFileLocally = async (
     const url = URL.createObjectURL(file);
 
     // Store the URL in localStorage for persistence across page refreshes
-    const key = `flipnews_local_${type}_${Date.now()}`;
+    const key = `acpsnews_local_${type}_${Date.now()}`;
     localStorage.setItem(key, url);
 
     console.warn('Using local storage for file. This URL will not persist across sessions.');

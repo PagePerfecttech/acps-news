@@ -18,8 +18,8 @@ export default function GlobalError({
   const handleReset = () => {
     // Clear any cached data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
-      localStorage.removeItem('flipnews_settings');
+      localStorage.removeItem('acpsnews_articles_cache');
+      localStorage.removeItem('acpsnews_settings');
       console.log('Cache cleared due to global error recovery');
     }
     // Reset the error boundary

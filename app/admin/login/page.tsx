@@ -175,7 +175,7 @@ export default function LoginPage() {
                 href="/"
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
-                FlipNews Home
+                ACPS News Home
               </Link>
             </div>
           </div>

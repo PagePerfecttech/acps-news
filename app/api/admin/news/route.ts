@@ -1,22 +1,18 @@
 /**
  * API Route for managing news articles
  *
- * This route bypasses RLS policies by using the service role key
+ * This route uses Drizzle ORM to interact with Neon database
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
-
-// Create Supabase admin client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+import { db } from '@/app/lib/db';
+import { newsArticles, categories } from '@/app/lib/schema';
+import { eq, desc, count } from 'drizzle-orm';
 
 // GET /api/admin/news - Get all news articles
 export async function GET(request: NextRequest) {
   try {
-    console.log('Fetching news articles via admin API');
+    console.log('Fetching news articles via admin API (Drizzle)');
 
     // Get query parameters
     const url = new URL(request.url);
@@ -28,40 +24,47 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query
-    let query = supabaseAdmin
-      .from('news_articles')
-      .select(`
-        *,
-        categories(name, slug)
-      `)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let baseQuery = db.select({
+      news: newsArticles,
+      category: { name: categories.name, slug: categories.slug }
+    })
+      .from(newsArticles)
+      .leftJoin(categories, eq(newsArticles.category_id, categories.slug));
 
-    // Add category filter if provided
+    let whereClause = undefined;
     if (category) {
-      query = query.eq('categories.slug', category);
+      whereClause = eq(categories.slug, category);
     }
 
-    // Execute query
-    const { data, error, count } = await query;
+    const data = await baseQuery
+      .where(whereClause)
+      .orderBy(desc(newsArticles.created_at))
+      .limit(limit)
+      .offset(offset);
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: `Failed to fetch articles: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    // Get total count
+    const totalResult = await db.select({ count: count() })
+      .from(newsArticles)
+      .leftJoin(categories, eq(newsArticles.category_id, categories.slug))
+      .where(whereClause);
 
-    console.log(`Fetched ${data?.length || 0} articles from Supabase`);
+    const total = totalResult[0]?.count || 0;
+
+    // Transform data to match expected format
+    const formattedData = data.map(item => ({
+      ...item.news,
+      categories: item.category
+    }));
+
+    console.log(`Fetched ${formattedData.length} articles from Neon`);
 
     return NextResponse.json({
       success: true,
-      data: data || [],
+      data: formattedData,
       page,
       limit,
-      total: count,
-      hasMore: data && data.length === limit
+      total,
+      hasMore: formattedData.length === limit
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/news:', error);
@@ -75,7 +78,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/news - Create a new news article
 export async function POST(request: NextRequest) {
   try {
-    console.log('Creating news article via admin API');
+    console.log('Creating news article via admin API (Drizzle)');
 
     // Parse request body
     const body = await request.json();
@@ -89,8 +92,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create article object for Supabase
-    const now = new Date().toISOString();
+    // Create article object
+    const now = new Date();
     const article = {
       title: body.title,
       content: body.content,
@@ -105,22 +108,14 @@ export async function POST(request: NextRequest) {
       updated_at: now
     };
 
-    console.log('Inserting article into Supabase:', article);
+    console.log('Inserting article into Neon:', article);
 
-    // Insert into Supabase
-    const { data, error } = await supabaseAdmin
-      .from('news_articles')
-      .insert([article])
-      .select()
-      .single();
+    // Insert into Neon
+    const result = await db.insert(newsArticles)
+      .values(article)
+      .returning();
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: `Failed to save article: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    const data = result[0];
 
     console.log('Article saved successfully:', data);
 

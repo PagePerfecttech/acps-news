@@ -75,7 +75,7 @@ export default function AddNewsPage() {
 
     // Get current user info from localStorage
     try {
-      const storedUsers = localStorage.getItem('flipnews_users');
+      const storedUsers = localStorage.getItem('acpsnews_users');
       if (storedUsers) {
         const users = JSON.parse(storedUsers);
         if (users && users.length > 0) {

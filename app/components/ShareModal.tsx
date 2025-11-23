@@ -165,7 +165,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
 
       // Use the share link from settings, or fallback to a default
       const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
-      const siteName = settings?.site_name || 'Vizag News';
+      const siteName = settings?.site_name || 'ACPS News';
 
       // Get the article element to extract content
       const articleElement = document.getElementById(elementId);
@@ -291,7 +291,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
         alert('Screenshot is not ready yet. Please try again in a moment.');
         return;
       }
-      const siteName = settings?.site_name || 'Vizag News';
+      const siteName = settings?.site_name || 'ACPS News';
       downloadDataUrl(screenshotUrl, `${siteName}-news.png`);
     } catch (error) {
       console.error('Error downloading screenshot:', error);
@@ -424,7 +424,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
                   style={{ maxHeight: '70vh', objectFit: 'contain' }}
                 />
                 <div className="absolute bottom-2 right-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs font-bold">
-                  <span data-site-name>{settings?.site_name || 'Vizag News'}</span>
+                  <span data-site-name>{settings?.site_name || 'ACPS News'}</span>
                 </div>
               </div>
             ) : (

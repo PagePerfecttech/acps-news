@@ -113,7 +113,7 @@ export default function AdminLayout({
         style={{ backgroundColor: settings.primary_color }}
       >
         <div className="p-6">
-          <h1 className="text-2xl font-bold mb-6">FlipNews Admin</h1>
+          <h1 className="text-2xl font-bold mb-6">ACPS News Admin</h1>
           <nav className="space-y-4">
             <Link
               href="/admin"

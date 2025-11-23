@@ -61,7 +61,7 @@ export default function DebugPage() {
   const handleRefresh = async () => {
     // Force reload all data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
+      localStorage.removeItem('acpsnews_articles_cache');
       console.log('Cache cleared via debug page');
     }
 

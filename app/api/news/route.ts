@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isSupabaseConfigured, supabase } from '../../lib/supabase';
+import { db } from '../../lib/db';
+import { newsArticles, categories } from '../../lib/schema';
+import { eq, desc, count, and } from 'drizzle-orm';
 
 // GET /api/news - Get all news articles
 export async function GET(request: NextRequest) {
   try {
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
-    if (!configured) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
     // Get query parameters
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '10');
@@ -22,38 +15,43 @@ export async function GET(request: NextRequest) {
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
 
-    // Build query
-    let query = supabase
-      .from('news_articles')
-      .select(`
-        *,
-        categories(name, slug)
-      `)
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    // Add category filter if provided
+    // Build where clause
+    const whereConditions = [eq(newsArticles.published, true)];
     if (category) {
-      query = query.eq('category_id', category);
+      whereConditions.push(eq(newsArticles.category_id, category));
     }
 
-    const { data, error, count } = await query;
+    // Fetch articles with category info
+    const data = await db.select({
+      news: newsArticles,
+      category: { name: categories.name, slug: categories.slug }
+    })
+      .from(newsArticles)
+      .leftJoin(categories, eq(newsArticles.category_id, categories.slug))
+      .where(and(...whereConditions))
+      .orderBy(desc(newsArticles.created_at))
+      .limit(limit)
+      .offset(offset);
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: `Failed to fetch articles: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    // Get total count
+    const totalResult = await db.select({ count: count() })
+      .from(newsArticles)
+      .where(and(...whereConditions));
+
+    const total = totalResult[0]?.count || 0;
+
+    // Transform data to match expected format
+    const formattedData = data.map(item => ({
+      ...item.news,
+      categories: item.category
+    }));
 
     return NextResponse.json({
-      data: data || [],
+      data: formattedData,
       page,
       limit,
-      total: count || 0,
-      hasMore: (data?.length || 0) === limit
+      total,
+      hasMore: formattedData.length === limit
     });
   } catch (error: any) {
     console.error('Error:', error);
@@ -67,15 +65,6 @@ export async function GET(request: NextRequest) {
 // POST /api/news - Create a new news article
 export async function POST(request: NextRequest) {
   try {
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
-    if (!configured) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
     // Parse request body
     const body = await request.json();
 
@@ -87,8 +76,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create article object for Supabase
-    const now = new Date().toISOString();
+    // Create article object
+    const now = new Date();
     const article = {
       title: body.title,
       content: body.content,
@@ -103,24 +92,14 @@ export async function POST(request: NextRequest) {
       updated_at: now
     };
 
-    // Insert into Supabase
-    const { data, error } = await supabase
-      .from('news_articles')
-      .insert([article])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: `Failed to save article: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    // Insert into database
+    const result = await db.insert(newsArticles)
+      .values(article)
+      .returning();
 
     return NextResponse.json({
       success: true,
-      data: data
+      data: result[0]
     });
   } catch (error: any) {
     console.error('Error:', error);

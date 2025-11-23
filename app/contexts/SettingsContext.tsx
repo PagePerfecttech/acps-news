@@ -8,13 +8,14 @@ import { applyThemeColors } from '../lib/themeUtils';
 
 // Default settings
 const defaultSettings: SiteSettings = {
-  site_name: 'Vizag News',
+  site_name: 'ACPS News',
   primary_color: '#FACC15', // Yellow-500
   secondary_color: '#000000',
-  share_link: 'https://vizag-news.vercel.app',
+  share_link: 'https://acps-news.vercel.app',
   logo_url: '',
   background_logo_url: '/logo-background.svg',
   background_logo_opacity: 0.1,
+  black_strip_text: 'No.1 News Daily',
 };
 
 interface SettingsContextType {
@@ -28,7 +29,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType>({
   settings: defaultSettings,
   loading: true,
-  refreshSettings: async () => {},
+  refreshSettings: async () => { },
   connectionStatus: 'disconnected',
   subscriptionStatus: null,
 });
@@ -75,7 +76,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       setSettings(loadedSettings || defaultSettings);
     } catch (error) {
       console.error('Error loading settings:', error);
-      // Use default settings if there&apos;s an error
+      // Use default settings if there's an error
       setSettings(defaultSettings);
     } finally {
       setLoading(false);
@@ -90,12 +91,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkSupabase();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []);
 
   // Initial load of settings
   useEffect(() => {
     loadSettings();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps;
+  }, []);
 
   const refreshSettings = async () => {
     await loadSettings();

@@ -13,7 +13,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">{settings.site_name || 'FlipNews'}</h3>
+            <h3 className="text-xl font-bold mb-4">{settings.site_name || 'ACPS News'}</h3>
             <p className="text-gray-400 mb-4">
               Your source for the latest news and updates from around the world.
               Flip through stories that matter to you.
@@ -87,14 +87,14 @@ export default function Footer() {
               </li>
               <li className="flex items-center">
                 <FiMail className="mr-3 text-gray-400" />
-                <span className="text-gray-400">contact@{settings.share_link ? new URL(settings.share_link).hostname : 'flipnews.com'}</span>
+                <span className="text-gray-400">contact@{settings.share_link ? new URL(settings.share_link).hostname : 'acpsnews.com'}</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-400">
-          <p>&copy; {currentYear} {settings.site_name || 'FlipNews'}. All rights reserved.</p>
+          <p>&copy; {currentYear} {settings.site_name || 'ACPS News'}. All rights reserved.</p>
         </div>
       </div>
     </footer>

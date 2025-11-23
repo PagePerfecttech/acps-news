@@ -17,19 +17,14 @@ export default function Login() {
     setError('');
 
     try {
-      // Use Supabase auth for real authentication
-      const { supabase } = await import('../../lib/supabase');
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-        console.error('Login error:', error);
-      } else {
-        // Successful login - redirect to admin dashboard
+      // Simple demo authentication - replace with real auth if needed
+      if (email === 'admin@acpsnews.com' && password === 'admin123') {
+        // Successful login - set auth flag in localStorage
+        localStorage.setItem('acpsnews_auth', 'true');
+        localStorage.setItem('acpsnews_admin_name', email);
         router.push('/admin');
+      } else {
+        setError('Invalid email or password');
       }
     } catch (err) {
       setError('An error occurred during login');

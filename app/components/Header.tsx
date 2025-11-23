@@ -35,7 +35,7 @@ export default function Header() {
               {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
             <Link href="/" className="text-xl font-bold">
-              {settings.site_name || 'FlipNews'}
+              {settings.site_name || 'ACPS News'}
             </Link>
           </div>
           <div className="flex items-center">
@@ -74,7 +74,7 @@ export default function Header() {
             className="fixed top-0 left-0 h-full w-3/4 bg-white shadow-lg z-50 overflow-y-auto"
           >
             <div className="p-4 bg-primary flex justify-between items-center" style={{ backgroundColor: settings.primary_color }}>
-              <span className="text-xl font-bold">{settings.site_name || 'FlipNews'}</span>
+              <span className="text-xl font-bold">{settings.site_name || 'ACPS News'}</span>
               <button onClick={toggleMenu}>
                 <FiX size={24} />
               </button>

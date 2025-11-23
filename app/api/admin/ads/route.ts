@@ -1,42 +1,29 @@
 /**
  * API Route for managing ads
  *
- * This route bypasses RLS policies by using the service role key
+ * This route uses Drizzle ORM to interact with Neon database
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
-
-// Create Supabase admin client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+import { db } from '@/app/lib/db';
+import { ads } from '@/app/lib/schema';
+import { eq, desc } from 'drizzle-orm';
 
 // GET /api/admin/ads - Get all ads
 export async function GET(request: NextRequest) {
   try {
-    console.log('Fetching ads via admin API');
+    console.log('Fetching ads via admin API (Drizzle)');
 
-    // Fetch ads from Supabase
-    const { data, error } = await supabaseAdmin
-      .from('ads')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // Fetch ads from Neon
+    const data = await db.select()
+      .from(ads)
+      .orderBy(desc(ads.created_at));
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: `Failed to fetch ads: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
-    console.log(`Fetched ${data?.length || 0} ads from Supabase`);
+    console.log(`Fetched ${data.length} ads from Neon`);
 
     return NextResponse.json({
       success: true,
-      data: data || []
+      data: data
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/ads:', error);
@@ -50,7 +37,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/ads - Create a new ad
 export async function POST(request: NextRequest) {
   try {
-    console.log('Creating ad via admin API');
+    console.log('Creating ad via admin API (Drizzle)');
 
     // Parse request body
     const body = await request.json();
@@ -64,8 +51,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create ad object for Supabase
-    const now = new Date().toISOString();
+    // Create ad object
+    const now = new Date();
     const ad = {
       title: body.title,
       description: body.description || '',
@@ -80,22 +67,14 @@ export async function POST(request: NextRequest) {
       updated_at: now
     };
 
-    console.log('Inserting ad into Supabase:', ad);
+    console.log('Inserting ad into Neon:', ad);
 
-    // Insert into Supabase
-    const { data, error } = await supabaseAdmin
-      .from('ads')
-      .insert([ad])
-      .select()
-      .single();
+    // Insert into Neon
+    const result = await db.insert(ads)
+      .values(ad)
+      .returning();
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: `Failed to save ad: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    const data = result[0];
 
     console.log('Ad saved successfully:', data);
 
@@ -112,14 +91,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/admin/ads/:id - Update an ad
+// PUT /api/admin/ads - Update an ad
 export async function PUT(request: NextRequest) {
   try {
-    console.log('Updating ad via admin API');
+    console.log('Updating ad via admin API (Drizzle)');
 
-    // Get the ad ID from the URL
+    // Parse request body
+    const body = await request.json();
+
+    // Get the ad ID from URL or body
     const url = new URL(request.url);
-    const id = url.pathname.split('/').pop();
+    let id = url.searchParams.get('id') || body.id;
+
+    // Fallback to pathname extraction
+    if (!id) {
+      const pathParts = url.pathname.split('/');
+      const lastPart = pathParts.pop();
+      if (lastPart && lastPart !== 'ads') {
+        id = lastPart;
+      }
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -128,8 +119,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Parse request body
-    const body = await request.json();
     console.log('Updating ad with ID:', id, 'Data:', body);
 
     // Validate required fields
@@ -140,8 +129,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Create update object for Supabase
-    const now = new Date().toISOString();
+    // Create update object
+    const now = new Date();
     const updateData = {
       title: body.title,
       description: body.description || '',
@@ -155,29 +144,24 @@ export async function PUT(request: NextRequest) {
       updated_at: now
     };
 
-    console.log('Updating ad in Supabase:', updateData);
+    // Update in Neon
+    const result = await db.update(ads)
+      .set(updateData)
+      .where(eq(ads.id, id))
+      .returning();
 
-    // Update in Supabase
-    const { data, error } = await supabaseAdmin
-      .from('ads')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase error:', error);
+    if (result.length === 0) {
       return NextResponse.json(
-        { error: `Failed to update ad: ${error.message}` },
-        { status: 500 }
+        { error: 'Ad not found' },
+        { status: 404 }
       );
     }
 
-    console.log('Ad updated successfully:', data);
+    console.log('Ad updated successfully:', result[0]);
 
     return NextResponse.json({
       success: true,
-      data: data
+      data: result[0]
     });
   } catch (error: any) {
     console.error('Error in PUT /api/admin/ads:', error);
@@ -188,14 +172,23 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/admin/ads/:id - Delete an ad
+// DELETE /api/admin/ads - Delete an ad
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('Deleting ad via admin API');
+    console.log('Deleting ad via admin API (Drizzle)');
 
     // Get the ad ID from the URL
     const url = new URL(request.url);
-    const id = url.pathname.split('/').pop();
+    let id = url.searchParams.get('id');
+
+    // Fallback to pathname extraction
+    if (!id) {
+      const pathParts = url.pathname.split('/');
+      const lastPart = pathParts.pop();
+      if (lastPart && lastPart !== 'ads') {
+        id = lastPart;
+      }
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -206,17 +199,15 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Deleting ad with ID:', id);
 
-    // Delete from Supabase
-    const { error } = await supabaseAdmin
-      .from('ads')
-      .delete()
-      .eq('id', id);
+    // Delete from Neon
+    const result = await db.delete(ads)
+      .where(eq(ads.id, id))
+      .returning();
 
-    if (error) {
-      console.error('Supabase error:', error);
+    if (result.length === 0) {
       return NextResponse.json(
-        { error: `Failed to delete ad: ${error.message}` },
-        { status: 500 }
+        { error: 'Ad not found' },
+        { status: 404 }
       );
     }
 

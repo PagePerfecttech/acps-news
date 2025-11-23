@@ -17,7 +17,7 @@ export default function MinimalPage() {
         
         // Clear any cached data
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('flipnews_articles_cache');
+          localStorage.removeItem('acpsnews_articles_cache');
         }
         
         // Simulate data fetching

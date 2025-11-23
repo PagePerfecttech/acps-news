@@ -23,360 +23,120 @@ const defaultAds: Ad[] = [
     description: 'ఇప్పుడే సబ్‌స్క్రైబ్ చేసుకొని యాడ్-ఫ్రీ రీడింగ్, ఎక్స్‌క్లూజివ్ కంటెంట్ మరియు మరిన్ని ఆనందించండి!',
     image_url: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=1470&auto=format&fit=crop',
     link_url: '/subscribe',
-    frequency: 3, // Show after every 3 articles
+    frequency: 3,
     active: true,
     created_at: '2023-05-01T00:00:00Z',
     updated_at: '2023-05-01T00:00:00Z',
   },
-  {
-    id: '2',
-    title: 'నూతన స్మార్ట్‌ఫోన్ లాంచ్',
-    description: 'అత్యాధునిక ఫీచర్లతో కొత్త స్మార్ట్‌ఫోన్ మార్కెట్లోకి',
-    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    video_type: 'youtube',
-    link_url: '/smartphone',
-    frequency: 5,
-    active: true,
-    created_at: '2023-05-02T00:00:00Z',
-    updated_at: '2023-05-02T00:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'ఆన్‌లైన్ షాపింగ్ ఆఫర్స్',
-    text_content: 'ఇప్పుడే కొనుగోలు చేసి 50% వరకు పొదుపు చేయండి!',
-    image_url: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1470&auto=format&fit=crop',
-    link_url: '/shopping',
-    frequency: 4,
-    active: true,
-    created_at: '2023-05-03T00:00:00Z',
-    updated_at: '2023-05-03T00:00:00Z',
-  }
 ];
 
-// Initialize data in localStorage if it doesn&apos;t exist
+// Initialize data in localStorage if it doesn't exist
 const initializeData = () => {
-  if (typeof window === 'undefined') return; // Skip on server-side
+  if (typeof window === 'undefined') return;
 
-  // Check if news data exists in localStorage
-  if (!localStorage.getItem('vizagnews_articles')) {
-    // Initialize with the default data
-    localStorage.setItem('vizagnews_articles', JSON.stringify(longNewsPosts));
+  if (!localStorage.getItem('acpsnews_articles')) {
+    localStorage.setItem('acpsnews_articles', JSON.stringify(longNewsPosts));
   }
 
-  // Check if ads data exists in localStorage
-  if (!localStorage.getItem('vizagnews_ads')) {
-    // Initialize with the default ads
-    localStorage.setItem('vizagnews_ads', JSON.stringify(defaultAds));
+  if (!localStorage.getItem('acpsnews_ads')) {
+    localStorage.setItem('acpsnews_ads', JSON.stringify(defaultAds));
   }
 
-  // Check if categories data exists in localStorage
-  if (!localStorage.getItem('vizagnews_categories')) {
-    // Initialize with the default categories
-    localStorage.setItem('vizagnews_categories', JSON.stringify(defaultCategories));
+  if (!localStorage.getItem('acpsnews_categories')) {
+    localStorage.setItem('acpsnews_categories', JSON.stringify(defaultCategories));
   }
 };
 
-// Get all news articles
+// Get all news articles from Neon-backed API
 export const getNewsArticles = async (): Promise<NewsArticle[]> => {
-  // Try to get data from Supabase first
   try {
-    // Import dynamically to avoid circular dependencies
-    const { supabase, isSupabaseConfigured } = await import('./supabase');
+    console.log('Fetching articles from Neon API...');
+    const response = await fetch('/api/news?limit=100');
 
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
+    if (!response.ok) {
+      throw new Error('Failed to fetch articles from API');
+    }
 
-    if (configured) {
-      console.log('Fetching articles from Supabase...');
-      console.log('Fetching articles from Supabase with detailed query...');
-      const { data, error } = await supabase
-        .from('news_articles')
-        .select(`
-          *,
-          categories:category_id(name)
-        `)
-        .order('created_at', { ascending: false });
+    const result = await response.json();
 
-      console.log('Supabase query result:', { data, error });
+    if (result.data && result.data.length > 0) {
+      console.log(`Retrieved ${result.data.length} articles from Neon`);
 
-      if (!error && data && data.length > 0) {
-        console.log(`Retrieved ${data.length} articles from Supabase`);
+      // Format the data
+      const formattedData = result.data.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        content: article.content || '',
+        summary: article.summary || '',
+        category: article.categories?.name || 'Uncategorized',
+        category_id: article.category_id,
+        author: article.author || 'Anonymous',
+        image_url: article.image_url || '',
+        video_url: article.video_url || '',
+        video_type: article.video_type || '',
+        tags: Array.isArray(article.tags) ? article.tags : [],
+        likes: article.likes || 0,
+        views: article.views || 0,
+        published: article.published !== false,
+        comments: article.comments || [],
+        created_at: article.created_at || new Date().toISOString(),
+        updated_at: article.updated_at || new Date().toISOString()
+      }));
 
-        // Ensure each article has the required properties
-        const formattedData = data.map(article => {
-          // Extract category name from the categories relation
-          const categoryName = article.categories?.name || 'Uncategorized';
-
-          // Make sure all required fields are present
-          return {
-            id: article.id,
-            title: article.title,
-            content: article.content || '',
-            summary: article.summary || '',
-            category: categoryName, // Set the category field to the category name
-            category_id: article.category_id,
-            author: article.author || 'Anonymous',
-            image_url: article.image_url || '',
-            video_url: article.video_url || '',
-            video_type: article.video_type || '',
-            tags: Array.isArray(article.tags) ? article.tags : [],
-            likes: article.likes || 0,
-            views: article.views || 0,
-            published: article.published !== false,
-            comments: article.comments || [],
-            created_at: article.created_at || new Date().toISOString(),
-            updated_at: article.updated_at || new Date().toISOString()
-          };
-        });
-
-        // Update localStorage with the latest data
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('vizagnews_articles', JSON.stringify(formattedData));
-          localStorage.setItem('vizagnews_articles_cache', JSON.stringify(formattedData));
-          localStorage.setItem('vizagnews_articles_cache_timestamp', Date.now().toString());
-          localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
-        }
-
-        return formattedData;
-      } else {
-        console.warn('Failed to fetch articles from Supabase:', error);
+      // Update localStorage cache
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('acpsnews_articles', JSON.stringify(formattedData));
+        localStorage.setItem('acpsnews_articles_cache', JSON.stringify(formattedData));
+        localStorage.setItem('acpsnews_articles_cache_timestamp', Date.now().toString());
+        localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
       }
+
+      return formattedData;
     }
   } catch (error) {
-    console.error('Error fetching from Supabase:', error);
+    console.error('Error fetching from Neon API:', error);
   }
 
-  // Fall back to localStorage if Supabase fails
+  // Fall back to localStorage
   if (typeof window === 'undefined') {
-    // Return the default data on server-side
     return longNewsPosts;
   }
 
   initializeData();
-
-  // Check if we have a cached version and when it was last updated
-  const lastUpdated = localStorage.getItem('vizagnews_articles_updated');
-  const cachedArticles = localStorage.getItem('vizagnews_articles_cache');
-
-  // Get the actual articles from storage
-  const articles = localStorage.getItem('vizagnews_articles');
-
-  if (!articles) {
-    return longNewsPosts;
-  }
-
-  // Parse the articles
-  const parsedArticles = JSON.parse(articles);
-
-  // If we have cached articles, check if they&apos;re still fresh
-  if (cachedArticles && lastUpdated) {
-    const cachedTimestamp = localStorage.getItem('vizagnews_articles_cache_timestamp');
-
-    // If the cache timestamp is newer than the last update, use the cache
-    if (cachedTimestamp && parseInt(cachedTimestamp, 10) > parseInt(lastUpdated, 10)) {
-      console.log('Using cached articles from localStorage');
-      return JSON.parse(cachedArticles);
-    }
-  }
-
-  // If we get here, either there&apos;s no cache or it&apos;s stale
-  // Update the cache with the fresh data
-  localStorage.setItem('vizagnews_articles_cache', JSON.stringify(parsedArticles));
-  localStorage.setItem('vizagnews_articles_cache_timestamp', Date.now().toString());
-
-  console.log('Using fresh articles data from localStorage');
-  return parsedArticles;
+  const articles = localStorage.getItem('acpsnews_articles');
+  return articles ? JSON.parse(articles) : longNewsPosts;
 };
 
 // Get a single news article by ID
 export const getNewsArticleById = async (id: string): Promise<NewsArticle | undefined> => {
-  // Try to get from Supabase first
   try {
-    // Import dynamically to avoid circular dependencies
-    const { supabase, isSupabaseConfigured } = await import('./supabase');
-
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
-
-    if (configured) {
-      console.log('Fetching article from Supabase:', id);
-
-      const { data, error } = await supabase
-        .from('news_articles')
-        .select(`
-          *,
-          categories:category_id(name)
-        `)
-        .eq('id', id)
-        .single();
-
-      if (!error && data) {
-        console.log(`Article ${id} found in Supabase`);
-
-        // Format the article to match our expected structure
-        const article: NewsArticle = {
-          id: data.id,
-          title: data.title,
-          content: data.content || '',
-          summary: data.summary || '',
-          category: data.categories ? data.categories.name : (data.category_id || 'Uncategorized'),
-          category_id: data.category_id,
-          author: data.author || 'Anonymous',
-          image_url: data.image_url || '',
-          video_url: data.video_url || '',
-          video_type: data.video_type || '',
-          tags: Array.isArray(data.tags) ? data.tags : [],
-          likes: data.likes || 0,
-          views: data.views || 0,
-          published: data.published !== false,
-          comments: data.comments || [],
-          created_at: data.created_at || new Date().toISOString(),
-          updated_at: data.updated_at || new Date().toISOString()
-        };
-
-        console.log('Formatted article from Supabase:', article);
-
-        return article;
-      } else {
-        console.warn('Failed to fetch article from Supabase:', error);
-      }
-    }
+    const articles = await getNewsArticles();
+    return articles.find(article => article.id === id);
   } catch (error) {
-    console.error('Error fetching article from Supabase:', error);
+    console.error('Error fetching article:', error);
+    return undefined;
   }
-
-  // Try to get from all possible localStorage sources
-  try {
-    // First try the main articles storage
-    const articlesPromise = getNewsArticles();
-    const articles = await articlesPromise;
-    const article = articles.find(article => article.id === id);
-
-    if (article) {
-      console.log(`Article ${id} found in main storage`);
-      return article;
-    }
-
-    // If not found, try the cache
-    if (typeof window !== 'undefined') {
-      const cachedArticlesJson = localStorage.getItem('vizagnews_articles_cache');
-      if (cachedArticlesJson) {
-        try {
-          const cachedArticles = JSON.parse(cachedArticlesJson);
-          const cachedArticle = cachedArticles.find((a: NewsArticle) => a.id === id);
-
-          if (cachedArticle) {
-            console.log(`Article ${id} found in cache`);
-            return cachedArticle;
-          }
-        } catch (e) {
-          console.error('Error parsing cached articles:', e);
-        }
-      }
-
-      // Last resort: check all localStorage keys for any article data
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.includes('article')) {
-          try {
-            const value = localStorage.getItem(key);
-            if (value) {
-              const storedArticle = JSON.parse(value);
-              if (storedArticle.id === id) {
-                console.log(`Article ${id} found in localStorage key: ${key}`);
-                return storedArticle;
-              }
-            }
-          } catch (e) {
-            // Skip this key if it&apos;s not valid JSON
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error searching for article in localStorage:', error);
-  }
-
-  console.log(`Article ${id} not found in any storage`);
-  return undefined;
 };
 
 // Update a news article
 export const updateNewsArticle = async (updatedArticle: NewsArticle): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false;
 
   try {
-    // Try to update in Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { supabase, isSupabaseConfigured } = await import('./supabase');
+    // Update via API (you'll need to create a PUT endpoint)
+    console.log('Updating article via API:', updatedArticle.title);
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
-
-      if (configured) {
-        console.log('Updating article in Supabase:', updatedArticle.title);
-
-        // Find category ID if needed
-        let categoryId = updatedArticle.category;
-        if (typeof categoryId === 'string' && isNaN(Number(categoryId))) {
-          // If category is a name rather than an ID, look up the ID
-          const { data: categoryData } = await supabase
-            .from('categories')
-            .select('id, name')
-            .eq('name', updatedArticle.category)
-            .single();
-
-          if (categoryData) {
-            categoryId = categoryData.id;
-          }
-        }
-
-        // Update the article in Supabase
-        const { error } = await supabase
-          .from('news_articles')
-          .update({
-            title: updatedArticle.title,
-            content: updatedArticle.content,
-            summary: updatedArticle.summary,
-            category_id: categoryId,
-            image_url: updatedArticle.image_url,
-            video_url: updatedArticle.video_url,
-            video_type: updatedArticle.video_type,
-            author: updatedArticle.author,
-            published: updatedArticle.published !== false,
-            updated_at: updatedArticle.updated_at || new Date().toISOString()
-          })
-          .eq('id', updatedArticle.id);
-
-        if (error) {
-          console.error('Error updating article in Supabase:', error);
-        } else {
-          console.log('Article updated in Supabase successfully');
-        }
-      }
-    } catch (supabaseError) {
-      console.error('Error with Supabase when updating article:', supabaseError);
-      // Continue to update localStorage even if Supabase fails
-    }
-
-    // Also update in localStorage as a fallback
-    const articlesPromise = getNewsArticles();
-    const articles = await articlesPromise;
+    // For now, update localStorage
+    const articles = await getNewsArticles();
     const index = articles.findIndex(article => article.id === updatedArticle.id);
 
     if (index === -1) return false;
 
     articles[index] = updatedArticle;
-    localStorage.setItem('vizagnews_articles', JSON.stringify(articles));
+    localStorage.setItem('acpsnews_articles', JSON.stringify(articles));
+    localStorage.removeItem('acpsnews_articles_cache');
+    localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
 
-    // Clear any cached data to ensure fresh data is loaded
-    localStorage.removeItem('vizagnews_articles_cache');
-
-    // Set a timestamp for when the articles were last updated
-    localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
-
-    console.log('Article updated successfully, cache cleared');
     return true;
   } catch (error) {
     console.error('Error updating article:', error);
@@ -386,130 +146,47 @@ export const updateNewsArticle = async (updatedArticle: NewsArticle): Promise<bo
 
 // Add a new news article
 export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false;
 
   try {
-    // Try to add to Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { supabase, isSupabaseConfigured } = await import('./supabase');
+    console.log('Adding article via API:', newArticle.title);
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
+    const response = await fetch('/api/news', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: newArticle.title,
+        content: newArticle.content,
+        summary: newArticle.summary || '',
+        category_id: newArticle.category,
+        image_url: newArticle.image_url || '',
+        video_url: newArticle.video_url || '',
+        video_type: newArticle.video_type || '',
+        author: newArticle.author || 'Anonymous',
+        published: newArticle.published !== false,
+      }),
+    });
 
-      if (configured) {
-        console.log('Adding article to Supabase:', newArticle.title);
-
-        // Use the category name directly as category_id for now
-        // This simplifies the process until we have proper category management
-        let categoryId = newArticle.category;
-
-        // If we have categories table, try to find the ID
-        try {
-          if (typeof categoryId === 'string') {
-            // Check if categories table exists
-            const { count, error: countError } = await supabase
-              .from('categories')
-              .select('*', { count: 'exact', head: true });
-
-            if (!countError && count && count > 0) {
-              // If category is a name rather than an ID, look up the ID
-              const { data: categoryData } = await supabase
-                .from('categories')
-                .select('id, name')
-                .eq('name', newArticle.category)
-                .single();
-
-              if (categoryData) {
-                categoryId = categoryData.id;
-              }
-            }
-          }
-        } catch (categoryError) {
-          console.warn('Error looking up category, using name as ID:', categoryError);
-          // Continue with the category name as the ID
-        }
-
-        // Prepare the article data
-        const articleData = {
-          title: newArticle.title,
-          content: newArticle.content,
-          summary: newArticle.summary || '',
-          category_id: categoryId,
-          image_url: newArticle.image_url || '',
-          video_url: newArticle.video_url || '',
-          video_type: newArticle.video_type || '',
-          author: newArticle.author || 'Anonymous',
-          likes: newArticle.likes || 0,
-          views: 0,
-          published: newArticle.published !== false,
-          created_at: newArticle.created_at || new Date().toISOString(),
-          updated_at: newArticle.updated_at || new Date().toISOString(),
-          tags: Array.isArray(newArticle.tags) ? newArticle.tags : []
-        };
-
-        console.log('Article data prepared:', articleData);
-
-        console.log('Inserting article with data:', articleData);
-
-        try {
-          console.log('Attempting to insert article into Supabase...');
-
-          // Insert the article into Supabase
-          const { data, error } = await supabase
-            .from('news_articles')
-            .insert(articleData)
-            .select()
-            .single();
-
-          if (error) {
-            console.error('Error adding article to Supabase:', error);
-            console.log('Error code:', error.code);
-            console.log('Error message:', error.message);
-            console.log('Error details:', error.details);
-
-            // Try a simpler insert without select
-            console.log('Trying simpler insert without select...');
-            const { error: simpleError } = await supabase
-              .from('news_articles')
-              .insert(articleData);
-
-            if (simpleError) {
-              console.error('Error with simple insert:', simpleError);
-              console.log('Simple error code:', simpleError.code);
-              console.log('Simple error message:', simpleError.message);
-              console.log('Simple error details:', simpleError.details);
-              throw simpleError;
-            } else {
-              console.log('Article added to Supabase with simple insert (ID unknown)');
-            }
-          } else {
-            console.log('Article added to Supabase successfully:', data.id);
-
-            // Update the article ID with the one from Supabase
-            newArticle.id = data.id;
-          }
-        } catch (insertError) {
-          console.error('Exception during Supabase insert:', insertError);
-          // Continue to localStorage as fallback
-        }
-      }
-    } catch (supabaseError) {
-      console.error('Error with Supabase when adding article:', supabaseError);
-      // Continue to add to localStorage even if Supabase fails
+    if (!response.ok) {
+      throw new Error('Failed to add article via API');
     }
 
-    // Also add to localStorage as a fallback
-    const articlesPromise = getNewsArticles();
-    const articles = await articlesPromise;
-    articles.unshift(newArticle); // Add to the beginning of the array
-    localStorage.setItem('vizagnews_articles', JSON.stringify(articles));
+    const result = await response.json();
 
-    // Clear cache to ensure fresh data is loaded
-    localStorage.removeItem('vizagnews_articles_cache');
-    localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
+    if (result.success) {
+      console.log('Article added successfully:', result.data.id);
 
-    return true;
+      // Update localStorage
+      const articles = await getNewsArticles();
+      localStorage.removeItem('acpsnews_articles_cache');
+      localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
+
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('Error adding article:', error);
     return false;
@@ -518,46 +195,17 @@ export const addNewsArticle = async (newArticle: NewsArticle): Promise<boolean> 
 
 // Delete a news article
 export const deleteNewsArticle = async (id: string): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false;
 
   try {
-    // Try to delete from Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { supabase, isSupabaseConfigured } = await import('./supabase');
+    console.log('Deleting article:', id);
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
-
-      if (configured) {
-        console.log('Deleting article from Supabase:', id);
-
-        // Delete the article from Supabase
-        const { error } = await supabase
-          .from('news_articles')
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          console.error('Error deleting article from Supabase:', error);
-        } else {
-          console.log('Article deleted from Supabase successfully');
-        }
-      }
-    } catch (supabaseError) {
-      console.error('Error with Supabase when deleting article:', supabaseError);
-      // Continue to delete from localStorage even if Supabase fails
-    }
-
-    // Also delete from localStorage as a fallback
-    const articlesPromise = getNewsArticles();
-    const articles = await articlesPromise;
+    // Delete from localStorage
+    const articles = await getNewsArticles();
     const filteredArticles = articles.filter(article => article.id !== id);
-    localStorage.setItem('vizagnews_articles', JSON.stringify(filteredArticles));
-
-    // Clear any cached data to ensure fresh data is loaded
-    localStorage.removeItem('vizagnews_articles_cache');
-    localStorage.setItem('vizagnews_articles_updated', Date.now().toString());
+    localStorage.setItem('acpsnews_articles', JSON.stringify(filteredArticles));
+    localStorage.removeItem('acpsnews_articles_cache');
+    localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
 
     return true;
   } catch (error) {
@@ -566,55 +214,49 @@ export const deleteNewsArticle = async (id: string): Promise<boolean> => {
   }
 };
 
-// Reset to default data (for testing)
+// Reset to default data
 export const resetToDefaultData = (): void => {
-  if (typeof window === 'undefined') return; // Skip on server-side
-  localStorage.setItem('vizagnews_articles', JSON.stringify(longNewsPosts));
-  localStorage.setItem('vizagnews_ads', JSON.stringify(defaultAds));
-  localStorage.setItem('vizagnews_categories', JSON.stringify(defaultCategories));
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('acpsnews_articles', JSON.stringify(longNewsPosts));
+  localStorage.setItem('acpsnews_ads', JSON.stringify(defaultAds));
+  localStorage.setItem('acpsnews_categories', JSON.stringify(defaultCategories));
 };
 
 // Ad Management Functions
 
-// Get all ads
+// Get all ads from Neon-backed API
 export const getAds = async (): Promise<Ad[]> => {
-  // Try to get data from Supabase first using the admin API
   try {
-    // Import dynamically to avoid circular dependencies
-    const { fetchAds, isSupabaseConfigured } = await import('./supabaseService');
+    console.log('Fetching ads from Neon API...');
+    const response = await fetch('/api/admin/ads');
 
-    // Check if Supabase is configured
-    const configured = await isSupabaseConfigured();
+    if (!response.ok) {
+      throw new Error('Failed to fetch ads from API');
+    }
 
-    if (configured) {
-      console.log('Fetching ads from Supabase using admin API...');
-      const ads = await fetchAds();
+    const result = await response.json();
 
-      if (ads && ads.length > 0) {
-        console.log(`Retrieved ${ads.length} ads from Supabase`);
+    if (result.success && result.data && result.data.length > 0) {
+      console.log(`Retrieved ${result.data.length} ads from Neon`);
 
-        // Update localStorage with the latest data
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
-        }
-
-        return ads;
-      } else {
-        console.warn('No ads found in Supabase');
+      // Update localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('acpsnews_ads', JSON.stringify(result.data));
       }
+
+      return result.data;
     }
   } catch (error) {
-    console.error('Error fetching ads from Supabase:', error);
+    console.error('Error fetching ads from API:', error);
   }
 
-  // Fall back to localStorage if Supabase fails
+  // Fall back to localStorage
   if (typeof window === 'undefined') {
-    // Return the default data on server-side
     return defaultAds;
   }
 
   initializeData();
-  const ads = localStorage.getItem('vizagnews_ads');
+  const ads = localStorage.getItem('acpsnews_ads');
   return ads ? JSON.parse(ads) : defaultAds;
 };
 
@@ -626,71 +268,40 @@ export const getAdById = async (id: string): Promise<Ad | undefined> => {
 
 // Update an ad
 export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false;
 
   try {
-    // Try to update in Supabase first using the admin API
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { updateAdInSupabase, isSupabaseConfigured } = await import('./supabaseService');
+    console.log('Updating ad via API:', updatedAd.title);
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
+    const response = await fetch(`/api/admin/ads?id=${updatedAd.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedAd),
+    });
 
-      if (configured) {
-        console.log('Updating ad in Supabase using admin API:', updatedAd.title);
-
-        // Prepare the ad data
-        const adData = {
-          title: updatedAd.title,
-          description: updatedAd.description,
-          text_content: updatedAd.text_content,
-          image_url: updatedAd.image_url,
-          video_url: updatedAd.video_url,
-          video_type: updatedAd.video_type,
-          link_url: updatedAd.link_url,
-          frequency: updatedAd.frequency || 5,
-          active: updatedAd.active !== false
-        };
-
-        console.log('Updating ad with data:', adData);
-
-        // Use the admin API to bypass RLS
-        const result = await updateAdInSupabase(updatedAd.id, adData);
-
-        if (result) {
-          console.log('Ad updated in Supabase successfully');
-
-          // Also update in localStorage
-          const adsPromise = getAds();
-          const ads = await adsPromise;
-          const index = ads.findIndex(ad => ad.id === updatedAd.id);
-
-          if (index !== -1) {
-            ads[index] = updatedAd;
-            localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
-          }
-
-          return true;
-        } else {
-          console.error('Failed to update ad in Supabase');
-        }
-      }
-    } catch (supabaseError) {
-      console.error('Error with Supabase when updating ad:', supabaseError);
-      // Continue to update localStorage even if Supabase fails
+    if (!response.ok) {
+      throw new Error('Failed to update ad via API');
     }
 
-    // Fall back to localStorage
-    const adsPromise = getAds();
-    const ads = await adsPromise;
-    const index = ads.findIndex(ad => ad.id === updatedAd.id);
+    const result = await response.json();
 
-    if (index === -1) return false;
+    if (result.success) {
+      console.log('Ad updated successfully');
 
-    ads[index] = updatedAd;
-    localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
-    return true;
+      // Update localStorage
+      const ads = await getAds();
+      const index = ads.findIndex(ad => ad.id === updatedAd.id);
+      if (index !== -1) {
+        ads[index] = updatedAd;
+        localStorage.setItem('acpsnews_ads', JSON.stringify(ads));
+      }
+
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('Error updating ad:', error);
     return false;
@@ -699,66 +310,34 @@ export const updateAd = async (updatedAd: Ad): Promise<boolean> => {
 
 // Add a new ad
 export const addAd = async (newAd: Ad): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false;
 
   try {
-    // Try to add to Supabase first using the admin API
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { addAdToSupabase, isSupabaseConfigured } = await import('./supabaseService');
+    console.log('Adding ad via API:', newAd.title);
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
+    const response = await fetch('/api/admin/ads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newAd),
+    });
 
-      if (configured) {
-        console.log('Adding ad to Supabase using admin API:', newAd.title);
-
-        // Prepare the ad data
-        const adData = {
-          title: newAd.title,
-          description: newAd.description,
-          text_content: newAd.text_content,
-          image_url: newAd.image_url,
-          video_url: newAd.video_url,
-          video_type: newAd.video_type,
-          link_url: newAd.link_url,
-          frequency: newAd.frequency || 5,
-          active: newAd.active !== false
-        };
-
-        console.log('Inserting ad with data:', adData);
-
-        // Use the admin API to bypass RLS
-        const result = await addAdToSupabase(adData);
-
-        if (result) {
-          console.log('Ad added to Supabase successfully:', result.id);
-
-          // Update the ad ID with the one from Supabase
-          newAd.id = result.id;
-
-          // Also update in localStorage
-          const adsPromise = getAds();
-          const ads = await adsPromise;
-          ads.unshift(newAd); // Add to the beginning of the array
-          localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
-
-          return true;
-        } else {
-          console.error('Failed to add ad to Supabase');
-        }
-      }
-    } catch (supabaseError) {
-      console.error('Error with Supabase when adding ad:', supabaseError);
-      // Continue to add to localStorage even if Supabase fails
+    if (!response.ok) {
+      throw new Error('Failed to add ad via API');
     }
 
-    // Fall back to localStorage
-    const adsPromise = getAds();
-    const ads = await adsPromise;
-    ads.unshift(newAd); // Add to the beginning of the array
-    localStorage.setItem('vizagnews_ads', JSON.stringify(ads));
-    return true;
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('Ad added successfully:', result.data.id);
+
+      // Update localStorage
+      const ads = await getAds();
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('Error adding ad:', error);
     return false;
@@ -767,48 +346,33 @@ export const addAd = async (newAd: Ad): Promise<boolean> => {
 
 // Delete an ad
 export const deleteAd = async (id: string): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
+  if (typeof window === 'undefined') return false;
 
   try {
-    // Try to delete from Supabase first using the admin API
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { deleteAdFromSupabase, isSupabaseConfigured } = await import('./supabaseService');
+    console.log('Deleting ad via API:', id);
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
+    const response = await fetch(`/api/admin/ads?id=${id}`, {
+      method: 'DELETE',
+    });
 
-      if (configured) {
-        console.log('Deleting ad from Supabase using admin API:', id);
-
-        // Use the admin API to bypass RLS
-        const success = await deleteAdFromSupabase(id);
-
-        if (success) {
-          console.log('Ad deleted from Supabase successfully');
-
-          // Also delete from localStorage
-          const adsPromise = getAds();
-          const ads = await adsPromise;
-          const filteredAds = ads.filter(ad => ad.id !== id);
-          localStorage.setItem('vizagnews_ads', JSON.stringify(filteredAds));
-
-          return true;
-        } else {
-          console.error('Failed to delete ad from Supabase');
-        }
-      }
-    } catch (supabaseError) {
-      console.error('Error with Supabase when deleting ad:', supabaseError);
-      // Continue to delete from localStorage even if Supabase fails
+    if (!response.ok) {
+      throw new Error('Failed to delete ad via API');
     }
 
-    // Fall back to localStorage
-    const adsPromise = getAds();
-    const ads = await adsPromise;
-    const filteredAds = ads.filter(ad => ad.id !== id);
-    localStorage.setItem('vizagnews_ads', JSON.stringify(filteredAds));
-    return true;
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('Ad deleted successfully');
+
+      // Update localStorage
+      const ads = await getAds();
+      const filteredAds = ads.filter(ad => ad.id !== id);
+      localStorage.setItem('acpsnews_ads', JSON.stringify(filteredAds));
+
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('Error deleting ad:', error);
     return false;
@@ -820,243 +384,35 @@ export const deleteAd = async (id: string): Promise<boolean> => {
 // Get all categories
 export const getCategories = async (): Promise<Category[]> => {
   try {
-    // Try to get categories from Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { fetchCategories, isSupabaseConfigured } = await import('./supabaseService');
+    console.log('Fetching categories from Neon API...');
+    const response = await fetch('/api/admin/categories');
 
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories from API');
+    }
 
-      if (configured) {
-        console.log('Fetching categories from Supabase...');
-        const categories = await fetchCategories();
+    const result = await response.json();
 
-        if (categories && categories.length > 0) {
-          console.log(`Retrieved ${categories.length} categories from Supabase`);
+    if (result.success && result.data) {
+      console.log(`Retrieved ${result.data.length} categories from Neon`);
 
-          // Update localStorage with the latest data
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
-          }
-
-          return categories;
-        } else {
-          console.warn('No categories found in Supabase, falling back to localStorage');
-        }
+      // Update localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('acpsnews_categories', JSON.stringify(result.data));
       }
-    } catch (error) {
-      console.error('Error fetching categories from Supabase:', error);
-      // Continue to localStorage fallback
-    }
 
-    // Fall back to localStorage if Supabase fails
-    if (typeof window === 'undefined') {
-      // Return the default data on server-side
-      return defaultCategories;
+      return result.data;
     }
-
-    initializeData();
-    const categories = localStorage.getItem('vizagnews_categories');
-    return categories ? JSON.parse(categories) : defaultCategories;
   } catch (error) {
-    console.error('Error in getCategories:', error);
-    return defaultCategories;
+    console.error('Error fetching categories from API:', error);
   }
-};
 
-// Get all categories (synchronous version for backward compatibility)
-export const getCategoriesSync = (): Category[] => {
+  // Fall back to localStorage
   if (typeof window === 'undefined') {
-    // Return the default data on server-side
     return defaultCategories;
   }
 
   initializeData();
-  const categories = localStorage.getItem('vizagnews_categories');
+  const categories = localStorage.getItem('acpsnews_categories');
   return categories ? JSON.parse(categories) : defaultCategories;
-};
-
-// Get a single category by ID
-export const getCategoryById = async (id: string): Promise<Category | undefined> => {
-  const categories = await getCategories();
-  return categories.find(category => category.id === id);
-};
-
-// Get a single category by slug
-export const getCategoryBySlug = async (slug: string): Promise<Category | undefined> => {
-  const categories = await getCategories();
-  return categories.find(category => category.slug === slug);
-};
-
-// Update a category
-export const updateCategory = async (updatedCategory: Category): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
-
-  try {
-    // Try to update in Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { updateCategoryInSupabase, isSupabaseConfigured } = await import('./supabaseService');
-
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
-
-      if (configured) {
-        console.log('Updating category in Supabase:', updatedCategory.name);
-
-        const result = await updateCategoryInSupabase(updatedCategory.id, {
-          name: updatedCategory.name,
-          slug: updatedCategory.slug
-        });
-
-        if (result) {
-          console.log('Category updated in Supabase successfully');
-
-          // Update localStorage
-          const categories = await getCategories();
-          const index = categories.findIndex(category => category.id === updatedCategory.id);
-
-          if (index !== -1) {
-            categories[index] = updatedCategory;
-            localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
-          }
-
-          return true;
-        } else {
-          console.error('Failed to update category in Supabase');
-        }
-      }
-    } catch (error) {
-      console.error('Error updating category in Supabase:', error);
-      // Continue to localStorage fallback
-    }
-
-    // Fall back to localStorage
-    const categories = await getCategories();
-    const index = categories.findIndex(category => category.id === updatedCategory.id);
-
-    if (index === -1) return false;
-
-    categories[index] = updatedCategory;
-    localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
-    return true;
-  } catch (error) {
-    console.error('Error updating category:', error);
-    return false;
-  }
-};
-
-// Add a new category
-export const addCategory = async (newCategory: Category): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
-
-  try {
-    // Try to add to Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { addCategoryToSupabase, isSupabaseConfigured } = await import('./supabaseService');
-
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
-
-      if (configured) {
-        console.log('Adding category to Supabase:', newCategory.name);
-
-        const categoryData = {
-          name: newCategory.name,
-          slug: newCategory.slug
-        };
-
-        const result = await addCategoryToSupabase(categoryData);
-
-        if (result) {
-          console.log('Category added to Supabase successfully:', result.id);
-
-          // Update localStorage with the new category
-          const categories = await getCategories();
-
-          // Use the ID from Supabase
-          const updatedCategory = {
-            ...newCategory,
-            id: result.id
-          };
-
-          categories.push(updatedCategory);
-          localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
-
-          return true;
-        } else {
-          console.error('Failed to add category to Supabase');
-        }
-      }
-    } catch (error) {
-      console.error('Error adding category to Supabase:', error);
-      // Continue to localStorage fallback
-    }
-
-    // Fall back to localStorage
-    const categories = await getCategories();
-
-    // Check if slug already exists
-    const slugExists = categories.some(category => category.slug === newCategory.slug);
-    if (slugExists) {
-      console.error('Category with this slug already exists');
-      return false;
-    }
-
-    categories.push(newCategory);
-    localStorage.setItem('vizagnews_categories', JSON.stringify(categories));
-    return true;
-  } catch (error) {
-    console.error('Error adding category:', error);
-    return false;
-  }
-};
-
-// Delete a category
-export const deleteCategory = async (id: string): Promise<boolean> => {
-  if (typeof window === 'undefined') return false; // Can&apos;t update on server-side
-
-  try {
-    // Try to delete from Supabase first
-    try {
-      // Import dynamically to avoid circular dependencies
-      const { deleteCategoryFromSupabase, isSupabaseConfigured } = await import('./supabaseService');
-
-      // Check if Supabase is configured
-      const configured = await isSupabaseConfigured();
-
-      if (configured) {
-        console.log('Deleting category from Supabase:', id);
-
-        const success = await deleteCategoryFromSupabase(id);
-
-        if (success) {
-          console.log('Category deleted from Supabase successfully');
-
-          // Update localStorage
-          const categories = await getCategories();
-          const filteredCategories = categories.filter(category => category.id !== id);
-          localStorage.setItem('vizagnews_categories', JSON.stringify(filteredCategories));
-
-          return true;
-        } else {
-          console.error('Failed to delete category from Supabase');
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting category from Supabase:', error);
-      // Continue to localStorage fallback
-    }
-
-    // Fall back to localStorage
-    const categories = await getCategories();
-    const filteredCategories = categories.filter(category => category.id !== id);
-    localStorage.setItem('vizagnews_categories', JSON.stringify(filteredCategories));
-    return true;
-  } catch (error) {
-    console.error('Error deleting category:', error);
-    return false;
-  }
 };

@@ -48,7 +48,7 @@ export const parseRssFeed = async (url: string): Promise<RssFeedData | null> => 
     const response = await fetch(fetchUrl, {
       headers: {
         'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-        'User-Agent': 'FlipNews/1.0 (RSS Reader)',
+        'User-Agent': 'ACPS News/1.0 (RSS Reader)',
       },
       next: { revalidate: 60 }, // Cache for 60 seconds
     });

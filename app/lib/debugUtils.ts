@@ -7,7 +7,7 @@ export const logAllArticles = (): void => {
   if (typeof window === 'undefined') return; // Skip on server-side
   
   try {
-    const articlesJson = localStorage.getItem('flipnews_articles');
+    const articlesJson = localStorage.getItem('acpsnews_articles');
     if (!articlesJson) {
       console.log('No articles found in localStorage');
       return;
@@ -35,7 +35,7 @@ export const checkArticleExists = (id: string): boolean => {
   if (typeof window === 'undefined') return false; // Skip on server-side
   
   try {
-    const articlesJson = localStorage.getItem('flipnews_articles');
+    const articlesJson = localStorage.getItem('acpsnews_articles');
     if (!articlesJson) return false;
     
     const articles = JSON.parse(articlesJson);
@@ -64,7 +64,7 @@ export const getAllArticleIds = (): string[] => {
   
   try {
     // Check localStorage
-    const articlesJson = localStorage.getItem('flipnews_articles');
+    const articlesJson = localStorage.getItem('acpsnews_articles');
     if (articlesJson) {
       const articles = JSON.parse(articlesJson);
       articles.forEach((article: unknown) => {
@@ -75,7 +75,7 @@ export const getAllArticleIds = (): string[] => {
     }
     
     // Check cache
-    const cacheJson = localStorage.getItem('flipnews_articles_cache');
+    const cacheJson = localStorage.getItem('acpsnews_articles_cache');
     if (cacheJson) {
       const articles = JSON.parse(cacheJson);
       articles.forEach((article: unknown) => {

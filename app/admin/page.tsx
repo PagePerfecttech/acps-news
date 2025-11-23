@@ -275,7 +275,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">FlipNews Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold">ACPS News Admin Dashboard</h1>
         <div className="flex items-center">
           {usingSupabase && (
             <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full mr-2">

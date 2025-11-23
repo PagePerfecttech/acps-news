@@ -37,7 +37,7 @@ function OriginalHome() {
   useEffect(() => {
     // Force clear any cached data to ensure we get fresh data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
+      localStorage.removeItem('acpsnews_articles_cache');
       console.log('Cleared article cache on home page load');
     }
 
@@ -165,7 +165,7 @@ function OriginalHome() {
   const refreshContent = async () => {
     // Force clear any cached data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('flipnews_articles_cache');
+      localStorage.removeItem('acpsnews_articles_cache');
       console.log('Cache cleared via manual refresh');
     }
 

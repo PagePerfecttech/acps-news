@@ -298,7 +298,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
     console.log('Rendering default media');
     return (
       <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
-        <span className="text-white text-xl font-bold" data-site-name>Vizag News</span>
+        <span className="text-white text-xl font-bold" data-site-name>ACPS News</span>
       </div>
     );
   };
@@ -326,7 +326,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
               {settings?.black_strip_text || 'No.1 తెలుగు న్యూస్ డైలీ'}
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs">{settings?.site_name || 'Vizag News'}</span>
+              <span className="text-xs">{settings?.site_name || 'ACPS News'}</span>
               {/* Author profile picture */}
               <UserProfile authorName={article.author} size="small" showName={false} />
             </div>

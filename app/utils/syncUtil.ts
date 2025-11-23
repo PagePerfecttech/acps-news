@@ -7,12 +7,12 @@ export const getDeviceId = (): string => {
   if (typeof window === 'undefined') return 'server';
   
   // Try to get existing device ID from localStorage
-  let deviceId = localStorage.getItem('flipnews_device_id');
+  let deviceId = localStorage.getItem('acpsnews_device_id');
   
   // If no device ID exists, create one and store it
   if (!deviceId) {
     deviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem('flipnews_device_id', deviceId);
+    localStorage.setItem('acpsnews_device_id', deviceId);
   }
   
   return deviceId;
@@ -22,7 +22,7 @@ export const getDeviceId = (): string => {
 export const getLastSyncTime = (): number => {
   if (typeof window === 'undefined') return 0;
   
-  const timestamp = localStorage.getItem('flipnews_last_sync');
+  const timestamp = localStorage.getItem('acpsnews_last_sync');
   return timestamp ? parseInt(timestamp, 10) : 0;
 };
 
@@ -31,7 +31,7 @@ export const updateLastSyncTime = (): void => {
   if (typeof window === 'undefined') return;
   
   const now = Date.now();
-  localStorage.setItem('flipnews_last_sync', now.toString());
+  localStorage.setItem('acpsnews_last_sync', now.toString());
 };
 
 // Check if we need to sync data (e.g., if it&apos;s been more than 5 minutes)
@@ -49,5 +49,5 @@ export const shouldSyncData = (): boolean => {
 export const forceDataRefresh = (): void => {
   if (typeof window === 'undefined') return;
   
-  localStorage.removeItem('flipnews_last_sync');
+  localStorage.removeItem('acpsnews_last_sync');
 };

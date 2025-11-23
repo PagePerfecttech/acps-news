@@ -227,8 +227,8 @@ export default function EditNewsArticle({ params }: { params: { id: string } }) 
       if (success) {
         // Clear any cached data to ensure fresh data is loaded on the front end
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('flipnews_articles_cache');
-          localStorage.setItem('flipnews_articles_updated', Date.now().toString());
+          localStorage.removeItem('acpsnews_articles_cache');
+          localStorage.setItem('acpsnews_articles_updated', Date.now().toString());
           console.log('Article updated and cache cleared');
         }
 
