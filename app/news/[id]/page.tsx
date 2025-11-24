@@ -28,7 +28,12 @@ The research has been published in a peer-reviewed journal and the team plans to
     image_url: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=1470&auto=format&fit=crop',
     created_at: '2023-05-15T10:30:00Z',
     updated_at: '2023-05-15T10:30:00Z',
-    author: 'Jane Smith'
+    author: 'Jane Smith',
+    tags: ['AI', 'Technology', 'Research'],
+    likes: 120,
+    views: 1500,
+    published: true,
+    comments: []
   },
   '2': {
     id: '2',
@@ -49,7 +54,12 @@ The bill is expected to come to a vote next month, with passage looking increasi
     image_url: 'https://images.unsplash.com/photo-1470115636492-6d2b56f9146d?q=80&w=1470&auto=format&fit=crop',
     created_at: '2023-05-14T15:45:00Z',
     updated_at: '2023-05-14T15:45:00Z',
-    author: 'Michael Johnson'
+    author: 'Michael Johnson',
+    tags: ['Climate', 'Politics', 'Environment'],
+    likes: 95,
+    views: 1200,
+    published: true,
+    comments: []
   },
 };
 
@@ -288,10 +298,10 @@ export default function NewsDetail({ params }: { params: Promise<{ id: string }>
             </div>
             <div>
               <Link
-                href={`/category/${article.category.toLowerCase()}`}
+                href={`/category/${article.category?.toLowerCase() || 'general'}`}
                 className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm hover:bg-blue-200 transition-colors"
               >
-                More in {article.category}
+                More in {article.category || 'General'}
               </Link>
             </div>
           </div>

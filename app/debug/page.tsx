@@ -98,7 +98,7 @@ export default function DebugPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">FlipNEWS Debug Page</h1>
+          <h1 className="text-2xl font-bold">Debug Page</h1>
           <button
             onClick={handleRefresh}
             className="bg-blue-500 text-white px-4 py-2 rounded-md flex items-center"

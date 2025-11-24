@@ -118,10 +118,10 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
       ignoreElements: (el) => {
         // Ignore elements that are not visible or not important for the screenshot
         return el.classList.contains('ignore-screenshot') ||
-               el.tagName === 'SCRIPT' ||
-               el.tagName === 'STYLE' ||
-               el.style.display === 'none' ||
-               el.style.visibility === 'hidden';
+          el.tagName === 'SCRIPT' ||
+          el.tagName === 'STYLE' ||
+          (el as HTMLElement).style.display === 'none' ||
+          (el as HTMLElement).style.visibility === 'hidden';
       },
       onclone: (document, clonedElement) => {
         try {
@@ -134,7 +134,7 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
 
               // Ensure text is visible with good contrast
               if (el.tagName === 'P' || el.tagName === 'H1' || el.tagName === 'H2' ||
-                  el.tagName === 'H3' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
+                el.tagName === 'H3' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
                 // Only set color if it's not already dark
                 const computedStyle = window.getComputedStyle(el);
                 const color = computedStyle.color;
@@ -173,7 +173,9 @@ export const captureScreenshot = async (element: HTMLElement): Promise<string> =
           watermark.style.borderRadius = '4px';
           watermark.style.fontSize = '12px';
           watermark.style.fontWeight = 'bold';
-          watermark.textContent = 'FlipNEWS';
+          // Get site name from data attribute or use default
+          const siteNameElement = clonedElement.querySelector('[data-site-name]');
+          watermark.textContent = siteNameElement?.textContent || 'ACPS News';
           clonedElement.appendChild(watermark);
         } catch (e) {
           console.warn('Error in onclone handler:', e);

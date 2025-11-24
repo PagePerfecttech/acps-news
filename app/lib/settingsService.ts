@@ -48,7 +48,7 @@ export const getSettings = async (): Promise<SiteSettings> => {
     // Check if using Supabase
     const usingSupabase = await isSupabaseConfigured();
 
-    if (usingSupabase) {
+    if (usingSupabase && supabase) {
       try {
         // Try to get settings from Supabase as key-value pairs
         const { data: keyValueSettings, error: keyValueError } = await supabase
@@ -141,7 +141,7 @@ export const saveSettings = async (settings: SiteSettings): Promise<boolean> => 
     // Check if using Supabase
     const usingSupabase = await isSupabaseConfigured();
 
-    if (usingSupabase) {
+    if (usingSupabase && supabase) {
       try {
         // Save to Supabase as key-value pairs
         const now = new Date().toISOString();

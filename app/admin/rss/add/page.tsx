@@ -31,8 +31,8 @@ export default function AddRssFeedPage() {
   const fetchData = async () => {
     try {
       // Fetch categories and users with error handling
-      let fetchedCategories = [];
-      let fetchedUsers = [];
+      let fetchedCategories: Category[] = [];
+      let fetchedUsers: User[] = [];
 
       try {
         fetchedCategories = await getCategories() || [];
@@ -112,7 +112,7 @@ export default function AddRssFeedPage() {
       router.push('/admin/rss');
     } catch (err: unknown) {
       console.error('Error adding RSS feed:', err);
-      setError(err.message || 'Failed to add RSS feed');
+      setError((err as Error).message || 'Failed to add RSS feed');
     } finally {
       setLoading(false);
     }

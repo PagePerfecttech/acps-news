@@ -14,12 +14,12 @@ export default function MinimalPage() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Clear any cached data
         if (typeof window !== 'undefined') {
           localStorage.removeItem('acpsnews_articles_cache');
         }
-        
+
         // Simulate data fetching
         setTimeout(() => {
           // Create some dummy articles
@@ -39,7 +39,7 @@ export default function MinimalPage() {
               created_at: new Date().toISOString()
             }
           ];
-          
+
           setArticles(dummyArticles);
           setLoading(false);
         }, 1000);
@@ -49,10 +49,10 @@ export default function MinimalPage() {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   // Handle error state
   if (error) {
     return (
@@ -70,7 +70,7 @@ export default function MinimalPage() {
       </div>
     );
   }
-  
+
   // Handle loading state
   if (loading) {
     return (
@@ -82,17 +82,17 @@ export default function MinimalPage() {
       </div>
     );
   }
-  
+
   // Render minimal content
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">FlipNEWS Minimal Page</h1>
-        
+        <h1 className="text-3xl font-bold mb-6">Minimal Page</h1>
+
         <p className="mb-4 text-gray-700">
           This is a minimal version of the home page to help diagnose the client-side exception.
         </p>
-        
+
         <div className="bg-white rounded-lg shadow-md p-4 mb-4">
           <h2 className="text-xl font-semibold mb-2">Test Articles</h2>
           {articles && articles.length > 0 ? (
@@ -108,15 +108,15 @@ export default function MinimalPage() {
             <p className="text-gray-500">No articles found.</p>
           )}
         </div>
-        
+
         <div className="flex space-x-4">
-          <Link 
+          <Link
             href="/"
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Go to Main Page
           </Link>
-          
+
           <button
             onClick={() => window.location.reload()}
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"

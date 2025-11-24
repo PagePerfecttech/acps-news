@@ -90,7 +90,10 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     setMessage({ type: '', text: '' });
 
     try {
-      const success = await updateUser(id, formData);
+      const success = await updateUser(id, {
+        ...formData,
+        role: formData.role as 'user' | 'admin' | 'sub-admin'
+      });
 
       if (success) {
         setMessage({ type: 'success', text: 'User updated successfully!' });

@@ -79,3 +79,10 @@ export const ads = pgTable('ads', {
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
+
+export const siteSettings = pgTable('site_settings', {
+    key: varchar('key', { length: 255 }).primaryKey(),
+    value: text('value').notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});

@@ -79,7 +79,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
     if (!usingSupabase) return;
 
     // Subscribe to likes changes
-    const likesSubscription = subscribeToChanges('likes', (payload) => {
+    const likesSubscription = subscribeToChanges('likes', (payload: { new?: { news_id: string }; old?: unknown }) => {
       if (payload.new && payload.new.news_id === article.id) {
         // Update likes count
         setStats(prev => ({ ...prev, likes: prev.likes + 1 }));
@@ -87,7 +87,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
     });
 
     // Subscribe to comments changes
-    const commentsSubscription = subscribeToChanges('comments', (payload) => {
+    const commentsSubscription = subscribeToChanges('comments', (payload: { new?: { news_id: string }; old?: unknown }) => {
       if (payload.new && payload.new.news_id === article.id) {
         // Update comments count
         setStats(prev => ({ ...prev, comments: prev.comments + 1 }));
@@ -298,7 +298,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
     console.log('Rendering default media');
     return (
       <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
-        <span className="text-white text-xl font-bold" data-site-name>ACPS News</span>
+        <span className="text-white text-xl font-bold" data-site-name>{settings?.site_name || 'ACPS News'}</span>
       </div>
     );
   };
@@ -554,7 +554,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
         </div>
       )}
 
-    {/* ShareModal is now handled by the ShareButton component */}
+      {/* ShareModal is now handled by the ShareButton component */}
     </>
   );
 }

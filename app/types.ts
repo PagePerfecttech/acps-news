@@ -27,7 +27,9 @@ export interface Comment {
   news_id: string;
   user_id?: string;
   author?: string;
+  author_ip?: string;
   content: string;
+  approved?: boolean;
   created_at: string;
 }
 
@@ -40,8 +42,8 @@ export interface Ad {
   image_url?: string;
   video_url?: string;
   video_type?: 'youtube' | 'uploaded';
-  link_url?: string;
-  frequency?: number;
+  link_url: string;
+  frequency: number;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -62,7 +64,23 @@ export interface User {
   name: string;
   email: string;
   avatar_url?: string;
+  profile_pic?: string;
+  bio?: string;
   role: 'user' | 'admin' | 'sub-admin';
+  created_at: string;
+  updated_at: string;
+}
+
+// RSS Feed
+export interface RssFeed {
+  id: string;
+  name: string;
+  url: string;
+  category_id: string;
+  user_id: string;
+  active: boolean;
+  fetch_frequency: number;
+  last_fetched?: string | null;
   created_at: string;
   updated_at: string;
 }

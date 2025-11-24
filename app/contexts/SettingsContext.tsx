@@ -44,8 +44,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   // Handle settings update from real-time subscription
   const handleSettingsUpdate = async (payload: unknown) => {
     console.log('Settings update received:', payload);
-    if (payload.new) {
-      setSettings(payload.new);
+    const typedPayload = payload as { new?: SiteSettings; old?: SiteSettings };
+    if (typedPayload.new) {
+      setSettings(typedPayload.new);
     } else {
       // If we just got a notification without data, refresh settings
       await loadSettings();

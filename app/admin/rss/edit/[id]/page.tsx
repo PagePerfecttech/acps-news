@@ -38,7 +38,7 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
     const checkSupabase = async () => {
       const configured = await isSupabaseConfigured();
       setSupabaseConfigured(configured);
-      
+
       if (configured) {
         fetchData();
       } else {
@@ -46,7 +46,7 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
         setError('Supabase is not configured. RSS feeds require a database connection.');
       }
     };
-    
+
     checkSupabase();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -57,10 +57,10 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
         getUsers(),
         getRssFeedById(params.id)
       ]);
-      
+
       setCategories(fetchedCategories);
       setUsers(fetchedUsers);
-      
+
       if (feed) {
         setFormData(feed);
       } else {
@@ -76,14 +76,14 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData((prev: Partial<RssFeed>) => ({ ...prev, [name]: checked }));
     } else if (name === 'fetch_frequency') {
-      setFormData(prev => ({ ...prev, [name]: parseInt(value) || 60 }));
+      setFormData((prev: Partial<RssFeed>) => ({ ...prev, [name]: parseInt(value) || 60 }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev: Partial<RssFeed>) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -106,18 +106,18 @@ export default function EditRssFeedPage({ params }: EditRssFeedPageProps) {
         },
         body: JSON.stringify(formData),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update RSS feed');
       }
-      
+
       // Redirect to RSS feeds list
       router.push('/admin/rss');
     } catch (err: unknown) {
       console.error('Error updating RSS feed:', err);
-      setError(err.message || 'Failed to update RSS feed');
+      setError((err as Error).message || 'Failed to update RSS feed');
     } finally {
       setSaving(false);
     }
