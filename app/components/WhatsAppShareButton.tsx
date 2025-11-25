@@ -36,7 +36,9 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
   const handleWhatsAppShare = () => {
     try {
       // Get share link from settings
-      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
+      const shareLink = settings?.share_link || window.location.origin;
+      const siteName = settings?.site_name || 'ACPS News';
+      const tagline = settings?.black_strip_text || 'No.1 News Daily';
 
       // Get description from the article element - with error handling
       let description = '';
@@ -50,8 +52,8 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
         // Continue with empty description if there's an error
       }
 
-      // Create share text (with fallback if description fails)
-      const shareText = `${title}\n\n${description || 'Check out this interesting news article!'}\n\nRead More: ${shareLink}`;
+      // Create share text with app name and tagline
+      const shareText = `*${siteName}*\n${tagline}\n\n${title}\n\n${description || 'Check out this interesting news article!'}\n\nRead More: ${shareLink}`;
 
       // Encode for URL - with error handling
       let encodedText;
@@ -132,13 +134,13 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
       navigator.clipboard.writeText(textToCopy)
         .then(() => {
           alert('We couldn\'t open WhatsApp automatically.\n\n' +
-                'The share text has been copied to your clipboard.\n\n' +
-                'Please open WhatsApp manually and paste the text.');
+            'The share text has been copied to your clipboard.\n\n' +
+            'Please open WhatsApp manually and paste the text.');
         })
         .catch(() => {
           // If clipboard fails, just show instructions
           alert('We couldn\'t open WhatsApp automatically.\n\n' +
-                'Please open WhatsApp manually and share the article link.');
+            'Please open WhatsApp manually and share the article link.');
         });
     } catch (clipboardError) {
       // If all else fails, just show a simple message
@@ -160,9 +162,8 @@ export default function WhatsAppShareButton({ title, elementId }: WhatsAppShareB
       <button
         ref={buttonRef}
         onClick={handleWhatsAppShare}
-        className={`flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${
-          isAnimating ? 'whatsapp-pulse' : ''
-        }`}
+        className={`flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg p-3 transition-all duration-300 hover:bg-green-600 ${isAnimating ? 'whatsapp-pulse' : ''
+          }`}
         style={{
           boxShadow: '0 0 10px rgba(0,0,0,0.3)'
         }}

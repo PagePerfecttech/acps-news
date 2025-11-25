@@ -164,8 +164,9 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       }
 
       // Use the share link from settings, or fallback to a default
-      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
+      const shareLink = settings?.share_link || window.location.origin;
       const siteName = settings?.site_name || 'ACPS News';
+      const tagline = settings?.black_strip_text || 'No.1 News Daily';
 
       // Get the article element to extract content
       const articleElement = document.getElementById(elementId);
@@ -184,8 +185,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
         }
       }
 
-      // Create enhanced share text with title, description and read more link
-      const enhancedShareText = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
+      // Create enhanced share text with app name, tagline, description and link
+      const enhancedShareText = `*${siteName}*\n${tagline}\n\n${title}\n\n${description}\n\nRead More: ${shareLink}`;
 
       try {
         // Get the media element (image or video)
@@ -233,7 +234,9 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
       }
 
       // Use the share link from settings, or fallback to a default
-      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
+      const shareLink = settings?.share_link || window.location.origin;
+      const siteName = settings?.site_name || 'ACPS News';
+      const tagline = settings?.black_strip_text || 'No.1 News Daily';
 
       // Get the article element to extract content
       const articleElement = document.getElementById(elementId);
@@ -252,8 +255,8 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
         }
       }
 
-      // Customize share text based on platform with enhanced "Read More" text
-      let shareText = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
+      // Customize share text based on platform with app name and tagline
+      let shareText = `*${siteName}*\n${tagline}\n\n${title}\n\n${description}\n\nRead More: ${shareLink}`;
 
       // Twitter has character limits, so make it more concise
       if (platform === 'twitter') {
@@ -324,9 +327,11 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
   // Handle copy link button click
   const handleCopyLink = () => {
     try {
-      const shareLink = settings?.share_link || 'https://vizag-news.vercel.app';
+      const shareLink = settings?.share_link || window.location.origin;
+      const siteName = settings?.site_name || 'ACPS News';
+      const tagline = settings?.black_strip_text || 'No.1 News Daily';
       const description = getDescriptionForShare();
-      const shareMessage = `${title}\n\n${description}\n\nRead More: ${shareLink}`;
+      const shareMessage = `*${siteName}*\n${tagline}\n\n${title}\n\n${description}\n\nRead More: ${shareLink}`;
 
       // Modern clipboard API with fallback
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -462,7 +467,7 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
             <div className="flex items-center">
               <textarea
                 rows={4}
-                value={`${title}\n\n${getDescriptionForShare()}\n\nRead More: ${settings?.share_link || 'https://vizag-news.vercel.app'}`}
+                value={`*${settings?.site_name || 'ACPS News'}*\n${settings?.black_strip_text || 'No.1 News Daily'}\n\n${title}\n\n${getDescriptionForShare()}\n\nRead More: ${settings?.share_link || window.location.origin}`}
                 readOnly
                 className="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black text-sm"
               />
