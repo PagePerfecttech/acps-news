@@ -68,6 +68,7 @@ export default function SettingsPage() {
 
         // Set loading state
         setIsSubmitting(true);
+        setMessage({ type: '', text: '' });
 
         // Create form data for upload
         const formData = new FormData();
@@ -92,11 +93,29 @@ export default function SettingsPage() {
           // Keep the preview but don&apos;t update the form data
         } else {
           // Update settings with the actual storage URL
-          setSettings(prev => ({
-            ...prev,
+          const updatedSettings = {
+            ...settings,
             logo_url: result.url,
-          }));
+          };
+
+          setSettings(updatedSettings);
           console.log('Logo uploaded successfully:', result.url);
+
+          // Auto-save to database
+          const saveSuccess = await saveSettings(updatedSettings);
+          if (saveSuccess) {
+            await refreshSettings();
+            setMessage({
+              type: 'success',
+              text: 'Logo uploaded and saved successfully!'
+            });
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+          } else {
+            setMessage({
+              type: 'error',
+              text: 'Logo uploaded but failed to save to database. Please click Save Settings.'
+            });
+          }
         }
       } catch (error) {
         console.error('Error in logo upload:', error);
@@ -129,6 +148,7 @@ export default function SettingsPage() {
 
         // Set loading state
         setIsSubmitting(true);
+        setMessage({ type: '', text: '' });
 
         // Create form data for upload - use R2 directly for better control
         const formData = new FormData();
@@ -158,11 +178,29 @@ export default function SettingsPage() {
           // Keep the preview but don't update the form data
         } else {
           // Update settings with the actual storage URL
-          setSettings(prev => ({
-            ...prev,
+          const updatedSettings = {
+            ...settings,
             background_logo_url: result.url,
-          }));
+          };
+
+          setSettings(updatedSettings);
           console.log('Background logo uploaded successfully:', result.url);
+
+          // Auto-save to database
+          const saveSuccess = await saveSettings(updatedSettings);
+          if (saveSuccess) {
+            await refreshSettings();
+            setMessage({
+              type: 'success',
+              text: 'Background logo uploaded and saved successfully! Watermark updated.'
+            });
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+          } else {
+            setMessage({
+              type: 'error',
+              text: 'Logo uploaded but failed to save to database. Please click Save Settings.'
+            });
+          }
         }
       } catch (error) {
         console.error('Error in background logo upload:', error);
@@ -225,9 +263,8 @@ export default function SettingsPage() {
       {/* Message display */}
       {message.text && (
         <div
-          className={`p-4 mb-6 rounded-md ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}
+          className={`p-4 mb-6 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}
         >
           {message.text}
         </div>
