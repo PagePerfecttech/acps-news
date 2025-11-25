@@ -51,7 +51,9 @@ export const getSettings = async (): Promise<SiteSettings> => {
     if (usingSupabase && supabase) {
       try {
         // Try to get settings from Supabase as key-value pairs
-        const { data: keyValueSettings, error: keyValueError } = await supabase
+        // Type assertion needed because supabase is exported as null in stub
+        const supabaseClient = supabase as any;
+        const { data: keyValueSettings, error: keyValueError } = await supabaseClient
           .from('site_settings')
           .select('*');
 
@@ -174,8 +176,10 @@ export const saveSettings = async (settings: SiteSettings): Promise<boolean> => 
 
         // Upsert each setting
         let hasError = false;
+        // Type assertion needed because supabase is exported as null in stub
+        const supabaseClient = supabase as any;
         for (const setting of settingsToSave) {
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from('site_settings')
             .upsert({
               key: setting.key,

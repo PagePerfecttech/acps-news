@@ -11,9 +11,10 @@ interface ShareModalProps {
   onClose: () => void;
   title: string;
   elementId: string;
+  imageUrl?: string; // Add optional image URL prop
 }
 
-export default function ShareModal({ isOpen, onClose, title, elementId }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, title, elementId, imageUrl }: ShareModalProps) {
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -60,12 +61,17 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     let timeoutId: NodeJS.Timeout;
     let animTimeoutId: NodeJS.Timeout;
 
-    // Set a timeout to ensure we don&apos;t wait too long
+    // Set a timeout to ensure we don't wait too long
     const timeoutPromise = new Promise<string>((resolve) => {
       timeoutId = setTimeout(() => {
-        console.warn('Screenshot capture timed out, using fallback image');
-        // Use a fallback image if it takes too long
-        resolve('/images/fallback-share-image.svg');
+        console.warn('Screenshot capture timed out, using article image if available');
+        // Use article image if available, otherwise try to continue
+        if (imageUrl) {
+          console.log('Using article image as fallback:', imageUrl);
+          resolve(imageUrl);
+        } else {
+          resolve(''); // Let it continue to try screenshot
+        }
       }, 10000); // 10 seconds timeout (increased for better reliability)
     });
 
@@ -76,11 +82,21 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
     };
 
     try {
-      // First, make sure the element is fully visible and rendered
+      // If we have an article image, use it directly and skip screenshot
+      if (imageUrl) {
+        console.log('Using article image directly:', imageUrl);
+        setScreenshotUrl(imageUrl);
+        setIsCapturing(false);
+        cleanup();
+        return;
+      }
+
+      // Otherwise, try to capture screenshot
       const element = document.getElementById(elementId);
       if (!element) {
         console.error('Element not found:', elementId);
-        setScreenshotUrl('/images/fallback-share-image.svg');
+        console.log('No screenshot element and no article image available');
+        setScreenshotUrl(null);
         setIsCapturing(false);
         return;
       }
@@ -142,11 +158,22 @@ export default function ShareModal({ isOpen, onClose, title, elementId }: ShareM
         setScreenshotUrl(dataUrl);
       } else {
         console.error('Invalid screenshot data URL');
-        setScreenshotUrl('/images/fallback-share-image.svg');
+        // Fall back to article image if available
+        if (imageUrl) {
+          setScreenshotUrl(imageUrl);
+        } else {
+          setScreenshotUrl(null);
+        }
       }
     } catch (error) {
       console.error('Error capturing screenshot:', error);
-      setScreenshotUrl('/images/fallback-share-image.svg');
+      // Fall back to article image if available
+      if (imageUrl) {
+        console.log('Using article image after screenshot error:', imageUrl);
+        setScreenshotUrl(imageUrl);
+      } else {
+        setScreenshotUrl(null);
+      }
     } finally {
       setIsCapturing(false);
       // Call cleanup function to clear any remaining timeouts

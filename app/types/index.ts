@@ -82,6 +82,7 @@ export interface RssFeed {
   category_id: string;
   user_id: string;
   active: boolean;
+  auto_fetch: boolean;
   last_fetched: string | null;
   fetch_frequency: number;
   created_at: string;

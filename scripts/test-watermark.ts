@@ -41,8 +41,9 @@ async function testWatermark() {
                 } else {
                     console.log(`❌ Watermark URL returned error: ${response.status} ${response.statusText}`);
                 }
-            } catch (error) {
-                console.log(`❌ Failed to fetch watermark: ${error.message}`);
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.log(`❌ Failed to fetch watermark: ${errorMessage}`);
             }
         } else {
             console.log('❌ No watermark URL found in settings');

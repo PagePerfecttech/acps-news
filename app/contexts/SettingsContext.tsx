@@ -74,6 +74,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       const loadedSettings = await getSettings();
+      console.log('🔧 Settings loaded:', loadedSettings);
+      console.log('🖼️ Background logo URL:', loadedSettings?.background_logo_url);
       setSettings(loadedSettings || defaultSettings);
     } catch (error) {
       console.error('Error loading settings:', error);

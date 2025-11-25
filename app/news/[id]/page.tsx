@@ -262,28 +262,13 @@ export default function NewsDetail({ params }: { params: Promise<{ id: string }>
           />
         </div>
 
-        {/* Content area with watermark */}
-        <div className="relative">
-          {/* Watermark Background */}
-          {settings.background_logo_url && (
-            <div
-              className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden"
-              style={{ opacity: settings.background_logo_opacity || 0.1 }}
-            >
-              <div
-                className="w-full h-full bg-contain bg-center bg-no-repeat bg-fixed"
-                style={{ backgroundImage: `url(${settings.background_logo_url})` }}
-              />
-            </div>
-          )}
-
-          <div className="prose max-w-none relative z-10">
-            {article.content.split('\n\n').map((paragraph, index) => (
-              <p key={index} className="mb-4 text-gray-800 leading-relaxed">
-                {paragraph}
-              </p>
-            ))}
-          </div>
+        {/* Content area with watermark - using CSS class for consistency */}
+        <div className="content-with-logo-bg prose max-w-none relative py-8">
+          {article.content.split('\n\n').map((paragraph, index) => (
+            <p key={index} className="mb-4 text-gray-800 leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
         </div>
 
         <div className="border-t border-gray-200 mt-8 pt-6">

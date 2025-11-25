@@ -71,13 +71,18 @@ export const applyThemeColors = (settings: SiteSettings): void => {
 
   // Set background logo (watermark) CSS variables
   if (settings.background_logo_url) {
+    console.log('🎨 Setting background logo CSS variable:', settings.background_logo_url);
     document.documentElement.style.setProperty(
       '--background-logo-url',
       `url(${settings.background_logo_url})`
     );
+  } else {
+    console.log('⚠️ No background logo URL in settings, using default');
+    // Don't set the variable, let CSS fallback handle it
   }
 
   if (settings.background_logo_opacity !== undefined) {
+    console.log('🎨 Setting background logo opacity:', settings.background_logo_opacity);
     document.documentElement.style.setProperty(
       '--background-logo-opacity',
       settings.background_logo_opacity.toString()

@@ -406,6 +406,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
                 <ShareButton
                   title={article.title}
                   elementId={`news-card-${article.id}`}
+                  imageUrl={article.image_url}
                   className="text-blue-500 hover:text-blue-700 transition-colors"
                   iconSize={20}
                 />
@@ -502,6 +503,7 @@ export default function NewsCard({ article, index, totalArticles, onPopupStateCh
                     <ShareButton
                       title={article.title}
                       elementId={`news-card-${article.id}`}
+                      imageUrl={article.image_url}
                       className="flex items-center text-blue-600 hover:text-blue-800"
                       iconSize={20}
                     />
