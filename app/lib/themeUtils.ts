@@ -69,6 +69,21 @@ export const applyThemeColors = (settings: SiteSettings): void => {
     document.documentElement.style.setProperty('--secondary-rgb', `${r}, ${g}, ${b}`);
   }
 
+  // Set background logo (watermark) CSS variables
+  if (settings.background_logo_url) {
+    document.documentElement.style.setProperty(
+      '--background-logo-url',
+      `url(${settings.background_logo_url})`
+    );
+  }
+
+  if (settings.background_logo_opacity !== undefined) {
+    document.documentElement.style.setProperty(
+      '--background-logo-opacity',
+      settings.background_logo_opacity.toString()
+    );
+  }
+
   // Update site name in title and any elements with data-site-name attribute
   if (settings.site_name) {
     document.title = settings.site_name;
